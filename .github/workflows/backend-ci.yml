@@ -54,6 +54,12 @@ jobs:
           set -euo pipefail
           npm --prefix backend run typecheck
 
+      - name: Start Supabase services
+        run: |
+          set -euo pipefail
+          supabase start
+          supabase status
+
       - name: Reset database
         run: |
           set -euo pipefail
