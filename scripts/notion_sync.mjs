@@ -44,6 +44,27 @@ function warn(message) {
   console.warn(`WARN: ${message}`);
 }
 
+function extractErrorCode(error) {
+  const message = String(error?.message ?? error);
+  const statusMatch = message.match(/failed \((\d+)\)/);
+  return statusMatch ? Number.parseInt(statusMatch[1], 10) : null;
+}
+
+function classifySyncError(error) {
+  const message = String(error?.message ?? error);
+  const errorCode = extractErrorCode(error);
+
+  if (message.includes("Can't edit block that is archived")) {
+    return { errorCode, category: "ARCHIVED_PARENT", message };
+  }
+
+  if (errorCode === 404 || message.includes('"code":"object_not_found"')) {
+    return { errorCode: 404, category: "PERMISSION", message };
+  }
+
+  return { errorCode, category: "OTHER", message };
+}
+
 function pushUnique(items, value) {
   if (!items.includes(value)) {
     items.push(value);
@@ -608,12 +629,18 @@ function selectSignedChildrenToArchive(children) {
 
 async function archiveSpecificChildren(token, children) {
   let archived = 0;
-  let skipped = 0;
+  let skippedAlreadyArchived = 0;
+  let skippedUnsupported = 0;
 
   for (const child of children) {
+    if (child?.archived === true) {
+      skippedAlreadyArchived += 1;
+      continue;
+    }
+
     const childType = child.type ?? "unknown";
     if (childType === "child_page" || childType === "child_database") {
-      skipped += 1;
+      skippedUnsupported += 1;
       warn(`skip archiving ${childType}: ${child.id}`);
       continue;
     }
@@ -624,14 +651,14 @@ async function archiveSpecificChildren(token, children) {
     } catch (error) {
       const message = String(error.message ?? error);
       if (message.includes("Updating a page via the blocks endpoint unsupported")) {
-        skipped += 1;
+        skippedUnsupported += 1;
         warn(`skip archiving unsupported page block: ${child.id}`);
         continue;
       }
       throw error;
     }
   }
-  return { archived, skipped, total: children.length };
+  return { archived, skippedAlreadyArchived, skippedUnsupported, total: children.length };
 }
 
 async function archiveChildren(token, pageId) {
@@ -639,9 +666,10 @@ async function archiveChildren(token, pageId) {
   return archiveSpecificChildren(token, children);
 }
 
-async function appendChildren(token, pageId, blocks, afterId = null) {
+async function appendChildren(token, rootPageId, blocks, afterId = null) {
   let appended = 0;
   let anchor = afterId;
+  info(`append_root_page_id: ${rootPageId}`);
 
   for (let i = 0; i < blocks.length; i += MAX_CHILDREN_PER_APPEND) {
     const chunk = blocks.slice(i, i + MAX_CHILDREN_PER_APPEND);
@@ -650,7 +678,20 @@ async function appendChildren(token, pageId, blocks, afterId = null) {
       body.after = anchor;
     }
 
-    const response = await notionRequest(token, "PATCH", `/blocks/${pageId}/children`, body);
+    let response;
+    try {
+      response = await notionRequest(token, "PATCH", `/blocks/${rootPageId}/children`, body);
+    } catch (error) {
+      const message = String(error.message ?? error);
+      if (message.includes("Can't edit block that is archived")) {
+        console.error("ERROR: attempting to append under archived parent - bug");
+        throw new Error(
+          `append under archived parent (root_page_id=${rootPageId}, after=${anchor || "none"}): ${message}`
+        );
+      }
+      throw error;
+    }
+
     const lastAppendedId = response?.results?.[response.results.length - 1]?.id ?? null;
     if (lastAppendedId) {
       anchor = lastAppendedId;
@@ -977,7 +1018,8 @@ async function main() {
     synced: [],
     skipped_unchanged: [],
     unmappable: [],
-    locked_skipped_count: 0
+    locked_skipped_count: 0,
+    errors: []
   };
 
   const finalize = async (exitCode) => {
@@ -1164,6 +1206,13 @@ async function main() {
 
     if (!resolvedFile) {
       fail(`${repoPath} -> ${mappedPageId} (file not found)`);
+      report.errors.push({
+        file: repoPath,
+        page_id: pageId,
+        error_code: null,
+        category: "OTHER",
+        message: "file not found"
+      });
       syncFailures += 1;
       continue;
     }
@@ -1183,6 +1232,13 @@ async function main() {
       markdown = await readFile(resolvedFile.filePath, "utf8");
     } catch (error) {
       fail(`${repoPath} -> ${pageId} (read failed: ${String(error.message)})`);
+      report.errors.push({
+        file: resolvedFile.repoPath,
+        page_id: pageId,
+        error_code: null,
+        category: "OTHER",
+        message: `read failed: ${String(error.message).slice(0, 300)}`
+      });
       syncFailures += 1;
       continue;
     }
@@ -1218,13 +1274,16 @@ async function main() {
         const archiveStats =
           signedChildren.length > 0
             ? await archiveSpecificChildren(token, signedChildren)
-            : { archived: 0, skipped: 0, total: 0 };
+            : { archived: 0, skippedAlreadyArchived: 0, skippedUnsupported: 0, total: 0 };
         if (signedChildren.length === 0) {
           warn(`signature_mode: no signed blocks found for ${pageId}; appending signed payload`);
         }
+        info(
+          `archive_stats: root_page_id=${pageId} archived_count=${archiveStats.archived} skipped_already_archived_count=${archiveStats.skippedAlreadyArchived}`
+        );
         const appendedCount = await appendChildren(token, pageId, blocks);
         ok(
-          `${resolvedFile.repoPath} -> ${pageId} (mode=signature, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+          `${resolvedFile.repoPath} -> ${pageId} (mode=signature, archived=${archiveStats.archived}, skipped_already_archived=${archiveStats.skippedAlreadyArchived}, skipped_unsupported=${archiveStats.skippedUnsupported}, total=${archiveStats.total}, appended=${appendedCount})`
         );
         pushUnique(report.synced, resolvedFile.repoPath);
         continue;
@@ -1238,9 +1297,12 @@ async function main() {
             `bounded markers missing for ${pageId}; fallback to ${SYNC_MODE_FULL_REPLACE} (${MARKER_BEGIN} / ${MARKER_END})`
           );
           const archiveStats = await archiveSpecificChildren(token, children);
+          info(
+            `archive_stats: root_page_id=${pageId} archived_count=${archiveStats.archived} skipped_already_archived_count=${archiveStats.skippedAlreadyArchived}`
+          );
           const appendedCount = await appendChildren(token, pageId, blocks);
           ok(
-            `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+            `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped_already_archived=${archiveStats.skippedAlreadyArchived}, skipped_unsupported=${archiveStats.skippedUnsupported}, total=${archiveStats.total}, appended=${appendedCount})`
           );
           pushUnique(report.synced, resolvedFile.repoPath);
           continue;
@@ -1249,22 +1311,43 @@ async function main() {
         const betweenChildren = children.slice(markers.beginIndex + 1, markers.endIndex);
         const archiveStats = await archiveSpecificChildren(token, betweenChildren);
         const beginMarkerId = children[markers.beginIndex].id;
+        info(
+          `archive_stats: root_page_id=${pageId} archived_count=${archiveStats.archived} skipped_already_archived_count=${archiveStats.skippedAlreadyArchived}`
+        );
         const appendedCount = await appendChildren(token, pageId, blocks, beginMarkerId);
         ok(
-          `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_BOUNDED}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+          `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_BOUNDED}, archived=${archiveStats.archived}, skipped_already_archived=${archiveStats.skippedAlreadyArchived}, skipped_unsupported=${archiveStats.skippedUnsupported}, total=${archiveStats.total}, appended=${appendedCount})`
         );
         pushUnique(report.synced, resolvedFile.repoPath);
         continue;
       }
 
       const archiveStats = await archiveSpecificChildren(token, children);
+      info(
+        `archive_stats: root_page_id=${pageId} archived_count=${archiveStats.archived} skipped_already_archived_count=${archiveStats.skippedAlreadyArchived}`
+      );
       const appendedCount = await appendChildren(token, pageId, blocks);
       ok(
-        `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+        `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped_already_archived=${archiveStats.skippedAlreadyArchived}, skipped_unsupported=${archiveStats.skippedUnsupported}, total=${archiveStats.total}, appended=${appendedCount})`
       );
       pushUnique(report.synced, resolvedFile.repoPath);
     } catch (error) {
-      fail(`${resolvedFile.repoPath} -> ${pageId} (${String(error.message)})`);
+      const parsed = classifySyncError(error);
+      report.errors.push({
+        file: resolvedFile.repoPath,
+        page_id: pageId,
+        error_code: parsed.errorCode,
+        category: parsed.category,
+        message: parsed.message.slice(0, 400)
+      });
+
+      if (parsed.category === "PERMISSION") {
+        fail(
+          `${resolvedFile.repoPath} -> ${pageId} (PERMISSION_OR_NOT_FOUND: Notion integration likely lacks access. Share the target page with the integration. ${parsed.message})`
+        );
+      } else {
+        fail(`${resolvedFile.repoPath} -> ${pageId} (${parsed.message})`);
+      }
       syncFailures += 1;
     }
   }
