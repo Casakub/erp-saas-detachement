@@ -455,6 +455,11 @@ function toCanonicalPageId(pageId) {
     return null;
   }
 
+  const variantNibble = clean[16];
+  if (!/[89ab]/i.test(variantNibble)) {
+    return null;
+  }
+
   return `${clean.slice(0, 8)}-${clean.slice(8, 12)}-${clean.slice(12, 16)}-${clean.slice(16, 20)}-${clean.slice(20)}`;
 }
 
