@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "sync (default) or resolve_ids"
+        required: false
+        default: sync
+        type: choice
+        options:
+          - sync
+          - resolve_ids
 
 jobs:
   notion-sync:
@@ -28,8 +37,21 @@ jobs:
           BASE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
           NOTION_SYNC_MODE: full_replace
+          MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'sync' }}
         run: |
           set -euo pipefail
+          mode="${MODE:-sync}"
+          echo "INFO: mode=${mode}"
+
+          if [ "${mode}" = "resolve_ids" ]; then
+            if [ -z "${NOTION_TOKEN:-}" ]; then
+              echo "ERROR: NOTION_TOKEN secret is required for resolve_ids mode."
+              exit 1
+            fi
+            node scripts/notion_resolve_ids.mjs --json-out /tmp/notion_resolve_ids_report.json
+            exit 0
+          fi
+
           if [ -z "${NOTION_TOKEN:-}" ]; then
             echo "INFO: NOTION_TOKEN secret is not configured; skipping Notion sync."
             exit 0
@@ -61,3 +83,11 @@ jobs:
           fi
 
           BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" node scripts/notion_sync.mjs
+
+      - name: Upload resolve-ids report
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'resolve_ids' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-resolve-ids-report
+          path: /tmp/notion_resolve_ids_report.json
+          if-no-files-found: error
