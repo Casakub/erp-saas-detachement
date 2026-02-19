@@ -14,6 +14,39 @@ required_files=(
 
 has_fail=0
 
+resolve_required_file() {
+  local expected="$1"
+  local dir
+  local base
+  local candidate
+
+  if [[ -f "$expected" ]]; then
+    echo "$expected"
+    return 0
+  fi
+
+  dir="$(dirname "$expected")"
+  base="$(basename "$expected" .md)"
+
+  candidate="$(
+    find "$dir" -maxdepth 1 -type f -name "*.md" 2>/dev/null \
+      | while IFS= read -r file; do
+          local_name="$(basename "$file")"
+          if [[ "$local_name" == "$base "*".md" ]]; then
+            echo "$file"
+          fi
+        done \
+      | head -n 1
+  )"
+
+  if [[ -n "$candidate" ]]; then
+    echo "$candidate"
+    return 0
+  fi
+
+  return 1
+}
+
 check_placeholders() {
   local file="$1"
   local markers=("<à compléter>" "<lien ou chemin>" "TBD" "LOCK REQUIRED" "PLACEHOLDER")
@@ -30,23 +63,24 @@ check_placeholders() {
   echo "OK: placeholders-clean - $file"
 }
 
-for file in "${required_files[@]}"; do
-  if [[ ! -f "$file" ]]; then
-    echo "ERROR: $file - missing file"
+for required_file in "${required_files[@]}"; do
+  resolved_file=""
+  if ! resolved_file="$(resolve_required_file "$required_file")"; then
+    echo "ERROR: $required_file - missing file"
     has_fail=1
     continue
   fi
-  echo "OK: exists - $file"
+  echo "OK: exists - $resolved_file"
 
-  line_count="$(wc -l < "$file" | tr -d '[:space:]')"
+  line_count="$(wc -l < "$resolved_file" | tr -d '[:space:]')"
   if [[ "$line_count" -lt 20 ]]; then
-    echo "ERROR: $file - line count $line_count < 20"
+    echo "ERROR: $resolved_file - line count $line_count < 20"
     has_fail=1
   else
-    echo "OK: line-count($line_count) - $file"
+    echo "OK: line-count($line_count) - $resolved_file"
   fi
 
-  check_placeholders "$file"
+  check_placeholders "$resolved_file"
 done
 
 if [[ "$has_fail" -eq 0 ]]; then
