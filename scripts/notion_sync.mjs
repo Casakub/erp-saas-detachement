@@ -521,15 +521,21 @@ async function appendChildren(token, pageId, blocks, afterId = null) {
 }
 
 function loadChangedFiles() {
-  const baseSha = process.env.BASE_SHA || process.env.GITHUB_EVENT_BEFORE || "";
-  const headSha = process.env.HEAD_SHA || process.env.GITHUB_SHA || "";
+  const eventName = String(process.env.GITHUB_EVENT_NAME || process.env.EVENT_NAME || "").trim();
+  const baseSha = String(process.env.BASE_SHA || process.env.GITHUB_EVENT_BEFORE || "").trim();
+  const headSha = String(process.env.HEAD_SHA || process.env.GITHUB_SHA || "").trim();
+
+  info(`event_name: ${eventName || "unknown"}`);
+  info(`base_sha: ${baseSha || "(empty)"}`);
+  info(`head_sha: ${headSha || "(empty)"}`);
 
   const invalidBase = baseSha.length === 0 || /^0+$/.test(baseSha);
   const invalidHead = headSha.length === 0 || /^0+$/.test(headSha);
 
   if (invalidBase || invalidHead) {
-    info("git diff range unavailable; fallback to full mapping sync");
-    return null;
+    info("changed_files_count: n/a");
+    info("diff not available, full mapping sync");
+    return { changedFiles: null, eventName, baseSha, headSha };
   }
 
   try {
@@ -543,11 +549,13 @@ function loadChangedFiles() {
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
-    info(`git diff range detected (${baseSha}..${headSha}) -> ${files.length} changed file(s)`);
-    return files;
+    info(`changed_files_count: ${files.length}`);
+    return { changedFiles: files, eventName, baseSha, headSha };
   } catch (error) {
-    info(`git diff failed (${String(error.message)}); fallback to full mapping sync`);
-    return null;
+    info(`git diff failed (${String(error.message)})`);
+    info("changed_files_count: n/a");
+    info("diff not available, full mapping sync");
+    return { changedFiles: null, eventName, baseSha, headSha };
   }
 }
 
@@ -697,16 +705,21 @@ async function main() {
     process.exit(0);
   }
 
-  const changedFiles = loadChangedFiles();
+  info(`mapped_files_considered: ${mappingEntries.length}`);
+
+  const changedFilesContext = loadChangedFiles();
   let targets = mappingEntries;
 
-  if (changedFiles !== null) {
-    const changedSet = new Set(changedFiles.map((item) => normalizePathForMatch(item)));
+  if (changedFilesContext.changedFiles !== null) {
+    const changedSet = new Set(changedFilesContext.changedFiles.map((item) => normalizePathForMatch(item)));
     targets = mappingEntries.filter(([repoPath]) => changedSet.has(normalizePathForMatch(repoPath)));
+    info(`mapped_files_changed_count: ${targets.length}`);
+  } else {
+    info(`mapped_files_changed_count: ${targets.length} (full mapping sync)`);
   }
 
   if (targets.length === 0) {
-    info("no mapped file changed in this push; nothing to sync");
+    info("no mapped files changed");
     process.exit(0);
   }
 

@@ -34,4 +34,30 @@ jobs:
             echo "INFO: NOTION_TOKEN secret is not configured; skipping Notion sync."
             exit 0
           fi
-          node scripts/notion_sync.mjs
+
+          resolved_head_sha="${HEAD_SHA:-}"
+          if [ -z "${resolved_head_sha}" ]; then
+            resolved_head_sha="$(git rev-parse HEAD 2>/dev/null || true)"
+          fi
+
+          resolved_base_sha="${BASE_SHA:-}"
+          if [ -z "${resolved_base_sha}" ] || [ "${resolved_base_sha}" = "0000000000000000000000000000000000000000" ]; then
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              resolved_base_sha="$(git rev-parse HEAD^)"
+            else
+              resolved_base_sha=""
+            fi
+          fi
+
+          if [ -n "${resolved_base_sha}" ]; then
+            echo "INFO: workflow BASE_SHA resolved"
+          else
+            echo "INFO: workflow BASE_SHA unresolved (diff may fallback to full mapping sync)"
+          fi
+          if [ -n "${resolved_head_sha}" ]; then
+            echo "INFO: workflow HEAD_SHA resolved"
+          else
+            echo "INFO: workflow HEAD_SHA unresolved"
+          fi
+
+          BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" node scripts/notion_sync.mjs
