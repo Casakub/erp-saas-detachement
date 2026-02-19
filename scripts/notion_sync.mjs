@@ -623,7 +623,7 @@ function loadChangedFiles() {
   }
 
   try {
-    const output = execFileSync("git", ["diff", "--name-only", baseSha, headSha], {
+    const output = execFileSync("git", ["-c", "core.quotepath=false", "diff", "--name-only", baseSha, headSha], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"]
     });
