@@ -24,8 +24,16 @@ function fail(message) {
   console.error(`FAIL: ${message}`);
 }
 
+function warn(message) {
+  console.warn(`WARN: ${message}`);
+}
+
 function normalizePathForMatch(input) {
   return String(input).replaceAll("\\", "/").normalize("NFC");
+}
+
+function normalizePathWithForm(input, form = "NFC") {
+  return String(input).replaceAll("\\", "/").normalize(form);
 }
 
 function splitText(text, chunkSize = MAX_RICH_TEXT_CHUNK) {
@@ -466,6 +474,110 @@ function loadChangedFiles() {
   }
 }
 
+let gitTrackedFilesCache = null;
+
+function loadGitTrackedFiles() {
+  if (gitTrackedFilesCache !== null) {
+    return gitTrackedFilesCache;
+  }
+
+  try {
+    const output = execFileSync("git", ["-c", "core.quotepath=false", "ls-files"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    gitTrackedFilesCache = output
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  } catch (error) {
+    info(`git ls-files failed (${String(error.message)}); runtime path fallback disabled`);
+    gitTrackedFilesCache = [];
+  }
+
+  return gitTrackedFilesCache;
+}
+
+function pathVariants(value) {
+  const raw = String(value).replaceAll("\\", "/");
+  return [raw, raw.normalize("NFC"), raw.normalize("NFD")];
+}
+
+function findTrackedFileByUnicode(mappedPath, trackedFiles) {
+  const mappedVariants = new Set(pathVariants(mappedPath));
+
+  for (const candidate of trackedFiles) {
+    const candidateVariants = pathVariants(candidate);
+    if (candidateVariants.some((variant) => mappedVariants.has(variant))) {
+      return candidate;
+    }
+  }
+
+  const mappedBasename = path.posix.basename(String(mappedPath).replaceAll("\\", "/"));
+  const basenameVariants = new Set(pathVariants(mappedBasename));
+  const basenameMatches = trackedFiles.filter((candidate) => {
+    const basename = path.posix.basename(String(candidate).replaceAll("\\", "/"));
+    return pathVariants(basename).some((variant) => basenameVariants.has(variant));
+  });
+
+  if (basenameMatches.length > 0) {
+    return basenameMatches.sort((a, b) => a.localeCompare(b))[0];
+  }
+
+  return null;
+}
+
+function findTrackedFileByPageId(mappedPageId, trackedFiles) {
+  const cleanId = String(mappedPageId).replace(/-/g, "").trim().toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(cleanId)) {
+    return null;
+  }
+
+  return (
+    trackedFiles.find((candidate) => {
+      const normalized = String(candidate).toLowerCase();
+      return normalized.endsWith(".md") && normalized.includes(cleanId);
+    }) ?? null
+  );
+}
+
+function resolveMappedFilePath(repoPath, mappedPageId, trackedFiles) {
+  const directPath = path.resolve(process.cwd(), repoPath);
+  if (existsSync(directPath)) {
+    return {
+      method: "direct",
+      repoPath,
+      filePath: directPath
+    };
+  }
+
+  const unicodeMatch = findTrackedFileByUnicode(repoPath, trackedFiles);
+  if (unicodeMatch) {
+    const unicodePath = path.resolve(process.cwd(), unicodeMatch);
+    if (existsSync(unicodePath)) {
+      return {
+        method: "unicode",
+        repoPath: unicodeMatch,
+        filePath: unicodePath
+      };
+    }
+  }
+
+  const idMatch = findTrackedFileByPageId(mappedPageId, trackedFiles);
+  if (idMatch) {
+    const idPath = path.resolve(process.cwd(), idMatch);
+    if (existsSync(idPath)) {
+      return {
+        method: "page_id",
+        repoPath: idMatch,
+        filePath: idPath
+      };
+    }
+  }
+
+  return null;
+}
+
 async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
@@ -520,13 +632,14 @@ async function main() {
   info(`mode: ${dryRun ? "dry-run" : "live"}`);
   info(`target pages: ${targets.length}`);
 
+  const trackedFiles = loadGitTrackedFiles();
   let syncFailures = 0;
 
   for (const [repoPath, mappedPageId] of targets) {
-    const filePath = path.resolve(process.cwd(), repoPath);
     const pageId = toCanonicalPageId(mappedPageId);
+    const resolvedFile = resolveMappedFilePath(repoPath, mappedPageId, trackedFiles);
 
-    if (!existsSync(filePath)) {
+    if (!resolvedFile) {
       fail(`${repoPath} -> ${mappedPageId} (file not found)`);
       syncFailures += 1;
       continue;
@@ -538,9 +651,13 @@ async function main() {
       continue;
     }
 
+    if (resolvedFile.method !== "direct") {
+      warn(`path not found, resolved via ${resolvedFile.method}: ${repoPath} -> ${resolvedFile.repoPath}`);
+    }
+
     let markdown;
     try {
-      markdown = await readFile(filePath, "utf8");
+      markdown = await readFile(resolvedFile.filePath, "utf8");
     } catch (error) {
       fail(`${repoPath} -> ${pageId} (read failed: ${String(error.message)})`);
       syncFailures += 1;
@@ -548,20 +665,20 @@ async function main() {
     }
 
     const blocks = markdownToBlocks(markdown);
-    info(`file -> page: ${repoPath} -> ${pageId}`);
+    info(`file -> page: ${resolvedFile.repoPath} -> ${pageId}`);
     info(`blocks_count: ${blocks.length}`);
 
     if (dryRun) {
-      ok(`${repoPath} -> ${pageId} (dry-run)`);
+      ok(`${resolvedFile.repoPath} -> ${pageId} (dry-run)`);
       continue;
     }
 
     try {
       const archivedCount = await archiveChildren(token, pageId);
       const appendedCount = await appendChildren(token, pageId, blocks);
-      ok(`${repoPath} -> ${pageId} (archived=${archivedCount}, appended=${appendedCount})`);
+      ok(`${resolvedFile.repoPath} -> ${pageId} (archived=${archivedCount}, appended=${appendedCount})`);
     } catch (error) {
-      fail(`${repoPath} -> ${pageId} (${String(error.message)})`);
+      fail(`${resolvedFile.repoPath} -> ${pageId} (${String(error.message)})`);
       syncFailures += 1;
     }
   }
