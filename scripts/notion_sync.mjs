@@ -784,6 +784,9 @@ async function main() {
   info(`excluded_locked_count: ${candidateSelection.excludedLockedFiles.length}`);
 
   if (candidateSelection.changedMdFiles.length === 0) {
+    info("mappable_count (map json): 0");
+    info("mappable_count (auto id): 0");
+    info("unmappable_count: 0");
     info("no changed markdown files");
     process.exit(0);
   }
