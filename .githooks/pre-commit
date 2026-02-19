@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+if command -v git >/dev/null 2>&1; then
+  GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "$GIT_ROOT" ]]; then
+    ROOT_DIR="$GIT_ROOT"
+  fi
+fi
+
+cd "$ROOT_DIR" || exit 1
+
+run_check() {
+  local cmd="$1"
+  local fail_msg="$2"
+
+  if ! eval "$cmd"; then
+    echo ""
+    echo "pre-commit bloqué: $fail_msg"
+    echo "Corrige les points KO puis recommence le commit."
+    exit 1
+  fi
+}
+
+run_check "bash scripts/run_doc_check.sh" "bash scripts/run_doc_check.sh a échoué."
+run_check "bash scripts/substrate_check.sh" "bash scripts/substrate_check.sh a échoué."
+run_check "bash scripts/notion_section10_check.sh" "bash scripts/notion_section10_check.sh a échoué."
+run_check "bash scripts/notion_lots_modules_check.sh" "bash scripts/notion_lots_modules_check.sh a échoué."
+
+exit 0

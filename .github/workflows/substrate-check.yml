@@ -1,0 +1,46 @@
+name: substrate-check
+
+on:
+  pull_request:
+    paths:
+      - "AGENTS.md"
+      - "scripts/substrate_check.sh"
+      - "backend/**"
+      - "ERP Détachement europe/SECTION 2 — PROMPTS IA BACKEND (PAR MODULE) (DEV) 308688d6a59680ebb64fe4ddb4223b41.md"
+      - "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/*.md"
+      - "ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 309688d6a59680f9b1a2c3d4e5f60789.md"
+      - "ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md"
+      - "ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11.A — OPENAPI EXECUTION SCHEMAS (ANNEXE) 309688d6a59680c1b2d3e4f5a6b7c8d9.md"
+      - ".github/workflows/substrate-check.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "AGENTS.md"
+      - "scripts/substrate_check.sh"
+      - "backend/**"
+      - "ERP Détachement europe/SECTION 2 — PROMPTS IA BACKEND (PAR MODULE) (DEV) 308688d6a59680ebb64fe4ddb4223b41.md"
+      - "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/*.md"
+      - "ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 309688d6a59680f9b1a2c3d4e5f60789.md"
+      - "ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md"
+      - "ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11.A — OPENAPI EXECUTION SCHEMAS (ANNEXE) 309688d6a59680c1b2d3e4f5a6b7c8d9.md"
+      - ".github/workflows/substrate-check.yml"
+  workflow_dispatch:
+
+jobs:
+  substrate-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run substrate check
+        run: |
+          set -euo pipefail
+          chmod +x scripts/substrate_check.sh
+          ./scripts/substrate_check.sh

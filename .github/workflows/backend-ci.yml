@@ -1,0 +1,75 @@
+name: backend-ci
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "scripts/doc_check.sh"
+      - "scripts/run_doc_check.sh"
+      - "ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 309688d6a59680f9b1a2c3d4e5f60789.md"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "scripts/doc_check.sh"
+      - "scripts/run_doc_check.sh"
+  workflow_dispatch:
+
+jobs:
+  backend-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Verify backend package and required scripts
+        run: |
+          set -euo pipefail
+          node -e "const fs=require('fs'); const p='backend/package.json'; if(!fs.existsSync(p)){console.error('Missing backend/package.json'); process.exit(1)}; const pkg=JSON.parse(fs.readFileSync(p,'utf8')); const req=['lint','typecheck','test:ci']; const missing=req.filter((k)=>!(pkg.scripts&&pkg.scripts[k])); if(missing.length){console.error('Missing npm scripts: '+missing.join(', ')); process.exit(1)};"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm --prefix backend ci
+
+      - name: Lint
+        run: |
+          set -euo pipefail
+          npm --prefix backend run lint
+
+      - name: Typecheck
+        run: |
+          set -euo pipefail
+          npm --prefix backend run typecheck
+
+      - name: Reset database
+        run: |
+          set -euo pipefail
+          supabase db reset
+
+      - name: Run backend tests
+        run: |
+          set -euo pipefail
+          npm --prefix backend run test:ci
+
+      - name: Check schema drift
+        run: |
+          set -euo pipefail
+          supabase db diff
+
+      - name: Run doc check
+        run: |
+          set -euo pipefail
+          bash scripts/run_doc_check.sh
