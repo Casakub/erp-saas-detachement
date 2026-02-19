@@ -2,68 +2,64 @@
 
 - Statut: DRAFT
 - Type: DERIVED / DRAFT — does not override LOCKED V1
-- Portee: patch contractuel RBAC pour les surfaces OpenAPI V1.2 proposees (sans logique metier).
+- Portee: formaliser la matrice RBAC pour les surfaces OpenAPI V1.2.1 (sans logique metier).
 
 ## Sources de reference (lecture seule)
 
-- RBAC LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 308688d6a596802d8e81c1623900db41.md`
+- RBAC LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 308688d6a596802d8e81c1623900db41.md`
 - OpenAPI V1.2 patch DRAFT: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/2 11 — OPENAPI V1.2 (PATCH) — SURFACES MANQUANTES 31b688d6a59680d4a1b2c3d4e5f60701.md`
-- OpenAPI LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11 — OPENAPI V1 (PARCOURS MVP) — 1 → 3 → 2 308688d6a596801dad76e1c4a1a96c02.md`
 
-## Scope du patch RBAC V1.2
+## Decisions OWNER appliquees (V1.2.1)
 
-Ce patch ajoute des lignes RBAC pour les endpoints proposes en V1.2:
-- Auth/session + identity (`/v1/auth/*`, `/v1/me`, `/v1/users*`, `/v1/tenant-settings`).
-- Upload fichiers generique (`/v1/files`, `/v1/files/{file_id}:link`).
-- Worker check events (`/v1/missions/{mission_id}/worker-check-events`).
+1. Auth est geree par Supabase Auth; aucune route auth custom dans cette matrice.
+2. Surface fichiers standardisee: `/v1/files` + `/v1/file-links`.
+3. Check-in/out standardise via endpoint unique: `POST /v1/check-events`.
 
-Toutes les lignes ci-dessous restent conditionnelles a l'arbitrage owner sur les endpoints finaux.
+## Principes RBAC du patch
 
-## Matrice RBAC V1.2 (PATCH) — OWNER ARBITRATION REQUIRED
+- Tous les droits sont tenant-scoped.
+- Aucune action cross-tenant n'est autorisee.
+- Les restrictions d'ownership (mes propres fichiers, mes propres missions) sont notees comme contraintes contractuelles.
+- Ce patch reste DRAFT tant que non valide par owner.
 
-Valeurs:
-- `✅` autorise
-- `❌` interdit
-- `ARBITRATION` choix final owner requis
+## Endpoint -> Allowed roles (V1.2.1)
 
-| Endpoint | tenant_admin | agency_user | consultant | client_user | worker | system | Notes |
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker | system | Forbidden / Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| POST /v1/auth/login | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Authentification utilisateur; compte actif requis. |
-| POST /v1/auth/logout | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Cloture session utilisateur courant. |
-| POST /v1/auth/refresh | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Rotation token utilisateur courant. |
-| POST /v1/auth/password-reset/request | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Demande reset sans elevation privilege. |
-| POST /v1/auth/password-reset/confirm | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Confirmation reset scope utilisateur courant. |
-| GET /v1/me | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Lecture profil courant uniquement. |
-| GET /v1/users | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | Liste users du tenant; client/worker exclus. |
-| POST /v1/users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Creation user tenant; arbitration sur consultant. |
-| PATCH /v1/users/{user_id} | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Edition user tenant; pas de cross-tenant. |
-| PATCH /v1/users/{user_id}/status | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Activation/desactivation; operation sensible. |
-| PATCH /v1/users/{user_id}/role | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Changement role reserve tenant_admin. |
-| GET /v1/tenant-settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Lecture settings tenant interne agence. |
-| PATCH /v1/tenant-settings | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Mutation settings reserve tenant_admin. |
-| POST /v1/files | ✅ | ✅ | ARBITRATION | ❌ | ❌ | ❌ | Upload generique M9; consultant a arbitrer par usage metier. |
-| POST /v1/files/{file_id}:link | ✅ | ✅ | ARBITRATION | ❌ | ❌ | ❌ | Liaison fichier-entite; consultant a arbitrer. |
-| POST /v1/missions/{mission_id}/worker-check-events | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | worker limite a son propre perimetre mission; cross-tenant interdit. |
+| GET /v1/me | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Profil courant uniquement. |
+| GET /v1/users | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Liste users reservee admin tenant. |
+| POST /v1/users | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Creation user reservee admin tenant. |
+| PATCH /v1/users/{user_id} | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Edition user reservee admin tenant. |
+| POST /v1/users/{user_id}:deactivate | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Action administrative sensible. |
+| POST /v1/users/{user_id}:reactivate | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Action administrative sensible. |
+| GET /v1/tenant-settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Lecture settings: admin + operationnel agence. |
+| PATCH /v1/tenant-settings | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | Ecriture settings reservee admin tenant. |
+| POST /v1/files | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | Upload tenant-scoped; consultant/worker limites au perimetre autorise. |
+| GET /v1/files/{file_id} | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | Acces conditionne au lien valide (`file_links`) et au scope. |
+| POST /v1/files/{file_id}:soft-delete | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Soft delete reserve admin + operationnel agence. |
+| POST /v1/file-links | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | OWNER ARBITRATION REQUIRED: borne fine worker/consultant (ownership strict). |
+| DELETE /v1/file-links/{file_link_id} | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | Suppression lien reservee admin + operationnel agence. |
+| POST /v1/check-events | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | Worker autorise sur ses missions uniquement; no cross-tenant. |
 
-## Forbidden actions (multi-tenant strict)
+## Forbidden actions (explicites)
 
-- Interdiction absolue d'acces cross-tenant pour tous les roles.
-- `client_user` et `worker` ne peuvent pas appeler les endpoints d'administration users/settings.
-- `system` ne peut pas utiliser ces endpoints utilisateur/API front; il reste limite aux operations internes explicitement listees dans RBAC LOCKED.
-- Toute tentative hors matrice doit retourner `403` et produire un audit log.
+- `client_user`: aucun upload, aucun linking, aucun check-event.
+- `worker`: aucune administration users/settings; aucun delete de file-link.
+- `consultant`: aucune administration users/settings; aucun check-event.
+- `agency_user`: aucune administration users (create/update/deactivate/reactivate).
+- `system`: non scope dans ce patch (aucune route ci-dessus).
 
-## Coherence avec RBAC LOCKED
+## Notes de coherence
 
-- Pattern conserve: operations critiques reservees a `tenant_admin` et partiellement `agency_user` (voir RBAC LOCKED, sections matrices endpoint).
-- Pattern conserve: `client_user` et `worker` en lecture/usage limite, sans ecriture administrative.
-- Ce document n'ecrase pas RBAC LOCKED V1; il prepare uniquement un patch V1.2 derive.
+- Les chemins RBAC correspondent exactement au patch OpenAPI V1.2.1.
+- Les restrictions d'ownership sont contractuelles, sans detail d'implementation technique dans ce document.
+- En cas de conflit avec RBAC LOCKED V1, RBAC LOCKED V1 prime tant que ce patch n'est pas valide.
 
 ## What remains blocked
 
-- OWNER ARBITRATION REQUIRED: validation finale des colonnes `ARBITRATION` et des droits consultant sur `/v1/files*`.
-- OWNER ARBITRATION REQUIRED: confirmation perimetre `agency_user` sur `/v1/users` creation/edition.
-- OWNER ARBITRATION REQUIRED: validation finale de la route check-events retenue (endpoint unique vs alternatives).
+- OWNER ARBITRATION REQUIRED: niveau exact de droit consultant/worker sur `POST /v1/file-links` (cas limites ownership).
+- OWNER ARBITRATION REQUIRED: besoin eventuel d'ouvrir `GET /v1/users` a `agency_user` (actuellement refuse par choix conservateur).
 
 ## Mini-changelog
 
-- 2026-02-19: creation patch RBAC V1.2 DRAFT pour surfaces OpenAPI manquantes, sans modification des contrats LOCKED.
+- 2026-02-19: V1.2.1 owner decisions appliques sur la matrice RBAC des nouvelles surfaces, sans modification LOCKED.

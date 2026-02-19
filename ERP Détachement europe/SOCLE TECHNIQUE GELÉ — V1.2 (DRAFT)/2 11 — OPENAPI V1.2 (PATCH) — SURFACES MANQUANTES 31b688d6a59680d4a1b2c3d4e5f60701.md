@@ -2,367 +2,238 @@
 
 - Statut: DRAFT
 - Type: DERIVED / DRAFT — does not override LOCKED V1
-- Portee: patch contractuel de surfaces OpenAPI manquantes identifiees par audit (sans logique metier).
+- Portee: formaliser les surfaces contractuelles manquantes V1.2.1, sans logique metier.
 
 ## Sources de reference (lecture seule)
 
-- Base OpenAPI LOCKED: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11 — OPENAPI V1 (PARCOURS MVP) — 1 → 3 → 2 308688d6a596801dad76e1c4a1a96c02.md`
-- Base Events LOCKED: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md`
-- Base RBAC LOCKED: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 308688d6a596802d8e81c1623900db41.md`
-- Base DB LOCKED: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 9 - Schéma DB V1 1 (V1 + Patch) 308688d6a5968011b4f1f037d9e623f3.md`
+- OpenAPI LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11 — OPENAPI V1 (PARCOURS MVP) — 1 → 3 → 2 308688d6a596801dad76e1c4a1a96c02.md`
+- Events LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md`
+- RBAC LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 308688d6a596802d8e81c1623900db41.md`
+- DB LOCKED V1: `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 9 - Schéma DB V1 1 (V1 + Patch) 308688d6a5968011b4f1f037d9e623f3.md`
 
-## Scope du patch V1.2
+## Decisions OWNER appliquees (V1.2.1)
 
-Ce patch couvre uniquement les gaps contractuels suivants:
-- Lot 1: surfaces Auth / Users / Me / Tenant settings absentes en 2.11 LOCKED.
-- Lot 2: surface generique upload fichiers absente en 2.11 LOCKED (seul `/v1/clients/{client_id}/documents` existe).
-- Lot 3: surface API check-in/check-out absente en 2.11 LOCKED (event et DB existent deja).
+1. Auth via Supabase Auth: aucun endpoint `/v1/auth/login` custom.
+2. Files: endpoint generique `/v1/files` + endpoints de linking `file_links`.
+3. Check events: endpoint unique `POST /v1/check-events` avec `event_type` enum `check_in|check_out`.
+
+## Auth model (Supabase)
+
+- L'authentification est assuree par Supabase Auth.
+- L'API metier consomme un JWT valide.
+- Toutes les routes ci-dessous exigent `Authorization: Bearer`.
+- Le patch V1.2.1 ne cree pas d'endpoints auth custom.
 
 ## Patch summary
 
-Surfaces OpenAPI candidates (pending owner arbitration):
-- Auth/session + identity:
-- `POST /v1/auth/login`
-- `POST /v1/auth/logout`
-- `POST /v1/auth/refresh`
-- `POST /v1/auth/password-reset/request`
-- `POST /v1/auth/password-reset/confirm`
-- `GET /v1/me`
-- `GET /v1/users`
-- `POST /v1/users`
-- `PATCH /v1/users/{user_id}`
-- `PATCH /v1/users/{user_id}/status`
-- `PATCH /v1/users/{user_id}/role`
-- `GET /v1/tenant-settings`
-- `PATCH /v1/tenant-settings`
-- Files:
-- `POST /v1/files`
-- `POST /v1/files/{file_id}:link`
-- Worker check events:
-- `POST /v1/missions/{mission_id}/worker-check-events`
+| Domaine | Endpoints V1.2.1 |
+| --- | --- |
+| Identity / tenant | `GET /v1/me`, `GET /v1/users`, `POST /v1/users`, `PATCH /v1/users/{user_id}`, `POST /v1/users/{user_id}:deactivate`, `POST /v1/users/{user_id}:reactivate`, `GET /v1/tenant-settings`, `PATCH /v1/tenant-settings` |
+| Files | `POST /v1/files`, `GET /v1/files/{file_id}`, `POST /v1/files/{file_id}:soft-delete`, `POST /v1/file-links`, `DELETE /v1/file-links/{file_link_id}` |
+| Worker checks | `POST /v1/check-events` |
 
-Schema stubs ajoutes:
-- `AuthLoginRequest`, `AuthLoginResponse`
-- `AuthRefreshRequest`, `AuthRefreshResponse`
-- `PasswordResetRequestCreate`, `PasswordResetConfirmRequest`, `PasswordResetConfirmResponse`
-- `MeResponse`
-- `UserListItem`, `UserCreateRequest`, `UserCreateResponse`, `UserUpdateRequest`, `UserStatusPatchRequest`, `UserRolePatchRequest`
-- `TenantSettingsResponse`, `TenantSettingsPatchRequest`
-- `FileUploadRequest`, `FileUploadResponse`, `FileLinkRequest`, `FileLinkResponse`
-- `WorkerCheckEventCreateRequest`, `WorkerCheckEventCreateResponse`
+## Endpoint definitions (contract surfaces)
 
-## Arbitration block (OWNER ARBITRATION REQUIRED)
+### 1) GET `/v1/me`
 
-### A) Auth/session + me + users + tenant-settings
-
-Option A1 (RECOMMENDED):
-- Groupe `auth` dedie + endpoints explicites identity/settings:
-- `/v1/auth/*`, `/v1/me`, `/v1/users*`, `/v1/tenant-settings`.
-- Justification: coherent avec references documentaires existantes et nomenclature V1 (`/v1/...`).
-
-Option A2:
-- Groupe `sessions` dedie:
-- `/v1/sessions:*`, `/v1/account/me`, `/v1/tenant-settings`.
-
-Option A3:
-- Groupe IAM:
-- `/v1/iam/sessions:*`, `/v1/iam/users*`, `/v1/iam/tenant-settings`.
-
-Decision: OWNER ARBITRATION REQUIRED.
-
-### B) Files upload generique
-
-Option B1 (RECOMMENDED):
-- `POST /v1/files` + `POST /v1/files/{file_id}:link`.
-- Justification: aligne avec tables `files` et `file_links` en 2.9 (`...2 9 ...:607`, `...2 9 ...:621`).
-
-Option B2:
-- `POST /v1/uploads` puis liens sur endpoints metiers existants.
-
-Option B3:
-- Pas de surface generique; uniquement endpoints metiers (`/clients/{id}/documents`, etc.).
-
-Decision: OWNER ARBITRATION REQUIRED.
-
-### C) Worker check events (check-in/out)
-
-Option C1 (RECOMMENDED):
-- Endpoint unique `POST /v1/missions/{mission_id}/worker-check-events` avec `event_type` enum `check_in|check_out`.
-- Justification: aligne avec 2.10 `WorkerCheckEventRecorded` et payload `event_type` (`...2 10 ...:255`, `...2 10 ...:260`) et 2.9 `worker_check_events` (`...2 9 ...:355`).
-
-Option C2:
-- Deux endpoints action:
-- `POST /v1/missions/{mission_id}:check-in`
-- `POST /v1/missions/{mission_id}:check-out`
-
-Option C3:
-- Endpoint worker-centrique `POST /v1/workers/{worker_id}/check-events`.
-
-Decision: OWNER ARBITRATION REQUIRED.
-
-## Proposed path definitions (RECOMMENDED candidate set, non-final)
-
-### Auth / Session
-
-#### POST `/v1/auth/login`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: ouverture session.
-- Request schema: `AuthLoginRequest`
-- Response schema: `AuthLoginResponse`
-- Events: aucun event obligatoire ajoute dans ce patch.
-
-#### POST `/v1/auth/logout`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: cloture session.
-- Request schema: `AuthLogoutRequest` (minimal)
-- Response schema: `AuthLogoutResponse` (minimal)
-- Events: aucun event obligatoire ajoute dans ce patch.
-
-#### POST `/v1/auth/refresh`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: rotation token.
-- Request schema: `AuthRefreshRequest`
-- Response schema: `AuthRefreshResponse`
-
-#### POST `/v1/auth/password-reset/request`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: initier reset mot de passe.
-- Request schema: `PasswordResetRequestCreate`
-- Response schema: `PasswordResetRequestCreated`
-
-#### POST `/v1/auth/password-reset/confirm`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: confirmer reset mot de passe.
-- Request schema: `PasswordResetConfirmRequest`
-- Response schema: `PasswordResetConfirmResponse`
-
-### Identity / Users / Tenant settings
-
-#### GET `/v1/me`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: profil utilisateur courant.
+- Request schema: none
 - Response schema: `MeResponse`
+- Related Events (2.10): none (read route)
 
-#### GET `/v1/users`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: liste users du tenant.
-- Query: `limit`, `cursor`.
+### 2) GET `/v1/users`
+
+- Request schema: none
 - Response schema: `UserListResponse`
+- Related Events (2.10): none (read route)
 
-#### POST `/v1/users`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: creation user tenant.
+### 3) POST `/v1/users`
+
 - Request schema: `UserCreateRequest`
 - Response schema: `UserCreateResponse`
-- Events alignes: `UserCreated` existe deja en 2.10 (`...2 10 ...:90`).
+- Related Events (2.10): `UserCreated`
 
-#### PATCH `/v1/users/{user_id}`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: edition user.
-- Request schema: `UserUpdateRequest`
-- Response schema: `UserUpdateResponse`
+### 4) PATCH `/v1/users/{user_id}`
 
-#### PATCH `/v1/users/{user_id}/status`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: activation/desactivation user.
-- Request schema: `UserStatusPatchRequest`
-- Response schema: `UserStatusPatchResponse`
+- Request schema: `UserPatchRequest`
+- Response schema: `UserResponse`
+- Related Events (2.10): `UserRoleChanged` si mutation de role incluse.
+- OWNER ARBITRATION REQUIRED: confirmer si `role_type` est autorise via ce endpoint ou reserve a une surface dediee.
 
-#### PATCH `/v1/users/{user_id}/role`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: changement role user.
-- Request schema: `UserRolePatchRequest`
-- Response schema: `UserRolePatchResponse`
-- Events alignes: `UserRoleChanged` existe deja en 2.10 (`...2 10 ...:97`).
+### 5) POST `/v1/users/{user_id}:deactivate`
 
-#### GET `/v1/tenant-settings`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: lecture settings tenant.
+- Request schema: none
+- Response schema: `UserResponse`
+- Related Events (2.10): CONTRACT GAP: event name not confirmed in 2.10 pour changement statut user.
+
+### 6) POST `/v1/users/{user_id}:reactivate`
+
+- Request schema: none
+- Response schema: `UserResponse`
+- Related Events (2.10): CONTRACT GAP: event name not confirmed in 2.10 pour changement statut user.
+
+### 7) GET `/v1/tenant-settings`
+
+- Request schema: none
 - Response schema: `TenantSettingsResponse`
+- Related Events (2.10): none (read route)
 
-#### PATCH `/v1/tenant-settings`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: mise a jour settings tenant.
+### 8) PATCH `/v1/tenant-settings`
+
 - Request schema: `TenantSettingsPatchRequest`
-- Response schema: `TenantSettingsPatchResponse`
-- Events alignes: `TenantSettingsUpdated` existe deja en 2.10 (`...2 10 ...:104`).
+- Response schema: `TenantSettingsResponse`
+- Related Events (2.10): `TenantSettingsUpdated`
 
-### Files (generic M9)
+### 9) POST `/v1/files`
 
-#### POST `/v1/files`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: creer fichier logique (upload metadata + reference stockage).
 - Request schema: `FileUploadRequest`
 - Response schema: `FileUploadResponse`
-- Events alignes: `FileUploaded` existe deja en 2.10 (`...2 10 ...:301`).
+- Related Events (2.10): `FileUploaded`
 
-#### POST `/v1/files/{file_id}:link`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: relier fichier a entite metier.
-- Request schema: `FileLinkRequest`
+### 10) GET `/v1/files/{file_id}`
+
+- Request schema: none
+- Response schema: `FileResponse`
+- Related Events (2.10): `FileAccessed`
+
+### 11) POST `/v1/files/{file_id}:soft-delete`
+
+- Request schema: none
+- Response schema: `FileSoftDeleteResponse`
+- Related Events (2.10): `FileSoftDeleted`
+
+### 12) POST `/v1/file-links`
+
+- Request schema: `FileLinkCreateRequest`
 - Response schema: `FileLinkResponse`
-- DB alignee: `file_links` existe deja (`...2 9 ...:621`).
+- Related Events (2.10): CONTRACT GAP: event name not confirmed in 2.10 pour creation de file_link.
 
-### Worker check events (M7bis)
+### 13) DELETE `/v1/file-links/{file_link_id}`
 
-#### POST `/v1/missions/{mission_id}/worker-check-events`
-- Statut: PROPOSED (OWNER ARBITRATION REQUIRED)
-- But: enregistrer check_in/check_out.
-- Request schema: `WorkerCheckEventCreateRequest`
-- Response schema: `WorkerCheckEventCreateResponse`
-- Events alignes: `WorkerCheckEventRecorded` existe deja (`...2 10 ...:255`).
-- DB alignee: `worker_check_events` existe deja (`...2 9 ...:355`).
+- Request schema: none
+- Response schema: `FileLinkResponse`
+- Related Events (2.10): CONTRACT GAP: event name not confirmed in 2.10 pour suppression de file_link.
 
-## Schema stubs (minimal, typed)
+### 14) POST `/v1/check-events`
 
-### AuthLoginRequest
-- `email`: string
-- `password`: string
+- Request schema: `CheckEventCreateRequest`
+- Response schema: `CheckEventCreateResponse`
+- Related Events (2.10): `WorkerCheckEventRecorded`
+- Notes: V1 sans geolocalisation; `event_type` est le switch unique check-in/check-out.
 
-### AuthLoginResponse
-- `access_token`: string
-- `refresh_token`: string
-- `token_type`: string
-- `expires_in`: integer
-
-### AuthLogoutRequest
-- `refresh_token`: string (nullable)
-
-### AuthLogoutResponse
-- `success`: boolean
-
-### AuthRefreshRequest
-- `refresh_token`: string
-
-### AuthRefreshResponse
-- `access_token`: string
-- `refresh_token`: string
-- `token_type`: string
-- `expires_in`: integer
-
-### PasswordResetRequestCreate
-- `email`: string
-
-### PasswordResetRequestCreated
-- `status`: string
-
-### PasswordResetConfirmRequest
-- `token`: string
-- `new_password`: string
-
-### PasswordResetConfirmResponse
-- `status`: string
+## Schema stubs (minimal placeholders)
 
 ### MeResponse
-- `user_id`: uuid
-- `tenant_id`: uuid
-- `role_type`: string
-- `email`: string
-- `is_active`: boolean
 
-### UserListItem
 - `user_id`: uuid
 - `tenant_id`: uuid
-- `role_type`: string
-- `email`: string
-- `is_active`: boolean
+- `role`: string
 
 ### UserListResponse
-- `items`: array of `UserListItem`
-- `next_cursor`: string (nullable)
+
+- `items`: array of `UserResponse`
+- `next_cursor`: string nullable
 
 ### UserCreateRequest
+
 - `email`: string
-- `role_type`: string
+- `role`: string
 - `is_active`: boolean
 
 ### UserCreateResponse
+
 - `user_id`: uuid
 - `tenant_id`: uuid
 
-### UserUpdateRequest
-- `email`: string (nullable)
-- `language`: string (nullable)
+### UserPatchRequest
 
-### UserUpdateResponse
+- `email`: string optional
+- `role`: string optional
+- `is_active`: boolean optional
+
+### UserResponse
+
 - `user_id`: uuid
-- `updated_at`: string
-
-### UserStatusPatchRequest
+- `tenant_id`: uuid
+- `email`: string
+- `role`: string
 - `is_active`: boolean
-
-### UserStatusPatchResponse
-- `user_id`: uuid
-- `is_active`: boolean
-
-### UserRolePatchRequest
-- `role_type`: string
-
-### UserRolePatchResponse
-- `user_id`: uuid
-- `role_type`: string
 
 ### TenantSettingsResponse
+
 - `tenant_id`: uuid
 - `settings`: object
 
 ### TenantSettingsPatchRequest
-- `settings`: object
 
-### TenantSettingsPatchResponse
-- `tenant_id`: uuid
 - `settings`: object
 
 ### FileUploadRequest
-- `storage_provider`: string
-- `bucket`: string
-- `path`: string
+
 - `filename`: string
 - `mime_type`: string
 - `size_bytes`: integer
-- `sha256_hash`: string
+- `sha256`: string optional
+- `storage_provider`: string optional
 
 ### FileUploadResponse
+
 - `file_id`: uuid
-- `tenant_id`: uuid
-- `created_at`: string
+- `status`: string
+- `uploaded_at`: string
+- `sha256`: string optional
 
-### FileLinkRequest
-- `entity_type`: string
-- `entity_id`: uuid
-- `purpose`: string
+### FileResponse
 
-### FileLinkResponse
-- `file_link_id`: uuid
 - `file_id`: uuid
-
-### WorkerCheckEventCreateRequest
-- `worker_id`: uuid
-- `event_type`: string (`check_in|check_out`)
-- `occurred_at`: string
-- `source`: string
+- `url`: string optional
 - `metadata`: object
 
-### WorkerCheckEventCreateResponse
-- `check_event_id`: uuid
+### FileSoftDeleteResponse
+
+- `file_id`: uuid
+- `status`: string
+
+### FileLinkCreateRequest
+
+- `file_id`: uuid
+- `object_type`: enum `mission|worker|client|compliance_case|a1_case|timesheet|invoice|quote`
+- `object_id`: uuid
+
+### FileLinkResponse
+
+- `file_link_id`: uuid
+- `file_id`: uuid
+- `object_type`: string
+- `object_id`: uuid
+- `created_at`: string
+
+### CheckEventCreateRequest
+
 - `mission_id`: uuid
 - `worker_id`: uuid
-- `event_type`: string
+- `event_type`: enum `check_in|check_out`
+- `occurred_at`: string
+- `device_info`: object optional
 
-## Notes de coherence minimale
+### CheckEventCreateResponse
 
-- Aucun ajout DB strictement requis dans ce patch:
-- `users`, `tenant_settings`, `files`, `file_links`, `worker_check_events` existent deja en 2.9 (`...2 9 ...:61`, `:723`, `:607`, `:621`, `:355`).
-- Aucun ajout event strictement requis dans ce patch:
-- `UserCreated`, `UserRoleChanged`, `TenantSettingsUpdated`, `FileUploaded`, `WorkerCheckEventRecorded` existent deja en 2.10 (`...2 10 ...:90`, `:97`, `:104`, `:301`, `:255`).
-- RBAC V1.2 patch associe requis pour toutes les nouvelles routes (voir doc V1.2 RBAC patch).
+- `check_event_id`: uuid
+- `recorded_at`: string
+
+## Notes contractuelles
+
+- Login/refresh/reset sont hors de cette API, car geres par Supabase Auth.
+- Ne pas ajouter d'endpoints auth custom dans ce patch.
+- Ce patch clarifie que les endpoints M3 type `/v1/clients/{client_id}/documents` ne remplacent pas la surface generique `/v1/files`.
+- Le stockage concret (Supabase Storage, S3, autre) reste un detail d'implementation hors contrat.
+- La liaison probatoire est portee par `file_links` (DB 2.9: `file_links`).
 
 ## What remains blocked
 
-- Validation owner des options d'arbitrage A/B/C.
-- Confirmation des conventions de nommage finales pour auth/session/files/check-events.
-- Confirmation granulaire des droits RBAC par role pour les nouvelles routes.
+- OWNER ARBITRATION REQUIRED: confirmer la granularite finale de `PATCH /v1/users/{user_id}` pour les changements de role.
+- CONTRACT GAP: nom d'event pour deactivate/reactivate user non confirme dans 2.10.
+- CONTRACT GAP: noms d'events pour create/delete `file-links` non confirmes dans 2.10.
 
 ## Mini-changelog
 
-- 2026-02-19: creation patch OpenAPI V1.2 DRAFT (surfaces manquantes + arbitration block), sans modification des contrats LOCKED.
+- 2026-02-19: V1.2.1 owner decisions appliques (Supabase auth, files+linking, endpoint check-events unique), sans modification LOCKED.

@@ -45,6 +45,8 @@ Contrats qui priment:
 | 10.F | MVP V1/V2 MATRIX | Matrice déclarative V1/V2 et exclusions V1. | DRAFT | [SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1)](SECTION%2010.F%20%E2%80%94%20MVP%20V1%20V2%20MATRIX%20(ASSISTE%20VS%20AUTO%20+%20EXCLUSIONS%20V1)%2030b688d6a59680e78855eae07f3c9771.md) |
 | 10.P | Contracts patch V1.2 (DRAFT) | Patch contractuel dérivé pour combler les surfaces manquantes (OpenAPI + RBAC), sans remplacer V1 LOCKED. | DRAFT | [2 11 — OPENAPI V1.2 (PATCH)](SOCLE%20TECHNIQUE%20GEL%C3%89%20%E2%80%94%20V1.2%20(DRAFT)/2%2011%20%E2%80%94%20OPENAPI%20V1.2%20(PATCH)%20%E2%80%94%20SURFACES%20MANQUANTES%2031b688d6a59680d4a1b2c3d4e5f60701.md)<br>[2 12 — RBAC & PERMISSIONS (MATRIX) — V1.2 (PATCH)](SOCLE%20TECHNIQUE%20GEL%C3%89%20%E2%80%94%20V1.2%20(DRAFT)/2%2012%20%E2%80%94%20RBAC%20&%20PERMISSIONS%20(MATRIX)%20%E2%80%94%20V1.2%20(PATCH)%2031b688d6a59680d4a1b2c3d4e5f60702.md) |
 
+Note gouvernance: les patches V1.2 restent DERIVED/DRAFT et non contractuels tant qu'ils ne sont pas validés et intégrés dans un socle LOCKED.
+
 ## 4) Règles d'usage
 
 Quand consulter SECTION 10:
