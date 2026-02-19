@@ -401,7 +401,7 @@ function toCanonicalPageId(pageId) {
 
 async function listChildrenIds(token, blockId) {
   let cursor = null;
-  const ids = [];
+  const children = [];
 
   do {
     const search = new URLSearchParams({ page_size: "100" });
@@ -413,22 +413,42 @@ async function listChildrenIds(token, blockId) {
 
     for (const child of data.results ?? []) {
       if (child && child.id) {
-        ids.push(child.id);
+        children.push({ id: child.id, type: child.type ?? "unknown" });
       }
     }
 
     cursor = data.has_more ? data.next_cursor : null;
   } while (cursor);
 
-  return ids;
+  return children;
 }
 
 async function archiveChildren(token, pageId) {
-  const childIds = await listChildrenIds(token, pageId);
-  for (const id of childIds) {
-    await notionRequest(token, "PATCH", `/blocks/${id}`, { archived: true });
+  const children = await listChildrenIds(token, pageId);
+  let archived = 0;
+  let skipped = 0;
+
+  for (const child of children) {
+    if (child.type === "child_page" || child.type === "child_database") {
+      skipped += 1;
+      warn(`skip archiving ${child.type}: ${child.id}`);
+      continue;
+    }
+
+    try {
+      await notionRequest(token, "PATCH", `/blocks/${child.id}`, { archived: true });
+      archived += 1;
+    } catch (error) {
+      const message = String(error.message ?? error);
+      if (message.includes("Updating a page via the blocks endpoint unsupported")) {
+        skipped += 1;
+        warn(`skip archiving unsupported page block: ${child.id}`);
+        continue;
+      }
+      throw error;
+    }
   }
-  return childIds.length;
+  return { archived, skipped, total: children.length };
 }
 
 async function appendChildren(token, pageId, blocks) {
@@ -674,9 +694,11 @@ async function main() {
     }
 
     try {
-      const archivedCount = await archiveChildren(token, pageId);
+      const archiveStats = await archiveChildren(token, pageId);
       const appendedCount = await appendChildren(token, pageId, blocks);
-      ok(`${resolvedFile.repoPath} -> ${pageId} (archived=${archivedCount}, appended=${appendedCount})`);
+      ok(
+        `${resolvedFile.repoPath} -> ${pageId} (archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+      );
     } catch (error) {
       fail(`${resolvedFile.repoPath} -> ${pageId} (${String(error.message)})`);
       syncFailures += 1;
