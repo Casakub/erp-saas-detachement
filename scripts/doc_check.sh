@@ -15,7 +15,14 @@ resolve_locked_doc_by_id() {
   printf '%s' "$match"
 }
 
+resolve_doc_by_id_optional() {
+  local file_id="$1"
+  find . -type f -name "*${file_id}.md" -print -quit
+}
+
+SOCLE_FILE="$(resolve_doc_by_id_optional "308688d6a596805b8e40c7f8a22944ea")"
 OPENAPI_FILE="$(resolve_locked_doc_by_id "308688d6a596801dad76e1c4a1a96c02")"
+OPENAPI_SCHEMAS_FILE="$(resolve_doc_by_id_optional "309688d6a59680c1b2d3e4f5a6b7c8d9")"
 RBAC_FILE="$(resolve_locked_doc_by_id "308688d6a596802d8e81c1623900db41")"
 EVENTS_FILE="$(resolve_locked_doc_by_id "308688d6a596802bad05fb3834118422")"
 
@@ -36,6 +43,10 @@ ko() {
   FAIL=1
 }
 
+info() {
+  printf "INFO: %s\n" "$1"
+}
+
 if command -v rg >/dev/null 2>&1; then
   SEARCH_TOOL="rg"
 else
@@ -48,6 +59,20 @@ for required in "$OPENAPI_FILE" "$RBAC_FILE" "$EVENTS_FILE"; do
     exit 1
   fi
 done
+
+if [[ -n "$SOCLE_FILE" ]]; then
+  info "Resolved SOCLE: $SOCLE_FILE"
+else
+  info "Resolved SOCLE: not found (id=308688d6a596805b8e40c7f8a22944ea)"
+fi
+info "Resolved OpenAPI V1 (2.11): $OPENAPI_FILE"
+if [[ -n "$OPENAPI_SCHEMAS_FILE" ]]; then
+  info "Resolved OpenAPI Execution Schemas (2.11.A): $OPENAPI_SCHEMAS_FILE"
+else
+  info "Resolved OpenAPI Execution Schemas (2.11.A): not found (id=309688d6a59680c1b2d3e4f5a6b7c8d9)"
+fi
+info "Resolved Events (2.10): $EVENTS_FILE"
+info "Resolved RBAC (2.12): $RBAC_FILE"
 
 section "A) Fences"
 

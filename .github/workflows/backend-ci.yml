@@ -22,6 +22,8 @@ jobs:
   backend-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      SUPABASE_CLI_VERSION: "2.20.3"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +35,13 @@ jobs:
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Print Supabase CLI version
+        run: |
+          set -euo pipefail
+          supabase --version
 
       - name: Verify backend package and required scripts
         run: |
@@ -58,7 +67,16 @@ jobs:
         run: |
           set -euo pipefail
           supabase start
-          supabase status
+          status_output="$(supabase status)"
+          printf '%s\n' "$status_output"
+          if ! printf '%s\n' "$status_output" | grep -q "API URL"; then
+            echo "ERROR: supabase status missing expected marker: API URL"
+            exit 1
+          fi
+          if ! printf '%s\n' "$status_output" | grep -q "DB URL"; then
+            echo "ERROR: supabase status missing expected marker: DB URL"
+            exit 1
+          fi
 
       - name: Reset database
         run: |
