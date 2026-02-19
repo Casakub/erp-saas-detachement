@@ -203,6 +203,19 @@
 - Refuse la validation si un point critique n’est pas démontré (OpenAPI, Events, DB, RBAC, changelog).
 - Traite toute incohérence comme bloquante tant que non arbitrée.
 
+### 9.4 Notion sync (GitHub -> Notion)
+- Objectif: synchroniser en one-way des pages markdown non contractuelles vers Notion.
+- Source de mapping: `notion-sync-map.json` (clé=`repo/path.md`, valeur=`notion_page_id`).
+- Workflow CI: `.github/workflows/notion-sync.yml` (trigger `push` sur `main` + `workflow_dispatch`).
+- Script de sync: `node scripts/notion_sync.mjs`.
+- Secret requis GitHub Actions: `NOTION_TOKEN`.
+- Détection des changements: `git diff --name-only $BASE_SHA $HEAD_SHA`; fallback automatique sur tout le mapping si plage indisponible.
+- Pour ajouter une nouvelle page syncée:
+- 1) Ajouter l’entrée dans `notion-sync-map.json` avec un `page_id` Notion (extrait de l’URL).
+- 2) Vérifier que le fichier `.md` n’est pas un document LOCKED contractuel.
+- 3) Tester localement en dry-run: `NOTION_TOKEN=... node scripts/notion_sync.mjs --dry-run`.
+- Limites connues: les tables markdown sont converties en paragraphe (fallback), sans échec de sync.
+
 ## 10) Politique de changement
 - Privilégie des diffs petits et traçables.
 - Date les mises à jour importantes dans les documents contractuels touchés.
