@@ -9,6 +9,7 @@ import process from "node:process";
 const NOTION_API_BASE = "https://api.notion.com/v1";
 const NOTION_VERSION = "2022-06-28";
 const MAP_FILE = "notion-sync-map.json";
+const UNMAPPABLE_ALLOWLIST_FILE = "notion-unmappable-allowlist.json";
 const MAX_CHILDREN_PER_APPEND = 100;
 const MAX_RICH_TEXT_CHUNK = 1900;
 const SYNC_MODE_FULL_REPLACE = "full_replace";
@@ -16,6 +17,9 @@ const SYNC_MODE_BOUNDED = "bounded";
 const MARKER_BEGIN = "BEGIN GITHUB SYNC";
 const MARKER_END = "END GITHUB SYNC";
 const NOTION_PAGE_ID_REGEX = /([0-9a-f]{32})/i;
+const SYNC_SIGNATURE_TOKEN = "[SYNCED_FROM_GITHUB]";
+const SIGNATURE_MODE_ON = "on";
+const SIGNATURE_MODE_OFF = "off";
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -49,6 +53,11 @@ function isMarkdownPath(input) {
   return String(input).toLowerCase().endsWith(".md");
 }
 
+function isExcludedDocsPath(input) {
+  const normalized = normalizePathForLockCheck(input);
+  return normalized.startsWith("backend/") || normalized.startsWith("supabase/");
+}
+
 function isLockedPath(input) {
   const normalized = normalizePathForLockCheck(input);
   if (normalized.includes("(locked)")) {
@@ -61,6 +70,11 @@ function isLockedPath(input) {
 function extractPageIdFromPath(input) {
   const match = String(input).match(NOTION_PAGE_ID_REGEX);
   return match ? match[1].toLowerCase() : null;
+}
+
+function toPageId32(pageId) {
+  const clean = String(pageId ?? "").replace(/-/g, "").trim().toLowerCase();
+  return /^[0-9a-f]{32}$/.test(clean) ? clean : null;
 }
 
 function splitText(text, chunkSize = MAX_RICH_TEXT_CHUNK) {
@@ -418,8 +432,8 @@ async function notionRequest(token, method, endpoint, body) {
 }
 
 function toCanonicalPageId(pageId) {
-  const clean = String(pageId).replace(/-/g, "").trim().toLowerCase();
-  if (!/^[0-9a-f]{32}$/.test(clean)) {
+  const clean = toPageId32(pageId);
+  if (!clean) {
     return null;
   }
 
@@ -486,6 +500,53 @@ function findBoundedMarkers(children) {
   }
 
   return null;
+}
+
+function signatureCalloutBlock(repoPath, commitSha) {
+  return calloutBlock(`${SYNC_SIGNATURE_TOKEN} source=${repoPath} commit=${commitSha}`);
+}
+
+function wrapSignedBlocks(repoPath, commitSha, contentBlocks) {
+  return [
+    signatureCalloutBlock(repoPath, commitSha),
+    paragraphBlock(MARKER_BEGIN),
+    ...contentBlocks,
+    paragraphBlock(MARKER_END)
+  ];
+}
+
+function selectSignedChildrenToArchive(children) {
+  const selected = new Map();
+
+  const mark = (child) => {
+    if (child?.id) {
+      selected.set(child.id, child);
+    }
+  };
+
+  const markers = findBoundedMarkers(children);
+  if (markers) {
+    for (let i = markers.beginIndex; i <= markers.endIndex; i += 1) {
+      mark(children[i]);
+    }
+
+    if (markers.beginIndex > 0) {
+      const previous = children[markers.beginIndex - 1];
+      const previousText = toBlockPlainText(previous);
+      if (previousText.includes(SYNC_SIGNATURE_TOKEN)) {
+        mark(previous);
+      }
+    }
+  }
+
+  for (const child of children) {
+    const text = toBlockPlainText(child);
+    if (text.includes(SYNC_SIGNATURE_TOKEN)) {
+      mark(child);
+    }
+  }
+
+  return Array.from(selected.values());
 }
 
 async function archiveSpecificChildren(token, children) {
@@ -703,7 +764,9 @@ function uniquePaths(paths) {
 
 function selectMarkdownCandidates(changedFilesContext, trackedFiles) {
   const sourceFiles = changedFilesContext.changedFiles ?? trackedFiles;
-  const changedMdFiles = uniquePaths(sourceFiles.filter((file) => isMarkdownPath(file)));
+  const changedMdFiles = uniquePaths(
+    sourceFiles.filter((file) => isMarkdownPath(file) && !isExcludedDocsPath(file))
+  );
   const excludedLockedFiles = changedMdFiles.filter((file) => isLockedPath(file));
   const eligibleMdFiles = changedMdFiles.filter((file) => !isLockedPath(file));
 
@@ -736,16 +799,95 @@ function buildMappedPageIdLookup(mappingEntries, trackedFiles) {
   return mapped;
 }
 
+async function loadUnmappableAllowlist() {
+  const allowlistPath = path.resolve(process.cwd(), UNMAPPABLE_ALLOWLIST_FILE);
+  if (!existsSync(allowlistPath)) {
+    throw new Error(`allowlist file missing: ${UNMAPPABLE_ALLOWLIST_FILE}`);
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(await readFile(allowlistPath, "utf8"));
+  } catch (error) {
+    throw new Error(`unable to parse ${UNMAPPABLE_ALLOWLIST_FILE}: ${String(error.message)}`);
+  }
+
+  if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== "string")) {
+    throw new Error(`${UNMAPPABLE_ALLOWLIST_FILE} must be a JSON array of file paths`);
+  }
+
+  return new Set(parsed.map((item) => normalizePathForMatch(item)));
+}
+
+function enforceCollisionGuard(targets) {
+  const grouped = new Map();
+  for (const target of targets) {
+    if (!grouped.has(target.pageId32)) {
+      grouped.set(target.pageId32, []);
+    }
+    grouped.get(target.pageId32).push(target);
+  }
+
+  let resolvedCollisions = 0;
+  const guardedTargets = [];
+  const collisionErrors = [];
+
+  for (const [pageId32, group] of grouped.entries()) {
+    if (group.length === 1) {
+      guardedTargets.push(group[0]);
+      continue;
+    }
+
+    const preferred = group.filter((candidate) =>
+      normalizePathForMatch(path.posix.basename(candidate.repoPath)).toLowerCase().includes(pageId32)
+    );
+
+    if (preferred.length === 1) {
+      resolvedCollisions += 1;
+      warn(
+        `collision detected for page_id ${pageId32}; using suffixed path: ${preferred[0].repoPath} (dropped ${group.length - 1})`
+      );
+      guardedTargets.push(preferred[0]);
+      continue;
+    }
+
+    collisionErrors.push(
+      `page_id ${pageId32} has ${group.length} source files with no unique priority:\n- ${group
+        .map((item) => item.repoPath)
+        .join("\n- ")}`
+    );
+  }
+
+  if (collisionErrors.length > 0) {
+    return { ok: false, errors: collisionErrors, targets: [] };
+  }
+
+  info(`collision_check: ok (resolved=${resolvedCollisions}, remaining=${guardedTargets.length})`);
+  return { ok: true, errors: [], targets: guardedTargets };
+}
+
 async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
   const syncModeRaw = String(process.env.NOTION_SYNC_MODE || SYNC_MODE_FULL_REPLACE).trim().toLowerCase();
+  const signatureModeRaw = String(process.env.NOTION_SYNC_SIGNATURE_MODE || SIGNATURE_MODE_OFF)
+    .trim()
+    .toLowerCase();
   const syncMode =
     syncModeRaw === SYNC_MODE_BOUNDED || syncModeRaw === SYNC_MODE_FULL_REPLACE ? syncModeRaw : null;
+  const signatureMode = signatureModeRaw === SIGNATURE_MODE_ON || signatureModeRaw === SIGNATURE_MODE_OFF
+    ? signatureModeRaw
+    : null;
 
   if (!syncMode) {
     fail(
       `invalid NOTION_SYNC_MODE="${syncModeRaw}" (expected "${SYNC_MODE_FULL_REPLACE}" or "${SYNC_MODE_BOUNDED}")`
+    );
+    process.exit(1);
+  }
+  if (!signatureMode) {
+    fail(
+      `invalid NOTION_SYNC_SIGNATURE_MODE="${signatureModeRaw}" (expected "${SIGNATURE_MODE_OFF}" or "${SIGNATURE_MODE_ON}")`
     );
     process.exit(1);
   }
@@ -773,7 +915,16 @@ async function main() {
     .filter(([repoPath, pageId]) => typeof repoPath === "string" && typeof pageId === "string")
     .sort((a, b) => a[0].localeCompare(b[0]));
 
+  let unmappableAllowlist;
+  try {
+    unmappableAllowlist = await loadUnmappableAllowlist();
+  } catch (error) {
+    fail(String(error.message || error));
+    process.exit(1);
+  }
+
   info(`mapped_files_considered: ${mappingEntries.length}`);
+  info(`unmappable_allowlist_entries: ${unmappableAllowlist.size}`);
 
   const changedFilesContext = loadChangedFiles();
   const trackedFiles = loadGitTrackedFiles();
@@ -792,7 +943,7 @@ async function main() {
   }
 
   const mappedPageIdLookup = buildMappedPageIdLookup(mappingEntries, trackedFiles);
-  const targets = [];
+  let targets = [];
   const unmappableFiles = [];
   let mappableFromMap = 0;
   let mappableFromAuto = 0;
@@ -826,17 +977,35 @@ async function main() {
       mappableFromAuto += 1;
     }
 
-    targets.push({ repoPath, mappedPageId, pageId, source });
+    const pageId32 = toPageId32(mappedPageId);
+    targets.push({ repoPath, mappedPageId, pageId, pageId32, source });
   }
 
   info(`mappable_count (map json): ${mappableFromMap}`);
   info(`mappable_count (auto id): ${mappableFromAuto}`);
   info(`unmappable_count: ${unmappableFiles.length}`);
 
+  const allowlistViolations = unmappableFiles.filter(
+    (file) => !unmappableAllowlist.has(normalizePathForMatch(file))
+  );
+  if (allowlistViolations.length > 0) {
+    fail(
+      `unmappable files not in allowlist (${allowlistViolations.length}):\n- ${allowlistViolations.join("\n- ")}`
+    );
+    process.exit(1);
+  }
+
   if (unmappableFiles.length > 0) {
     const preview = unmappableFiles.slice(0, 50);
-    warn(`unmappable .md files (max 50):\n- ${preview.join("\n- ")}`);
+    warn(`unmappable .md files allowed by allowlist (max 50):\n- ${preview.join("\n- ")}`);
   }
+
+  const collisionResult = enforceCollisionGuard(targets);
+  if (!collisionResult.ok) {
+    fail(`collision_check: FAIL\n${collisionResult.errors.join("\n")}`);
+    process.exit(1);
+  }
+  targets = collisionResult.targets;
 
   if (candidateSelection.changedMdFiles.length > 0 && targets.length === 0) {
     warn("changed markdown files detected but none are mappable; sync skipped");
@@ -851,7 +1020,9 @@ async function main() {
 
   info(`mode: ${dryRun ? "dry-run" : "live"}`);
   info(`sync_mode: ${syncMode}`);
+  info(`signature_mode: ${signatureMode}`);
   info(`target pages: ${targets.length}`);
+  const commitSha = String(process.env.HEAD_SHA || process.env.GITHUB_SHA || "unknown").trim() || "unknown";
 
   let syncFailures = 0;
 
@@ -888,7 +1059,9 @@ async function main() {
       continue;
     }
 
-    const blocks = markdownToBlocks(markdown);
+    const contentBlocks = markdownToBlocks(markdown);
+    const blocks =
+      signatureMode === SIGNATURE_MODE_ON ? wrapSignedBlocks(resolvedFile.repoPath, commitSha, contentBlocks) : contentBlocks;
     info(`file -> page: ${resolvedFile.repoPath} -> ${pageId} (source=${source})`);
     info(`blocks_count: ${blocks.length}`);
 
@@ -898,6 +1071,23 @@ async function main() {
     }
 
     try {
+      if (signatureMode === SIGNATURE_MODE_ON) {
+        const children = await listChildrenIds(token, pageId);
+        const signedChildren = selectSignedChildrenToArchive(children);
+        const archiveStats =
+          signedChildren.length > 0
+            ? await archiveSpecificChildren(token, signedChildren)
+            : { archived: 0, skipped: 0, total: 0 };
+        if (signedChildren.length === 0) {
+          warn(`signature_mode: no signed blocks found for ${pageId}; appending signed payload`);
+        }
+        const appendedCount = await appendChildren(token, pageId, blocks);
+        ok(
+          `${resolvedFile.repoPath} -> ${pageId} (mode=signature, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+        );
+        continue;
+      }
+
       if (syncMode === SYNC_MODE_BOUNDED) {
         const children = await listChildrenIds(token, pageId);
         const markers = findBoundedMarkers(children);

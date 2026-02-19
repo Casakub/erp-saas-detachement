@@ -1,43 +1,21 @@
 # SECTION 10.F — MVP V1 V2 MATRIX (ASSISTÉ VS AUTO + EXCLUSIONS V1)
 
-- Statut: DRAFT
-- Portée: structurer une matrice déclarative V1/V2.
+- Statut: DEPRECATED (redirect only)
+- Portée: redirection documentaire locale.
 - Règles:
-- Matrice déclarative uniquement.
-- Cette page n'est pas contractuelle.
-- Aucun ajout de logique métier.
-- Références SOCLE (justification d'existence):
-- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED) 308688d6a596805b8e40c7f8a22944ea.md:556`
-- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED) 308688d6a596805b8e40c7f8a22944ea.md:563`
+- Aucun contenu métier dans ce fichier.
+- Ne pas synchroniser ce fichier vers Notion.
 
-## Avertissement
+## Redirect
 
-- Cette matrice est déclarative.
-- Les contrats LOCKED restent la source de vérité contractuelle.
+- Canonical file:
+- `ERP Détachement europe/SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1) 30b688d6a59680e78855eae07f3c9771.md`
 
-## Matrice V1 / V2
+## Why this file stays
 
-| feature | V1 mode (manual/assisted) | V2 mode (automated) | exclusions V1 | notes |
-| --- | --- | --- | --- | --- |
-| SIPSI | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-| A1 | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-| remuneration engine | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-| marketplace gating | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-| feature placeholder 1 | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-| feature placeholder 2 | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` | `<à renseigner>` |
-
-## Règles d'utilisation de la matrice
-
-- Renseigner les modes sans reformuler les contrats.
-- Renseigner les exclusions V1 explicitement.
-- Référencer les documents sources pour chaque ligne.
-
-## Non-goals / Out of scope
-
-- Définir des nouvelles fonctionnalités.
-- Changer la portée produit.
-- Remplacer les contrats LOCKED.
+- Ce fichier est conservé pour compatibilité locale avec des références anciennes.
+- La page Notion associée est gérée uniquement par le fichier canonique suffixé par l'ID.
 
 ## Mini-changelog
 
-- 2026-02-18: création du squelette documentaire (sans contenu métier).
+- 2026-02-19: conversion en redirect local (hors sync Notion).
