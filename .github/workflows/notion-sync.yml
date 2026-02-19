@@ -27,6 +27,7 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           BASE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
+          NOTION_SYNC_MODE: full_replace
         run: |
           set -euo pipefail
           if [ -z "${NOTION_TOKEN:-}" ]; then

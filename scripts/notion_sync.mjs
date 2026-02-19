@@ -11,6 +11,10 @@ const NOTION_VERSION = "2022-06-28";
 const MAP_FILE = "notion-sync-map.json";
 const MAX_CHILDREN_PER_APPEND = 100;
 const MAX_RICH_TEXT_CHUNK = 1900;
+const SYNC_MODE_FULL_REPLACE = "full_replace";
+const SYNC_MODE_BOUNDED = "bounded";
+const MARKER_BEGIN = "BEGIN GITHUB SYNC";
+const MARKER_END = "END GITHUB SYNC";
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -413,7 +417,7 @@ async function listChildrenIds(token, blockId) {
 
     for (const child of data.results ?? []) {
       if (child && child.id) {
-        children.push({ id: child.id, type: child.type ?? "unknown" });
+        children.push(child);
       }
     }
 
@@ -423,15 +427,53 @@ async function listChildrenIds(token, blockId) {
   return children;
 }
 
-async function archiveChildren(token, pageId) {
-  const children = await listChildrenIds(token, pageId);
+function toBlockPlainText(block) {
+  const blockType = block?.type;
+  if (!blockType || !block?.[blockType]) {
+    return "";
+  }
+
+  const payload = block[blockType];
+  if (Array.isArray(payload.rich_text)) {
+    return payload.rich_text.map((item) => item?.plain_text ?? "").join("");
+  }
+
+  return "";
+}
+
+function findBoundedMarkers(children) {
+  let beginIndex = -1;
+  let endIndex = -1;
+
+  for (let i = 0; i < children.length; i += 1) {
+    const text = toBlockPlainText(children[i]);
+    if (beginIndex < 0 && text.includes(MARKER_BEGIN)) {
+      beginIndex = i;
+      continue;
+    }
+
+    if (beginIndex >= 0 && text.includes(MARKER_END)) {
+      endIndex = i;
+      break;
+    }
+  }
+
+  if (beginIndex >= 0 && endIndex > beginIndex) {
+    return { beginIndex, endIndex };
+  }
+
+  return null;
+}
+
+async function archiveSpecificChildren(token, children) {
   let archived = 0;
   let skipped = 0;
 
   for (const child of children) {
-    if (child.type === "child_page" || child.type === "child_database") {
+    const childType = child.type ?? "unknown";
+    if (childType === "child_page" || childType === "child_database") {
       skipped += 1;
-      warn(`skip archiving ${child.type}: ${child.id}`);
+      warn(`skip archiving ${childType}: ${child.id}`);
       continue;
     }
 
@@ -451,12 +493,27 @@ async function archiveChildren(token, pageId) {
   return { archived, skipped, total: children.length };
 }
 
-async function appendChildren(token, pageId, blocks) {
+async function archiveChildren(token, pageId) {
+  const children = await listChildrenIds(token, pageId);
+  return archiveSpecificChildren(token, children);
+}
+
+async function appendChildren(token, pageId, blocks, afterId = null) {
   let appended = 0;
+  let anchor = afterId;
 
   for (let i = 0; i < blocks.length; i += MAX_CHILDREN_PER_APPEND) {
     const chunk = blocks.slice(i, i + MAX_CHILDREN_PER_APPEND);
-    await notionRequest(token, "PATCH", `/blocks/${pageId}/children`, { children: chunk });
+    const body = { children: chunk };
+    if (anchor) {
+      body.after = anchor;
+    }
+
+    const response = await notionRequest(token, "PATCH", `/blocks/${pageId}/children`, body);
+    const lastAppendedId = response?.results?.[response.results.length - 1]?.id ?? null;
+    if (lastAppendedId) {
+      anchor = lastAppendedId;
+    }
     appended += chunk.length;
   }
 
@@ -601,6 +658,16 @@ function resolveMappedFilePath(repoPath, mappedPageId, trackedFiles) {
 async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
+  const syncModeRaw = String(process.env.NOTION_SYNC_MODE || SYNC_MODE_FULL_REPLACE).trim().toLowerCase();
+  const syncMode =
+    syncModeRaw === SYNC_MODE_BOUNDED || syncModeRaw === SYNC_MODE_FULL_REPLACE ? syncModeRaw : null;
+
+  if (!syncMode) {
+    fail(
+      `invalid NOTION_SYNC_MODE="${syncModeRaw}" (expected "${SYNC_MODE_FULL_REPLACE}" or "${SYNC_MODE_BOUNDED}")`
+    );
+    process.exit(1);
+  }
 
   const mapPath = path.resolve(process.cwd(), MAP_FILE);
   if (!existsSync(mapPath)) {
@@ -650,6 +717,7 @@ async function main() {
   }
 
   info(`mode: ${dryRun ? "dry-run" : "live"}`);
+  info(`sync_mode: ${syncMode}`);
   info(`target pages: ${targets.length}`);
 
   const trackedFiles = loadGitTrackedFiles();
@@ -694,10 +762,36 @@ async function main() {
     }
 
     try {
+      if (syncMode === SYNC_MODE_BOUNDED) {
+        const children = await listChildrenIds(token, pageId);
+        const markers = findBoundedMarkers(children);
+
+        if (!markers) {
+          warn(
+            `bounded markers missing for ${pageId}; fallback to ${SYNC_MODE_FULL_REPLACE} (${MARKER_BEGIN} / ${MARKER_END})`
+          );
+          const archiveStats = await archiveSpecificChildren(token, children);
+          const appendedCount = await appendChildren(token, pageId, blocks);
+          ok(
+            `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+          );
+          continue;
+        }
+
+        const betweenChildren = children.slice(markers.beginIndex + 1, markers.endIndex);
+        const archiveStats = await archiveSpecificChildren(token, betweenChildren);
+        const beginMarkerId = children[markers.beginIndex].id;
+        const appendedCount = await appendChildren(token, pageId, blocks, beginMarkerId);
+        ok(
+          `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_BOUNDED}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+        );
+        continue;
+      }
+
       const archiveStats = await archiveChildren(token, pageId);
       const appendedCount = await appendChildren(token, pageId, blocks);
       ok(
-        `${resolvedFile.repoPath} -> ${pageId} (archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
+        `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
       );
     } catch (error) {
       fail(`${resolvedFile.repoPath} -> ${pageId} (${String(error.message)})`);
