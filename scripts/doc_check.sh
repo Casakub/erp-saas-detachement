@@ -4,9 +4,20 @@ set -u
 
 LC_ALL=C
 
-OPENAPI_FILE="ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11 — OPENAPI V1 (PARCOURS MVP) — 1 → 3 → 2 308688d6a596801dad76e1c4a1a96c02.md"
-RBAC_FILE="ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 308688d6a596802d8e81c1623900db41.md"
-EVENTS_FILE="ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md"
+resolve_locked_doc_by_id() {
+  local file_id="$1"
+  local match
+  match="$(find . -type f -name "*${file_id}.md" -print -quit)"
+  if [[ -z "$match" ]]; then
+    echo "KO: fichier introuvable (id=${file_id})"
+    exit 1
+  fi
+  printf '%s' "$match"
+}
+
+OPENAPI_FILE="$(resolve_locked_doc_by_id "308688d6a596801dad76e1c4a1a96c02")"
+RBAC_FILE="$(resolve_locked_doc_by_id "308688d6a596802d8e81c1623900db41")"
+EVENTS_FILE="$(resolve_locked_doc_by_id "308688d6a596802bad05fb3834118422")"
 
 FAIL=0
 TMP_DIR="$(mktemp -d)"
