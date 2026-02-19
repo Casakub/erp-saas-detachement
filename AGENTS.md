@@ -209,6 +209,7 @@
 - Workflow CI: `.github/workflows/notion-sync.yml` (trigger `push` sur `main` + `workflow_dispatch`).
 - Script de sync: `node scripts/notion_sync.mjs`.
 - Secret requis GitHub Actions: `NOTION_TOKEN`.
+- Comportement sans secret: le workflow Notion sync est ignoré proprement (message INFO) pour ne pas bloquer CI.
 - Détection des changements: `git diff --name-only $BASE_SHA $HEAD_SHA`; fallback automatique sur tout le mapping si plage indisponible.
 - Pour ajouter une nouvelle page syncée:
 - 1) Ajouter l’entrée dans `notion-sync-map.json` avec un `page_id` Notion (extrait de l’URL).

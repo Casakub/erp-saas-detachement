@@ -14,13 +14,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
+      - name: Skip sync when NOTION_TOKEN is missing
+        if: ${{ secrets.NOTION_TOKEN == '' }}
+        run: |
+          set -euo pipefail
+          echo "INFO: NOTION_TOKEN secret is not configured; skipping Notion sync."
+
       - name: Sync markdown to Notion
+        if: ${{ secrets.NOTION_TOKEN != '' }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           BASE_SHA: ${{ github.event.before }}
