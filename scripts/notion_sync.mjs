@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import process from "node:process";
 
@@ -20,6 +21,11 @@ const NOTION_PAGE_ID_REGEX = /([0-9a-f]{32})/i;
 const SYNC_SIGNATURE_TOKEN = "[SYNCED_FROM_GITHUB]";
 const SIGNATURE_MODE_ON = "on";
 const SIGNATURE_MODE_OFF = "off";
+const EFFECTIVE_SYNC_MODE_AUTO = "auto";
+const EFFECTIVE_SYNC_MODE_DIFF_ONLY = "diff_only";
+const EFFECTIVE_SYNC_MODE_FULL = "full";
+const SYNC_HASH_PREFIX = "SYNC_HASH:";
+const SYNC_HASH_REGEX = /SYNC_HASH:\s*([0-9a-f]{64})/i;
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -104,6 +110,18 @@ function paragraphBlock(text) {
       rich_text: toRichText(text)
     }
   };
+}
+
+function normalizeMarkdownForHash(markdown) {
+  return String(markdown).replace(/\r\n/g, "\n").trimEnd();
+}
+
+function computeMarkdownHash(markdown) {
+  return createHash("sha256").update(normalizeMarkdownForHash(markdown), "utf8").digest("hex");
+}
+
+function syncHashBlock(hash) {
+  return paragraphBlock(`${SYNC_HASH_PREFIX} ${hash}`);
 }
 
 function headingBlock(level, text) {
@@ -478,6 +496,21 @@ function toBlockPlainText(block) {
   return "";
 }
 
+function isSyncHashText(text) {
+  return SYNC_HASH_REGEX.test(String(text || ""));
+}
+
+function extractSyncHashFromChildren(children) {
+  for (const child of children) {
+    const text = toBlockPlainText(child);
+    const match = text.match(SYNC_HASH_REGEX);
+    if (match) {
+      return match[1].toLowerCase();
+    }
+  }
+  return null;
+}
+
 function findBoundedMarkers(children) {
   let beginIndex = -1;
   let endIndex = -1;
@@ -543,6 +576,11 @@ function selectSignedChildrenToArchive(children) {
     const text = toBlockPlainText(child);
     if (text.includes(SYNC_SIGNATURE_TOKEN)) {
       mark(child);
+      continue;
+    }
+
+    if (isSyncHashText(text)) {
+      mark(child);
     }
   }
 
@@ -604,19 +642,36 @@ async function appendChildren(token, pageId, blocks, afterId = null) {
   return appended;
 }
 
-function loadChangedFiles() {
+function loadChangedFiles(effectiveSyncMode) {
   const eventName = String(process.env.GITHUB_EVENT_NAME || process.env.EVENT_NAME || "").trim();
   const baseSha = String(process.env.BASE_SHA || process.env.GITHUB_EVENT_BEFORE || "").trim();
   const headSha = String(process.env.HEAD_SHA || process.env.GITHUB_SHA || "").trim();
 
   info(`event_name: ${eventName || "unknown"}`);
+  info(`effective_sync_mode: ${effectiveSyncMode}`);
   info(`base_sha: ${baseSha || "(empty)"}`);
   info(`head_sha: ${headSha || "(empty)"}`);
+
+  if (effectiveSyncMode === EFFECTIVE_SYNC_MODE_FULL) {
+    info("changed_files_count: n/a");
+    info("full sync requested");
+    return { changedFiles: null, eventName, baseSha, headSha, fullRequested: true };
+  }
 
   const invalidBase = baseSha.length === 0 || /^0+$/.test(baseSha);
   const invalidHead = headSha.length === 0 || /^0+$/.test(headSha);
 
   if (invalidBase || invalidHead) {
+    if (effectiveSyncMode === EFFECTIVE_SYNC_MODE_DIFF_ONLY) {
+      return {
+        changedFiles: null,
+        eventName,
+        baseSha,
+        headSha,
+        error: "diff_only mode requires valid BASE_SHA and HEAD_SHA"
+      };
+    }
+
     info("changed_files_count: n/a");
     info("diff not available, full mapping sync");
     return { changedFiles: null, eventName, baseSha, headSha };
@@ -636,6 +691,16 @@ function loadChangedFiles() {
     info(`changed_files_count: ${files.length}`);
     return { changedFiles: files, eventName, baseSha, headSha };
   } catch (error) {
+    if (effectiveSyncMode === EFFECTIVE_SYNC_MODE_DIFF_ONLY) {
+      return {
+        changedFiles: null,
+        eventName,
+        baseSha,
+        headSha,
+        error: `git diff failed in diff_only mode (${String(error.message)})`
+      };
+    }
+
     info(`git diff failed (${String(error.message)})`);
     info("changed_files_count: n/a");
     info("diff not available, full mapping sync");
@@ -870,11 +935,20 @@ async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
   const syncModeRaw = String(process.env.NOTION_SYNC_MODE || SYNC_MODE_FULL_REPLACE).trim().toLowerCase();
+  const effectiveSyncModeRaw = String(process.env.NOTION_SYNC_EFFECTIVE_MODE || EFFECTIVE_SYNC_MODE_AUTO)
+    .trim()
+    .toLowerCase();
   const signatureModeRaw = String(process.env.NOTION_SYNC_SIGNATURE_MODE || SIGNATURE_MODE_OFF)
     .trim()
     .toLowerCase();
   const syncMode =
     syncModeRaw === SYNC_MODE_BOUNDED || syncModeRaw === SYNC_MODE_FULL_REPLACE ? syncModeRaw : null;
+  const effectiveSyncMode =
+    effectiveSyncModeRaw === EFFECTIVE_SYNC_MODE_AUTO ||
+    effectiveSyncModeRaw === EFFECTIVE_SYNC_MODE_DIFF_ONLY ||
+    effectiveSyncModeRaw === EFFECTIVE_SYNC_MODE_FULL
+      ? effectiveSyncModeRaw
+      : null;
   const signatureMode = signatureModeRaw === SIGNATURE_MODE_ON || signatureModeRaw === SIGNATURE_MODE_OFF
     ? signatureModeRaw
     : null;
@@ -888,6 +962,12 @@ async function main() {
   if (!signatureMode) {
     fail(
       `invalid NOTION_SYNC_SIGNATURE_MODE="${signatureModeRaw}" (expected "${SIGNATURE_MODE_OFF}" or "${SIGNATURE_MODE_ON}")`
+    );
+    process.exit(1);
+  }
+  if (!effectiveSyncMode) {
+    fail(
+      `invalid NOTION_SYNC_EFFECTIVE_MODE="${effectiveSyncModeRaw}" (expected "${EFFECTIVE_SYNC_MODE_AUTO}", "${EFFECTIVE_SYNC_MODE_DIFF_ONLY}" or "${EFFECTIVE_SYNC_MODE_FULL}")`
     );
     process.exit(1);
   }
@@ -926,7 +1006,11 @@ async function main() {
   info(`mapped_files_considered: ${mappingEntries.length}`);
   info(`unmappable_allowlist_entries: ${unmappableAllowlist.size}`);
 
-  const changedFilesContext = loadChangedFiles();
+  const changedFilesContext = loadChangedFiles(effectiveSyncMode);
+  if (changedFilesContext.error) {
+    fail(changedFilesContext.error);
+    process.exit(1);
+  }
   const trackedFiles = loadGitTrackedFiles();
   const candidateSelection = selectMarkdownCandidates(changedFilesContext, trackedFiles);
 
@@ -1059,11 +1143,16 @@ async function main() {
       continue;
     }
 
+    const markdownHash = computeMarkdownHash(markdown);
     const contentBlocks = markdownToBlocks(markdown);
+    const syncContentBlocks = [syncHashBlock(markdownHash), ...contentBlocks];
     const blocks =
-      signatureMode === SIGNATURE_MODE_ON ? wrapSignedBlocks(resolvedFile.repoPath, commitSha, contentBlocks) : contentBlocks;
+      signatureMode === SIGNATURE_MODE_ON
+        ? wrapSignedBlocks(resolvedFile.repoPath, commitSha, syncContentBlocks)
+        : syncContentBlocks;
     info(`file -> page: ${resolvedFile.repoPath} -> ${pageId} (source=${source})`);
     info(`blocks_count: ${blocks.length}`);
+    info(`sync_hash: ${markdownHash}`);
 
     if (dryRun) {
       ok(`${resolvedFile.repoPath} -> ${pageId} (dry-run)`);
@@ -1071,8 +1160,14 @@ async function main() {
     }
 
     try {
+      const children = await listChildrenIds(token, pageId);
+      const previousHash = extractSyncHashFromChildren(children);
+      if (previousHash && previousHash === markdownHash) {
+        ok(`skip_unchanged: ${resolvedFile.repoPath} -> ${pageId} (hash=${markdownHash})`);
+        continue;
+      }
+
       if (signatureMode === SIGNATURE_MODE_ON) {
-        const children = await listChildrenIds(token, pageId);
         const signedChildren = selectSignedChildrenToArchive(children);
         const archiveStats =
           signedChildren.length > 0
@@ -1089,7 +1184,6 @@ async function main() {
       }
 
       if (syncMode === SYNC_MODE_BOUNDED) {
-        const children = await listChildrenIds(token, pageId);
         const markers = findBoundedMarkers(children);
 
         if (!markers) {
@@ -1114,7 +1208,7 @@ async function main() {
         continue;
       }
 
-      const archiveStats = await archiveChildren(token, pageId);
+      const archiveStats = await archiveSpecificChildren(token, children);
       const appendedCount = await appendChildren(token, pageId, blocks);
       ok(
         `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`

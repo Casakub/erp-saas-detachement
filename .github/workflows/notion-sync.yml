@@ -14,6 +14,14 @@ on:
         options:
           - sync
           - resolve_ids
+      sync_mode:
+        description: "sync only: diff (default) or full"
+        required: false
+        default: diff
+        type: choice
+        options:
+          - diff
+          - full
       signature_mode:
         description: "sync only: off (default) or on (signature-safe append/replace)"
         required: false
@@ -46,6 +54,7 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
           NOTION_SYNC_MODE: full_replace
           NOTION_SYNC_SIGNATURE_MODE: ${{ inputs.signature_mode }}
+          DISPATCH_SYNC_MODE: ${{ inputs.sync_mode }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'sync' }}
         run: |
           set -euo pipefail
@@ -75,6 +84,15 @@ jobs:
             exit 0
           fi
 
+          effective_sync_mode="diff_only"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            dispatch_sync_mode="${DISPATCH_SYNC_MODE:-diff}"
+            if [ "${dispatch_sync_mode}" = "full" ]; then
+              effective_sync_mode="full"
+            fi
+          fi
+          echo "INFO: effective_sync_mode=${effective_sync_mode}"
+
           resolved_head_sha="${HEAD_SHA:-}"
           if [ -z "${resolved_head_sha}" ]; then
             resolved_head_sha="$(git rev-parse HEAD 2>/dev/null || true)"
@@ -99,8 +117,15 @@ jobs:
           else
             echo "INFO: workflow HEAD_SHA unresolved"
           fi
+          echo "INFO: workflow base_sha=${resolved_base_sha:-<empty>}"
+          echo "INFO: workflow head_sha=${resolved_head_sha:-<empty>}"
 
-          BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" NOTION_SYNC_SIGNATURE_MODE="${resolved_signature_mode}" node scripts/notion_sync.mjs
+          if [ "${effective_sync_mode}" = "diff_only" ] && { [ -z "${resolved_base_sha}" ] || [ -z "${resolved_head_sha}" ]; }; then
+            echo "ERROR: diff_only requires both BASE_SHA and HEAD_SHA; refusing fallback full scan."
+            exit 1
+          fi
+
+          BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" NOTION_SYNC_SIGNATURE_MODE="${resolved_signature_mode}" NOTION_SYNC_EFFECTIVE_MODE="${effective_sync_mode}" node scripts/notion_sync.mjs
 
       - name: Upload resolve-ids report
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'resolve_ids' }}
