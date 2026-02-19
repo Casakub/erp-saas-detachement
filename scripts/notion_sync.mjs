@@ -15,6 +15,7 @@ const SYNC_MODE_FULL_REPLACE = "full_replace";
 const SYNC_MODE_BOUNDED = "bounded";
 const MARKER_BEGIN = "BEGIN GITHUB SYNC";
 const MARKER_END = "END GITHUB SYNC";
+const NOTION_PAGE_ID_REGEX = /([0-9a-f]{32})/i;
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -38,6 +39,28 @@ function normalizePathForMatch(input) {
 
 function normalizePathWithForm(input, form = "NFC") {
   return String(input).replaceAll("\\", "/").normalize(form);
+}
+
+function normalizePathForLockCheck(input) {
+  return String(input).replaceAll("\\", "/").normalize("NFD").toLowerCase();
+}
+
+function isMarkdownPath(input) {
+  return String(input).toLowerCase().endsWith(".md");
+}
+
+function isLockedPath(input) {
+  const normalized = normalizePathForLockCheck(input);
+  if (normalized.includes("(locked)")) {
+    return true;
+  }
+
+  return normalized.includes("socle technique") && normalized.includes("locked");
+}
+
+function extractPageIdFromPath(input) {
+  const match = String(input).match(NOTION_PAGE_ID_REGEX);
+  return match ? match[1].toLowerCase() : null;
 }
 
 function splitText(text, chunkSize = MAX_RICH_TEXT_CHUNK) {
@@ -663,6 +686,56 @@ function resolveMappedFilePath(repoPath, mappedPageId, trackedFiles) {
   return null;
 }
 
+function uniquePaths(paths) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const file of paths) {
+    const normalized = normalizePathForMatch(file);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      unique.push(file);
+    }
+  }
+
+  return unique;
+}
+
+function selectMarkdownCandidates(changedFilesContext, trackedFiles) {
+  const sourceFiles = changedFilesContext.changedFiles ?? trackedFiles;
+  const changedMdFiles = uniquePaths(sourceFiles.filter((file) => isMarkdownPath(file)));
+  const excludedLockedFiles = changedMdFiles.filter((file) => isLockedPath(file));
+  const eligibleMdFiles = changedMdFiles.filter((file) => !isLockedPath(file));
+
+  return {
+    changedMdFiles,
+    excludedLockedFiles,
+    eligibleMdFiles,
+    fullScan: changedFilesContext.changedFiles === null
+  };
+}
+
+function buildMappedPageIdLookup(mappingEntries, trackedFiles) {
+  const mapped = new Map();
+
+  for (const [mappedPath, pageId] of mappingEntries) {
+    const directKey = normalizePathForMatch(mappedPath);
+    if (!mapped.has(directKey)) {
+      mapped.set(directKey, pageId);
+    }
+
+    const unicodeMatch = findTrackedFileByUnicode(mappedPath, trackedFiles);
+    if (unicodeMatch) {
+      const resolvedKey = normalizePathForMatch(unicodeMatch);
+      if (!mapped.has(resolvedKey)) {
+        mapped.set(resolvedKey, pageId);
+      }
+    }
+  }
+
+  return mapped;
+}
+
 async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
@@ -700,26 +773,70 @@ async function main() {
     .filter(([repoPath, pageId]) => typeof repoPath === "string" && typeof pageId === "string")
     .sort((a, b) => a[0].localeCompare(b[0]));
 
-  if (mappingEntries.length === 0) {
-    info("mapping is empty; nothing to sync");
-    process.exit(0);
-  }
-
   info(`mapped_files_considered: ${mappingEntries.length}`);
 
   const changedFilesContext = loadChangedFiles();
-  let targets = mappingEntries;
+  const trackedFiles = loadGitTrackedFiles();
+  const candidateSelection = selectMarkdownCandidates(changedFilesContext, trackedFiles);
 
-  if (changedFilesContext.changedFiles !== null) {
-    const changedSet = new Set(changedFilesContext.changedFiles.map((item) => normalizePathForMatch(item)));
-    targets = mappingEntries.filter(([repoPath]) => changedSet.has(normalizePathForMatch(repoPath)));
-    info(`mapped_files_changed_count: ${targets.length}`);
-  } else {
-    info(`mapped_files_changed_count: ${targets.length} (full mapping sync)`);
+  info(`scan_mode: ${candidateSelection.fullScan ? "full_scan" : "diff_only"}`);
+  info(`changed_md_files_count: ${candidateSelection.changedMdFiles.length}`);
+  info(`excluded_locked_count: ${candidateSelection.excludedLockedFiles.length}`);
+
+  if (candidateSelection.changedMdFiles.length === 0) {
+    info("no changed markdown files");
+    process.exit(0);
   }
 
-  if (targets.length === 0) {
-    info("no mapped files changed");
+  const mappedPageIdLookup = buildMappedPageIdLookup(mappingEntries, trackedFiles);
+  const targets = [];
+  const unmappableFiles = [];
+  let mappableFromMap = 0;
+  let mappableFromAuto = 0;
+
+  for (const repoPath of candidateSelection.eligibleMdFiles) {
+    if (isLockedPath(repoPath)) {
+      warn(`safety guard: skip LOCKED path: ${repoPath}`);
+      continue;
+    }
+
+    const mappedFromJson = mappedPageIdLookup.get(normalizePathForMatch(repoPath)) ?? null;
+    const mappedFromAuto = mappedFromJson ? null : extractPageIdFromPath(repoPath);
+    const mappedPageId = mappedFromJson ?? mappedFromAuto;
+    const source = mappedFromJson ? "map_json" : mappedFromAuto ? "auto_id" : null;
+
+    if (!mappedPageId || !source) {
+      unmappableFiles.push(repoPath);
+      continue;
+    }
+
+    const pageId = toCanonicalPageId(mappedPageId);
+    if (!pageId) {
+      warn(`invalid page_id for ${repoPath}: ${mappedPageId}`);
+      unmappableFiles.push(repoPath);
+      continue;
+    }
+
+    if (source === "map_json") {
+      mappableFromMap += 1;
+    } else {
+      mappableFromAuto += 1;
+    }
+
+    targets.push({ repoPath, mappedPageId, pageId, source });
+  }
+
+  info(`mappable_count (map json): ${mappableFromMap}`);
+  info(`mappable_count (auto id): ${mappableFromAuto}`);
+  info(`unmappable_count: ${unmappableFiles.length}`);
+
+  if (unmappableFiles.length > 0) {
+    const preview = unmappableFiles.slice(0, 50);
+    warn(`unmappable .md files (max 50):\n- ${preview.join("\n- ")}`);
+  }
+
+  if (candidateSelection.changedMdFiles.length > 0 && targets.length === 0) {
+    warn("changed markdown files detected but none are mappable; sync skipped");
     process.exit(0);
   }
 
@@ -733,11 +850,15 @@ async function main() {
   info(`sync_mode: ${syncMode}`);
   info(`target pages: ${targets.length}`);
 
-  const trackedFiles = loadGitTrackedFiles();
   let syncFailures = 0;
 
-  for (const [repoPath, mappedPageId] of targets) {
-    const pageId = toCanonicalPageId(mappedPageId);
+  for (const target of targets) {
+    const { repoPath, mappedPageId, pageId, source } = target;
+    if (isLockedPath(repoPath)) {
+      warn(`safety guard: blocked LOCKED path before sync: ${repoPath}`);
+      continue;
+    }
+
     const resolvedFile = resolveMappedFilePath(repoPath, mappedPageId, trackedFiles);
 
     if (!resolvedFile) {
@@ -746,9 +867,8 @@ async function main() {
       continue;
     }
 
-    if (!pageId) {
-      fail(`${repoPath} -> ${mappedPageId} (invalid Notion page_id)`);
-      syncFailures += 1;
+    if (isLockedPath(resolvedFile.repoPath)) {
+      warn(`safety guard: blocked LOCKED resolved path before sync: ${resolvedFile.repoPath}`);
       continue;
     }
 
@@ -766,7 +886,7 @@ async function main() {
     }
 
     const blocks = markdownToBlocks(markdown);
-    info(`file -> page: ${resolvedFile.repoPath} -> ${pageId}`);
+    info(`file -> page: ${resolvedFile.repoPath} -> ${pageId} (source=${source})`);
     info(`blocks_count: ${blocks.length}`);
 
     if (dryRun) {
