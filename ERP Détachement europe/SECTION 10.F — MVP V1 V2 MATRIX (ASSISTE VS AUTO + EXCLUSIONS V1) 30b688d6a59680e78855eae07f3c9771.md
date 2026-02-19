@@ -34,6 +34,7 @@
 - Source 1 (SOCLE): "Facturation depuis timesheets = V2" (`SOCLE:259`).
 - Source 2 (OpenAPI V1): endpoints actifs `POST /v1/invoices:from-timesheet` et décision V1 C1 (`OPENAPI:553`, `OPENAPI:735`).
 - Note d'arbitrage documentaire (non contractuelle): Endpoint exists in contract but is disabled/not used in V1 per SOCLE; V1 behaviour: manual invoice only; V2: invoice-from-timesheet activated.
+- Politique V1.2.1 (documentaire): endpoint exposé mais `feature_flag` OFF en V1; activation prévue en V2.
 - État dans cette page: contradiction explicitée, aucune modification des contrats LOCKED.
 
 ## Non-goals / Out of scope

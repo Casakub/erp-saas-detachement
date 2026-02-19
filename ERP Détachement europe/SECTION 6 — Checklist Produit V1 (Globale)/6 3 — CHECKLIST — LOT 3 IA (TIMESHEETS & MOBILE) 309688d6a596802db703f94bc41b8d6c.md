@@ -1,7 +1,7 @@
 # 6.3 — CHECKLIST — LOT 3 IA (TIMESHEETS & MOBILE)
 
-**Statut** : PARTIAL
-**Version** : 1.1
+**Statut** : READY
+**Version** : 1.2
 **Date** : 2026-02-19
 **Objectif** : cadrer l'exécution M7.T/M7bis avec anchors contractuels explicites (2.10/2.11/2.12), sans ajout de logique métier.
 
@@ -21,39 +21,44 @@
 
 `operationId`: non spécifié dans le document LOCKED 2.11.
 
-### 6.3.2.a CONTRACT GAP — check-in/check-out mobile
+### 6.3.2.a Covered by V1.2.1 patch — check-in/check-out mobile
 
-- Recherche 2.11: aucune route `check-in/check-out` trouvée (`check-in`, `check_in`, `check-out`, `check_out`, `attendance`, `presence`, `punch`, `clock`).
-- Scope dérivé: check-in/check-out reste hors contrat OpenAPI V1 actuel (STOP / V2 tant que non contractualisé).
+- Endpoint unique: `POST /v1/check-events` (`...V1.2 (DRAFT)/2 11 ...31b688d6...0701.md:116`).
+- Le switch check-in/out est porté par `event_type = check_in|check_out` (`...0701.md:214`).
+- Notes: V1 sans géolocalisation requise (`...0701.md:121`).
 
-## 6.3.3 Events anchors (2.10)
+## 6.3.3 Events anchors (LOCKED 2.10)
 
 - `TimesheetCreated` (`...2 10 EVENTS...md:276`)
 - `TimesheetEntryAdded` (`...2 10 EVENTS...md:283`)
 - `TimesheetSubmitted` (`...2 10 EVENTS...md:262`)
 - `TimesheetValidated` (`...2 10 EVENTS...md:269`)
 - `TimesheetRejected` (`...2 10 EVENTS...md:290`)
-- `WorkerCheckEventRecorded` (`...2 10 EVENTS...md:255`) — event présent, endpoint API absent en 2.11 (contract gap ci-dessus).
+- `WorkerCheckEventRecorded` (`...2 10 EVENTS...md:255`)
 
-## 6.3.4 RBAC anchors (2.12)
+## 6.3.4 RBAC anchors (LOCKED 2.12 + V1.2.1 patch)
 
 - `POST /missions/{id}/timesheets` (`...2 12...md:99`)
 - `POST /timesheets/{id}/entries` (`...2 12...md:100`)
 - `POST /timesheets/{id}:submit` (`...2 12...md:101`)
 - `POST /timesheets/{id}:validate` (`...2 12...md:102`)
 - `POST /timesheets/{id}:reject` (`...2 12...md:103`)
+- `POST /v1/check-events` (`...V1.2 (DRAFT)/2 12 ...31b688d6...0702.md:42`)
 
 Résumé dérivé (sans nouvelle règle):
 - Allowed: `tenant_admin`, `agency_user` sur création/validation/rejet; `worker` limité à `entries` et `submit` en own scope.
 - Forbidden: `worker` sur validation/rejet; `consultant` hors mutations timesheets; `client_user` seulement cas explicite sur reject (`si double validation activée`).
+- Sur check-events patch V1.2.1: `tenant_admin`, `agency_user`, `worker` autorisés; autres interdits (`...0702.md:42`).
 
-## 6.3.5 Acceptance Tests (GWT) — Derived
+## 6.3.5 Acceptance Tests (GWT)
 
 - Référence centrale: `ERP Détachement europe/SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E 30b688d6a59680adaadedb2ffea55aa7.md`.
+- Given un `worker` sur sa mission, When `POST /v1/check-events` avec `event_type=check_in`, Then 2xx + enregistrement d'un check-event.
+- Given un `worker` tentant un `check_in` sur mission hors scope, When `POST /v1/check-events`, Then refus (tenant/ownership scope).
+- Given `agency_user` sur mission du tenant, When `POST /v1/check-events` avec `event_type=check_out`, Then 2xx + event `WorkerCheckEventRecorded`.
 - Given une mission avec `can_validate_timesheets=false`, When `POST /v1/timesheets/{timesheet_id}:validate`, Then `422 timesheet_validation_blocked` + `blocking_reasons` (`SECTION 10.E:65-73`).
 - Given une timesheet d'un autre tenant, When validation/rejet est tentée, Then refus cross-tenant (`SECTION 10.E:83-84`).
 - Given une mission conforme et timesheet validée, When transition vers billing status, Then publication `TimesheetBillingStatusChanged` (`SECTION 10.E:115-118`).
-- TODO: CONTRACT GAP — scénarios GWT check-in/check-out absents de `SECTION 10.E`.
 
 ## 6.3.6 Décisions structurantes (LOCKED)
 
@@ -80,10 +85,11 @@ Résumé dérivé (sans nouvelle règle):
 ## 6.3.9 Impact & Changelog (docs-only)
 
 - Impact: anchors OpenAPI/Events/RBAC explicités.
-- Contract gap explicite sur check-in/check-out API non présent en 2.11.
+- Check-in/check-out API couvert par patch V1.2.1 (`POST /v1/check-events`).
 - Aucun endpoint/event/permission ajouté hors contrats LOCKED.
 
 ## Changelog doc
 
 - 2026-02-18: Alignement référentiel Lot 3 sur modules canoniques (M7.T, M7bis) et events 2.10, sans changement métier.
 - 2026-02-19: patch P0 executable-spec (anchors + GWT dérivés + contract gap check-in/out), sans changement métier.
+- 2026-02-19: réalignement V1.2.1 (check-events couvert OpenAPI/RBAC + GWT check-in/out), docs-only.

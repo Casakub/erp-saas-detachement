@@ -1,8 +1,8 @@
 # 6.2 — CHECKLIST “LOT 2 IA” (CORE MÉTIER) — Missions + Compliance Case + Enforcement
 
-**Statut** : PARTIAL
-**Version** : 1.0
-**Date** : 2026-02-15
+**Statut** : READY
+**Version** : 1.1
+**Date** : 2026-02-19
 **Objectif** : livrer le cœur RegTech opérationnel (mission → compliance case → requirements → A1 tracking → enforcement flags), testable et “inspection-ready”.
 
 > 🔗 **Documents de référence (contrats amont)**
@@ -87,10 +87,22 @@ Endpoints minimum :
 
 `operationId`: non spécifié dans le document LOCKED 2.11.
 
-### 2.14.2.3.a CONTRACT GAP — Vault API
+### 2.14.2.3.a Covered by V1.2.1 patch — Vault API
 
-- `POST /v1/files` n'existe pas dans 2.11 LOCKED.
-- Scope dérivé: M9 upload API reste hors contrat OpenAPI V1 actuel (STOP jusqu'à arbitrage).
+Couverture OpenAPI V1.2.1:
+
+- `POST /v1/files` (`...V1.2 (DRAFT)/2 11 ...31b688d6...0701.md:86`)
+- `GET /v1/files/{file_id}` (`...0701.md:92`)
+- `POST /v1/files/{file_id}:soft-delete` (`...0701.md:98`)
+- `POST /v1/file-links` (`...0701.md:104`)
+- `DELETE /v1/file-links/{file_link_id}` (`...0701.md:110`)
+
+Couverture RBAC V1.2.1:
+
+- `POST /v1/files` (`...V1.2 (DRAFT)/2 12 ...31b688d6...0702.md:37`)
+- `GET /v1/files/{file_id}` (`...0702.md:38`)
+- `POST /v1/file-links` (`...0702.md:40`)
+- `DELETE /v1/file-links/{file_link_id}` (`...0702.md:41`)
 
 ### 2.14.2.4 Tests (OBLIGATOIRES)
 
@@ -220,7 +232,7 @@ Le lot 2 est **DONE** si et seulement si :
 
 ---
 
-## 2.14.7 OpenAPI anchors (2.11)
+## 2.14.7 OpenAPI anchors (LOCKED 2.11 + V1.2.1 patch)
 
 - `POST /v1/missions` (`...2 11...md:34`)
 - `PATCH /v1/missions/{mission_id}/status` (`...2 11...md:69`)
@@ -233,8 +245,12 @@ Le lot 2 est **DONE** si et seulement si :
 - `PATCH /v1/a1-requests/{a1_request_id}/status` (`...2 11...md:275`)
 - `GET /v1/missions/{mission_id}/enforcement` (`...2 11...md:371`)
 - `POST /v1/missions/{mission_id}/enforcement:evaluate` (`...2 11...md:398`)
+- `POST /v1/files` (`...V1.2 (DRAFT)/2 11 ...31b688d6...0701.md:86`)
+- `GET /v1/files/{file_id}` (`...0701.md:92`)
+- `POST /v1/file-links` (`...0701.md:104`)
+- `DELETE /v1/file-links/{file_link_id}` (`...0701.md:110`)
 
-## 2.14.8 Events anchors (2.10)
+## 2.14.8 Events anchors (LOCKED 2.10)
 
 - `MissionCreated` (`...2 10 EVENTS...md:241`)
 - `MissionStatusChanged` (`...2 10 EVENTS...md:248`)
@@ -243,34 +259,42 @@ Le lot 2 est **DONE** si et seulement si :
 - `ComplianceRequirementStatusChanged` (`...2 10 EVENTS...md:334`)
 - `A1StatusUpdated` (`...2 10 EVENTS...md:341`)
 - `MissionEnforcementEvaluated` (`...2 10 EVENTS...md:362`)
-- `FileUploaded` (`...2 10 EVENTS...md:301`) — event présent, endpoint `/v1/files` absent en 2.11 (contract gap ci-dessus).
+- `FileUploaded` (`...2 10 EVENTS...md:301`)
+- `FileAccessed` (`...2 10 EVENTS...md:308`)
+- `FileSoftDeleted` (`...2 10 EVENTS...md:500`)
 
-## 2.14.9 RBAC anchors (2.12)
+## 2.14.9 RBAC anchors (LOCKED 2.12 + V1.2.1 patch)
 
 - Missions: `POST /missions`, `PATCH /missions/{id}/status`, `GET /missions/{id}` (`...2 12...md:47-49`).
 - Compliance: `GET /missions/{id}/compliance-case`, `POST /missions/{id}/compliance-case/requirements/initialize`, `GET /compliance-cases/{id}/requirements`, `PATCH /requirements/{id}/status` (`...2 12...md:57-60`).
 - A1: `POST /compliance-cases/{id}/a1-requests`, `PATCH /a1-requests/{id}/status` (`...2 12...md:68-69`).
 - Enforcement: `GET /missions/{id}/enforcement`, `POST /missions/{id}/enforcement:evaluate` (`...2 12...md:86-87`).
+- Vault patch: `POST /v1/files` (`...0702.md:37`), `GET /v1/files/{file_id}` (`...0702.md:38`), `POST /v1/file-links` (`...0702.md:40`), `DELETE /v1/file-links/{file_link_id}` (`...0702.md:41`).
 
 Résumé dérivé (sans nouvelle règle):
 - Allowed: `tenant_admin`, `agency_user` sur mutations mission/compliance/A1; `consultant` limité en lecture/scoped selon matrice.
 - Forbidden: `client_user` et `worker` sur décisions critiques et écritures conformité (`...2 12...md:34`, `...2 12...md:180`).
+- OWNER ARBITRATION REQUIRED restant: granularité ownership consultant/worker sur `POST /v1/file-links` (`...0702.md:40`, `...0702.md:60`).
 
-## 2.14.10 Acceptance Tests (GWT) — Derived
+## 2.14.10 Acceptance Tests (GWT)
 
 - Référence centrale: `ERP Détachement europe/SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E 30b688d6a59680adaadedb2ffea55aa7.md`.
 - Given une mission avec `can_validate_timesheets=false`, When `POST /v1/timesheets/{timesheet_id}:validate`, Then retour `422` avec `blocking_reasons` (`SECTION 10.E:65-73`).
 - Given une mission avec `can_issue_invoice=false`, When `POST /v1/invoices:from-timesheet` ou `POST /v1/invoices/{invoice_id}:issue`, Then retour `422 invoice_issuance_blocked` (`SECTION 10.E:88-95`).
 - Given tenant B sur ressource tenant A, When lecture/écriture mission/compliance, Then isolation multi-tenant stricte (`SECTION 10.E:39-40`, `SECTION 10.E:83-84`, `SECTION 10.E:105-106`).
+- Given `agency_user` sur son tenant, When `POST /v1/files` puis `POST /v1/file-links` avec `object_type=client|worker|mission`, Then upload et rattachement acceptés.
+- Given `consultant` sur dossier autorisé, When `POST /v1/files` puis `POST /v1/file-links`, Then autorisé tenant-scoped (ownership à appliquer selon patch RBAC V1.2.1).
+- Given `client_user`, When `POST /v1/files` ou `POST /v1/file-links`, Then 403.
 
 ## 2.14.11 Impact & Changelog (docs-only)
 
 - Impact: ancrages OpenAPI/Events/RBAC explicites ajoutés.
-- Contract gap documenté: endpoint `/v1/files` absent en 2.11 LOCKED.
+- Surface Vault couverte par patch V1.2.1 (`/v1/files` + `file-links`).
 - Aucun changement de logique métier ni de contrat LOCKED.
 
 ## Changelog doc
 
 - 2026-02-19: patch P0 executable-spec (anchors OpenAPI/Events/RBAC, GWT dérivés, contract gap Vault API explicité), sans changement métier.
+- 2026-02-19: réalignement V1.2.1 (Vault API couverte par patch OpenAPI/RBAC), docs-only.
 
 FIN — LOT 2 IA

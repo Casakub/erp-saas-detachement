@@ -1,8 +1,8 @@
 # 6.1 — CHECKLIST “LOT 1 IA” (FOUNDATION) — Core/Auth/RBAC/Audit + Events Outbox
 
-**Statut** : PARTIAL
-**Version** : 1.0
-**Date** : 2026-02-15
+**Statut** : READY
+**Version** : 1.1
+**Date** : 2026-02-19
 **Objectif** : livrer un socle exécutable et testable pour que les lots suivants puissent s’enchaîner sans chaos.
 
 ---
@@ -55,30 +55,29 @@ Doit inclure (si pas déjà présent) :
 - `events_outbox`
 - `notification_events` (trace orchestration)
 
-### 2.13.2.3 OpenAPI — Core V1 (extrait 2.11)
+### 2.13.2.3 OpenAPI — Core V1.2.1 patch
 
-OpenAPI 2.11 ne contient pas d'endpoints Core/Auth/Users/Tenant settings.
+Couverture par patch OpenAPI V1.2.1:
 
-- Vérification: `2.11` expose les parcours mission/compliance/timesheets/finance/CRM (`...2 11...md:34`, `...2 11...md:422`, `...2 11...md:553`, `...2 11...md:749`) et aucune entrée `/v1/auth`, `/v1/users`, `/v1/me`, `/v1/tenant-settings`.
-- `operationId`: non spécifié dans le document LOCKED 2.11.
+- `GET /v1/me` (`...V1.2 (DRAFT)/2 11 ...31b688d6...0701.md:37`)
+- `GET /v1/users` (`...0701.md:43`)
+- `POST /v1/users` (`...0701.md:49`)
+- `PATCH /v1/users/{user_id}` (`...0701.md:55`)
+- `POST /v1/users/{user_id}:deactivate` (`...0701.md:62`)
+- `POST /v1/users/{user_id}:reactivate` (`...0701.md:68`)
+- `GET /v1/tenant-settings` (`...0701.md:74`)
+- `PATCH /v1/tenant-settings` (`...0701.md:80`)
 
-### 2.13.2.3.a CONTRACT GAP — endpoints Core non présents dans 2.11 (STOP)
+Notes contractuelles:
 
-Ces endpoints sont hors contrat OpenAPI V1 actuel et doivent rester en attente d'arbitrage contractuel:
+- Modèle Auth: Supabase Auth (pas d'endpoint auth custom) (`...0701.md:20-26`, `...0701.md:225-226`).
+- `operationId`: non spécifié dans les documents contractuels.
 
-- `POST /v1/auth/login`
-- `POST /v1/auth/logout`
-- `POST /v1/auth/refresh`
-- `POST /v1/auth/password-reset/request`
-- `POST /v1/auth/password-reset/confirm`
-- `GET /v1/me`
-- `GET /v1/users`
-- `POST /v1/users`
-- `PATCH /v1/users/{id}`
-- `PATCH /v1/users/{id}/status`
-- `PATCH /v1/users/{id}/role`
-- `GET /v1/tenant-settings`
-- `PATCH /v1/tenant-settings`
+### 2.13.2.3.a Couverture contractuelle V1.2.1
+
+- Ancien contract gap Core (OpenAPI/RBAC) couvert par les patchs V1.2.1.
+- Alignement RBAC Core/Settings: `...V1.2 (DRAFT)/2 12 ...31b688d6...0702.md:29-36`.
+- OWNER ARBITRATION REQUIRED restant: granularité role via `PATCH /v1/users/{user_id}` (`...0701.md:60`).
 
 ### 2.13.2.4 Tests (OBLIGATOIRES)
 
@@ -109,8 +108,8 @@ Ces endpoints sont hors contrat OpenAPI V1 actuel et doivent rester en attente d
 
 ### 2.13.3.2 Auth (Day 1)
 
-- [ ]  Implémenter login/logout/refresh
-- [ ]  Sessions / token rotation (si supporté)
+- [ ]  Intégrer AuthN Supabase (JWT valide transmis à l'API)
+- [ ]  Exposer `GET /v1/me` et vérifier le contexte tenant/role
 - [ ]  Rate-limit login (anti brute force)
 - [ ]  Blocage user `is_active=false` (401/403) + audit
 
@@ -188,38 +187,46 @@ Le lot 1 est **DONE** si et seulement si :
 
 ---
 
-## 2.13.7 Events anchors (2.10)
+## 2.13.7 Events anchors (LOCKED 2.10)
 
 - `UserCreated` (`...2 10 EVENTS...md:90`)
 - `UserRoleChanged` (`...2 10 EVENTS...md:97`)
 - `TenantSettingsUpdated` (`...2 10 EVENTS...md:104`)
 
-## 2.13.8 RBAC anchors (2.12)
+## 2.13.8 RBAC anchors (V1.2.1 patch)
 
-- Rôles officiels: `tenant_admin`, `agency_user`, `consultant`, `client_user`, `worker`, `system` (`...2 12...md:21-26`).
-- Principes de sécurité: tenant-scoped, `client_user`/`worker` en lecture limitée, décisions critiques jamais côté `client_user`/`worker` (`...2 12...md:32-35`).
-- CONTRACT GAP: 2.12 ne contient pas de matrice endpoint explicite pour `/v1/auth*`, `/v1/users*`, `/v1/tenant-settings*` (aligné au gap OpenAPI ci-dessus).
+- `GET /v1/me` (`...V1.2 (DRAFT)/2 12 ...31b688d6...0702.md:29`)
+- `GET /v1/users` (`...0702.md:30`)
+- `POST /v1/users` (`...0702.md:31`)
+- `PATCH /v1/users/{user_id}` (`...0702.md:32`)
+- `POST /v1/users/{user_id}:deactivate` (`...0702.md:33`)
+- `POST /v1/users/{user_id}:reactivate` (`...0702.md:34`)
+- `GET /v1/tenant-settings` (`...0702.md:35`)
+- `PATCH /v1/tenant-settings` (`...0702.md:36`)
 
 Résumé dérivé (sans nouvelle règle):
-- Allowed (cadre général): acteurs internes du tenant (`tenant_admin`, `agency_user`) selon matrice officielle.
-- Forbidden: `client_user` et `worker` pour décisions critiques (`...2 12...md:34`, `...2 12...md:180`).
 
-## 2.13.9 Acceptance Tests (GWT) — Derived
+- Allowed: `tenant_admin` sur administration users/settings; `agency_user` autorisé en lecture `tenant-settings`.
+- Forbidden: `consultant`, `client_user`, `worker` sur administration users/settings.
+- Règle transverse: tenant-scoped strict, no cross-tenant (`...0702.md:20-23`).
 
-- Référence centrale: `ERP Détachement europe/SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E 30b688d6a59680adaadedb2ffea55aa7.md`.
-- Given un acteur du tenant B et une ressource du tenant A, When une action mutante est tentée, Then l'accès cross-tenant est refusé (`SECTION 10.E:39-40`, `SECTION 10.E:83-84`).
-- Given une action critique, When l'acteur est `client_user` ou `worker`, Then l'action est refusée (`SECTION 10.E:34-35`, `SECTION 10.E:100`).
-- TODO: CONTRACT GAP — scénarios GWT auth/users/tenant-settings absents de `SECTION 10.E`.
+## 2.13.9 Acceptance Tests (GWT)
+
+- Given `tenant_admin` authentifié (JWT Supabase), When `POST /v1/users` puis `PATCH /v1/users/{user_id}` (role), Then création et affectation de rôle réussissent, avec events `UserCreated`/`UserRoleChanged`.
+- Given `agency_user` sur son tenant, When `GET /v1/tenant-settings`, Then 200; When `PATCH /v1/tenant-settings`, Then 403.
+- Given `consultant`, When `GET /v1/users` ou `POST /v1/users`, Then 403.
+- Given tenant B sur ressource tenant A, When lecture/écriture users/settings, Then refus cross-tenant.
 
 ## 2.13.10 Impact & Changelog (docs-only)
 
 - Impact: alignement explicite Lot 1 avec les contrats LOCKED 2.10/2.11/2.12.
-- Aucun endpoint/event/permission nouveau ajouté.
-- Contract gap Core OpenAPI/RBAC rendu explicite pour arbitrage.
+- Couverture Core OpenAPI/RBAC apportée par patch V1.2.1 (sans modification LOCKED).
+- Aucun endpoint/event/permission nouveau ajouté dans les documents LOCKED.
 
 ## Changelog doc
 
 - 2026-02-19: patch P0 executable-spec (contract gap OpenAPI/RBAC M1, anchors events/RBAC, GWT dérivés), sans changement métier.
+- 2026-02-19: réalignement V1.2.1 (anchors OpenAPI/RBAC patch, GWT Core complets), docs-only.
 
 ---
 

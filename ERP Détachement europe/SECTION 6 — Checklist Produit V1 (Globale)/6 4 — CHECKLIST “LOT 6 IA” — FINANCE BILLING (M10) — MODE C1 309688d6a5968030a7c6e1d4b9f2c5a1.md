@@ -1,7 +1,7 @@
 # 6.4 — CHECKLIST “LOT 6 IA” — FINANCE / BILLING (M10) — MODE C1
 
 **Statut** : PARTIAL
-**Version** : 1.1
+**Version** : 1.2
 **Date** : 2026-02-19
 **Objectif** : ancrer Lot 6 sur les contrats LOCKED (OpenAPI/Events/RBAC) avec explicitation de l'ambiguïté V1/V2.
 
@@ -22,13 +22,13 @@
 
 `operationId`: non spécifié dans le document LOCKED 2.11.
 
-## 6.4.3 Contradiction V1/V2 — note d'arbitrage documentaire (non contractuelle)
+## 6.4.3 OpenAPI anchors (V1.2.1 patch policy note)
 
-- Endpoint exists in contract but is disabled/not used in V1 per SOCLE; V1 behaviour: manual invoice only; V2: invoice-from-timesheet activated.
-- Sources: SOCLE `...44ea.md:259` vs OpenAPI `...2 11...md:553`.
-- Cette note n'édite pas les contrats LOCKED; elle signale un arbitrage requis.
+- Endpoint `POST /v1/invoices:from-timesheet` est exposé en OpenAPI LOCKED (`...2 11...md:553`).
+- Politique produit V1.2.1: endpoint présent mais feature flag OFF en V1; activation V2 uniquement (référence `SECTION 10.F ...30b688d6...9771.md:36`).
+- Statut Lot 6: PARTIAL documented & acceptable tant que l'arbitrage reste "feature flag OFF" en V1.
 
-## 6.4.4 Events anchors (2.10)
+## 6.4.4 Events anchors (LOCKED 2.10)
 
 - `InvoiceIssued` (`...2 10 EVENTS...md:394`)
 - `InvoiceDraftCreated` (`...2 10 EVENTS...md:401`)
@@ -38,7 +38,7 @@
 - `ConsultantCommissionCalculated` (`...2 10 EVENTS...md:429`)
 - `TimesheetBillingStatusChanged` (`...2 10 EVENTS...md:507`)
 
-## 6.4.5 RBAC anchors (2.12)
+## 6.4.5 RBAC anchors (LOCKED 2.12 + V1.2.1 patch policy)
 
 - `POST /invoices:from-timesheet` (`...2 12...md:111`)
 - `POST /invoices/{id}:issue` (`...2 12...md:112`)
@@ -50,6 +50,7 @@
 Résumé dérivé (sans nouvelle règle):
 - Allowed: `tenant_admin` et `agency_user` sur création/émission/paiement.
 - Forbidden: `consultant`, `client_user`, `worker`; `agency_user` interdit sur `block`/`void`.
+- V1.2.1 patch n'ajoute pas de nouvelle route M10; la note porte uniquement sur la politique d'activation V1/V2.
 
 ## 6.4.6 Acceptance Tests (GWT) — Derived
 
@@ -70,10 +71,11 @@ Résumé dérivé (sans nouvelle règle):
 ## 6.4.8 Impact & Changelog (docs-only)
 
 - Impact: anchors OpenAPI/Events/RBAC + GWT dérivés ajoutés.
-- Contradiction SOCLE/OpenAPI documentée sans modification des contrats LOCKED.
+- Contradiction SOCLE/OpenAPI documentée avec politique V1.2.1 "feature flag OFF", sans modification des contrats LOCKED.
 - Aucun endpoint/event/permission nouveau ajouté.
 
 ## Changelog doc
 
 - 2026-02-17: Création checklist Lot 6 (Finance/Billing), sans changement métier.
 - 2026-02-19: patch P0 executable-spec (anchors + GWT dérivés + note d'arbitrage V1/V2), sans changement métier.
+- 2026-02-19: alignement V1.2.1 (feature flag OFF V1 pour invoices-from-timesheet), Lot 6 PARTIAL documented & acceptable.
