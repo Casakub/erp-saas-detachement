@@ -68,3 +68,4 @@ Quand ne pas utiliser SECTION 10:
 - 2026-02-18: création de la page index SECTION 10 (structure et navigation).
 - 2026-02-19: Changelog: sync smoke test (no contract change).
 - 2026-02-19: Changelog: sync smoke test follow-up (no contract change).
+- 2026-02-19: Changelog: sync hardening verification (no contract change).
