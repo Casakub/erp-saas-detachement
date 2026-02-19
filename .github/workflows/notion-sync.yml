@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       mode:
@@ -33,6 +36,7 @@ on:
 
 jobs:
   notion-sync:
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -134,3 +138,186 @@ jobs:
           name: notion-resolve-ids-report
           path: /tmp/notion_resolve_ids_report.json
           if-no-files-found: error
+
+  notion-sync-pr-report:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build Notion sync PR dry-run report
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          NOTION_SYNC_MODE: full_replace
+          NOTION_SYNC_SIGNATURE_MODE: off
+          NOTION_SYNC_EFFECTIVE_MODE: diff_only
+        run: |
+          set -euo pipefail
+          echo "INFO: effective_sync_mode=diff_only"
+          echo "INFO: workflow base_sha=${BASE_SHA:-<empty>}"
+          echo "INFO: workflow head_sha=${HEAD_SHA:-<empty>}"
+          node scripts/notion_sync.mjs --dry-run
+
+      - name: Verify sync report exists
+        run: |
+          set -euo pipefail
+          if [ ! -f .artifacts/notion-sync-report.json ]; then
+            echo "ERROR: missing .artifacts/notion-sync-report.json"
+            exit 1
+          fi
+
+      - name: Append GitHub Actions summary
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const reportPath = path.resolve(process.cwd(), ".artifacts/notion-sync-report.json");
+          if (!fs.existsSync(reportPath)) {
+            console.error("ERROR: missing .artifacts/notion-sync-report.json");
+            process.exit(1);
+          }
+
+          const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+          const synced = Array.isArray(report.synced) ? report.synced : [];
+          const skippedUnchanged = Array.isArray(report.skipped_unchanged) ? report.skipped_unchanged : [];
+          const unmappable = Array.isArray(report.unmappable) ? report.unmappable : [];
+          const lockSkippedCount = Number(report.locked_skipped_count || 0);
+          const changedCount = Number(report.changed_md_files_count || 0);
+          const lockedTouched = lockSkippedCount > 0;
+
+          const summary = [
+            "## Notion Sync PR Dry-Run Summary",
+            `- mode: \`${report.mode || "diff_only"}\``,
+            `- changed_md_files_count: \`${changedCount}\``,
+            `- synced_count: \`${synced.length}\``,
+            `- skipped_unchanged_count: \`${skippedUnchanged.length}\``,
+            `- unmappable_count: \`${unmappable.length}\``,
+            `- LOCKED touched: **${lockedTouched ? "Yes" : "No"}**`
+          ].join("\n");
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+          console.log("INFO: wrote PR dry-run summary to GITHUB_STEP_SUMMARY");
+          NODE
+
+      - name: Post or update PR summary comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const core = require("@actions/core");
+
+            const marker = "<!-- notion-sync-pr-report -->";
+            const reportPath = path.resolve(process.cwd(), ".artifacts/notion-sync-report.json");
+            if (!fs.existsSync(reportPath)) {
+              core.setFailed("missing .artifacts/notion-sync-report.json");
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+            const synced = Array.isArray(report.synced) ? report.synced : [];
+            const skippedUnchanged = Array.isArray(report.skipped_unchanged) ? report.skipped_unchanged : [];
+            const unmappable = Array.isArray(report.unmappable) ? report.unmappable : [];
+            const lockSkippedCount = Number(report.locked_skipped_count || 0);
+            const changedCount = Number(report.changed_md_files_count || 0);
+
+            const isLockedPath = (input) => {
+              const normalized = String(input).replaceAll("\\\\", "/").normalize("NFD").toLowerCase();
+              return normalized.includes("(locked)") || (normalized.includes("socle technique") && normalized.includes("locked"));
+            };
+
+            const lockedInSynced = synced.filter((filePath) => isLockedPath(filePath));
+            if (lockedInSynced.length > 0) {
+              core.setFailed(`LOCKED paths detected in synced[]: ${lockedInSynced.join(", ")}`);
+              return;
+            }
+
+            const renderList = (values) => {
+              if (!values || values.length === 0) {
+                return "- _(none)_";
+              }
+              return values.map((value) => `- \`${value}\``).join("\n");
+            };
+
+            const lockedTouched = lockSkippedCount > 0 || lockedInSynced.length > 0;
+            const body = [
+              marker,
+              "## Notion Sync Report (PR dry-run)",
+              `- mode: \`${report.mode || "diff_only"}\``,
+              `- changed_md_files_count: \`${changedCount}\``,
+              `- LOCKED touched: **${lockedTouched ? "Yes" : "No"}**`,
+              "",
+              "### Synced (planned)",
+              renderList(synced),
+              "",
+              "### Skipped unchanged",
+              renderList(skippedUnchanged),
+              "",
+              "### Unmappable",
+              renderList(unmappable)
+            ].join("\n");
+
+            core.info("PR comment preview:");
+            core.info(body);
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+            const botMarkerComments = comments.filter(
+              (comment) =>
+                typeof comment.body === "string" &&
+                comment.body.includes(marker) &&
+                comment.user?.login === "github-actions[bot]"
+            );
+            botMarkerComments.sort(
+              (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
+            );
+            const existing = botMarkerComments[0];
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+              core.info(`Updated comment ${existing.id}`);
+
+              const extras = botMarkerComments.slice(1);
+              for (const duplicate of extras) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: duplicate.id
+                });
+                core.info(`Deleted duplicate comment ${duplicate.id}`);
+              }
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body
+              });
+              core.info(`Created comment ${created.data.id}`);
+            }

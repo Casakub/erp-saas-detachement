@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -26,6 +26,7 @@ const EFFECTIVE_SYNC_MODE_DIFF_ONLY = "diff_only";
 const EFFECTIVE_SYNC_MODE_FULL = "full";
 const SYNC_HASH_PREFIX = "SYNC_HASH:";
 const SYNC_HASH_REGEX = /SYNC_HASH:\s*([0-9a-f]{64})/i;
+const REPORT_PATH = ".artifacts/notion-sync-report.json";
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -41,6 +42,19 @@ function fail(message) {
 
 function warn(message) {
   console.warn(`WARN: ${message}`);
+}
+
+function pushUnique(items, value) {
+  if (!items.includes(value)) {
+    items.push(value);
+  }
+}
+
+async function writeSyncReport(report) {
+  const reportFilePath = path.resolve(process.cwd(), REPORT_PATH);
+  await mkdir(path.dirname(reportFilePath), { recursive: true });
+  await writeFile(reportFilePath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  info(`report_written: ${REPORT_PATH}`);
 }
 
 function normalizePathForMatch(input) {
@@ -957,30 +971,48 @@ async function main() {
   const signatureMode = signatureModeRaw === SIGNATURE_MODE_ON || signatureModeRaw === SIGNATURE_MODE_OFF
     ? signatureModeRaw
     : null;
+  const report = {
+    mode: effectiveSyncModeRaw === EFFECTIVE_SYNC_MODE_FULL ? "full" : "diff_only",
+    changed_md_files_count: 0,
+    synced: [],
+    skipped_unchanged: [],
+    unmappable: [],
+    locked_skipped_count: 0
+  };
+
+  const finalize = async (exitCode) => {
+    try {
+      await writeSyncReport(report);
+    } catch (error) {
+      fail(`unable to write ${REPORT_PATH}: ${String(error.message ?? error)}`);
+      return 1;
+    }
+    return exitCode;
+  };
 
   if (!syncMode) {
     fail(
       `invalid NOTION_SYNC_MODE="${syncModeRaw}" (expected "${SYNC_MODE_FULL_REPLACE}" or "${SYNC_MODE_BOUNDED}")`
     );
-    process.exit(1);
+    return finalize(1);
   }
   if (!signatureMode) {
     fail(
       `invalid NOTION_SYNC_SIGNATURE_MODE="${signatureModeRaw}" (expected "${SIGNATURE_MODE_OFF}" or "${SIGNATURE_MODE_ON}")`
     );
-    process.exit(1);
+    return finalize(1);
   }
   if (!effectiveSyncMode) {
     fail(
       `invalid NOTION_SYNC_EFFECTIVE_MODE="${effectiveSyncModeRaw}" (expected "${EFFECTIVE_SYNC_MODE_AUTO}", "${EFFECTIVE_SYNC_MODE_DIFF_ONLY}" or "${EFFECTIVE_SYNC_MODE_FULL}")`
     );
-    process.exit(1);
+    return finalize(1);
   }
 
   const mapPath = path.resolve(process.cwd(), MAP_FILE);
   if (!existsSync(mapPath)) {
     fail(`mapping file missing: ${MAP_FILE}`);
-    process.exit(1);
+    return finalize(1);
   }
 
   let rawMap;
@@ -988,12 +1020,12 @@ async function main() {
     rawMap = JSON.parse(await readFile(mapPath, "utf8"));
   } catch (error) {
     fail(`unable to parse ${MAP_FILE}: ${String(error.message)}`);
-    process.exit(1);
+    return finalize(1);
   }
 
   if (!rawMap || Array.isArray(rawMap) || typeof rawMap !== "object") {
     fail(`${MAP_FILE} must be a JSON object: { "repo/path.md": "notion_page_id" }`);
-    process.exit(1);
+    return finalize(1);
   }
 
   const mappingEntries = Object.entries(rawMap)
@@ -1005,7 +1037,7 @@ async function main() {
     unmappableAllowlist = await loadUnmappableAllowlist();
   } catch (error) {
     fail(String(error.message || error));
-    process.exit(1);
+    return finalize(1);
   }
 
   info(`mapped_files_considered: ${mappingEntries.length}`);
@@ -1014,10 +1046,13 @@ async function main() {
   const changedFilesContext = loadChangedFiles(effectiveSyncMode);
   if (changedFilesContext.error) {
     fail(changedFilesContext.error);
-    process.exit(1);
+    return finalize(1);
   }
   const trackedFiles = loadGitTrackedFiles();
   const candidateSelection = selectMarkdownCandidates(changedFilesContext, trackedFiles);
+  report.mode = candidateSelection.fullScan ? "full" : "diff_only";
+  report.changed_md_files_count = candidateSelection.changedMdFiles.length;
+  report.locked_skipped_count += candidateSelection.excludedLockedFiles.length;
 
   info(`scan_mode: ${candidateSelection.fullScan ? "full_scan" : "diff_only"}`);
   info(`changed_md_files_count: ${candidateSelection.changedMdFiles.length}`);
@@ -1028,7 +1063,7 @@ async function main() {
     info("mappable_count (auto id): 0");
     info("unmappable_count: 0");
     info("no changed markdown files");
-    process.exit(0);
+    return finalize(0);
   }
 
   const mappedPageIdLookup = buildMappedPageIdLookup(mappingEntries, trackedFiles);
@@ -1040,6 +1075,7 @@ async function main() {
   for (const repoPath of candidateSelection.eligibleMdFiles) {
     if (isLockedPath(repoPath)) {
       warn(`safety guard: skip LOCKED path: ${repoPath}`);
+      report.locked_skipped_count += 1;
       continue;
     }
 
@@ -1073,6 +1109,7 @@ async function main() {
   info(`mappable_count (map json): ${mappableFromMap}`);
   info(`mappable_count (auto id): ${mappableFromAuto}`);
   info(`unmappable_count: ${unmappableFiles.length}`);
+  report.unmappable = [...unmappableFiles];
 
   const allowlistViolations = unmappableFiles.filter(
     (file) => !unmappableAllowlist.has(normalizePathForMatch(file))
@@ -1081,7 +1118,7 @@ async function main() {
     fail(
       `unmappable files not in allowlist (${allowlistViolations.length}):\n- ${allowlistViolations.join("\n- ")}`
     );
-    process.exit(1);
+    return finalize(1);
   }
 
   if (unmappableFiles.length > 0) {
@@ -1092,19 +1129,19 @@ async function main() {
   const collisionResult = enforceCollisionGuard(targets);
   if (!collisionResult.ok) {
     fail(`collision_check: FAIL\n${collisionResult.errors.join("\n")}`);
-    process.exit(1);
+    return finalize(1);
   }
   targets = collisionResult.targets;
 
   if (candidateSelection.changedMdFiles.length > 0 && targets.length === 0) {
     warn("changed markdown files detected but none are mappable; sync skipped");
-    process.exit(0);
+    return finalize(0);
   }
 
   const token = process.env.NOTION_TOKEN || "";
   if (!dryRun && token.length === 0) {
     fail("NOTION_TOKEN is required (use --dry-run for local preview without API calls)");
-    process.exit(1);
+    return finalize(1);
   }
 
   info(`mode: ${dryRun ? "dry-run" : "live"}`);
@@ -1119,6 +1156,7 @@ async function main() {
     const { repoPath, mappedPageId, pageId, source } = target;
     if (isLockedPath(repoPath)) {
       warn(`safety guard: blocked LOCKED path before sync: ${repoPath}`);
+      report.locked_skipped_count += 1;
       continue;
     }
 
@@ -1132,6 +1170,7 @@ async function main() {
 
     if (isLockedPath(resolvedFile.repoPath)) {
       warn(`safety guard: blocked LOCKED resolved path before sync: ${resolvedFile.repoPath}`);
+      report.locked_skipped_count += 1;
       continue;
     }
 
@@ -1160,6 +1199,7 @@ async function main() {
     info(`sync_hash: ${markdownHash}`);
 
     if (dryRun) {
+      pushUnique(report.synced, resolvedFile.repoPath);
       ok(`${resolvedFile.repoPath} -> ${pageId} (dry-run)`);
       continue;
     }
@@ -1168,6 +1208,7 @@ async function main() {
       const children = await listChildrenIds(token, pageId);
       const previousHash = extractSyncHashFromChildren(children);
       if (previousHash && previousHash === markdownHash) {
+        pushUnique(report.skipped_unchanged, resolvedFile.repoPath);
         ok(`skip_unchanged: ${resolvedFile.repoPath} -> ${pageId} (hash=${markdownHash})`);
         continue;
       }
@@ -1185,6 +1226,7 @@ async function main() {
         ok(
           `${resolvedFile.repoPath} -> ${pageId} (mode=signature, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
         );
+        pushUnique(report.synced, resolvedFile.repoPath);
         continue;
       }
 
@@ -1200,6 +1242,7 @@ async function main() {
           ok(
             `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
           );
+          pushUnique(report.synced, resolvedFile.repoPath);
           continue;
         }
 
@@ -1210,6 +1253,7 @@ async function main() {
         ok(
           `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_BOUNDED}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
         );
+        pushUnique(report.synced, resolvedFile.repoPath);
         continue;
       }
 
@@ -1218,6 +1262,7 @@ async function main() {
       ok(
         `${resolvedFile.repoPath} -> ${pageId} (mode=${SYNC_MODE_FULL_REPLACE}, archived=${archiveStats.archived}, skipped=${archiveStats.skipped}, total=${archiveStats.total}, appended=${appendedCount})`
       );
+      pushUnique(report.synced, resolvedFile.repoPath);
     } catch (error) {
       fail(`${resolvedFile.repoPath} -> ${pageId} (${String(error.message)})`);
       syncFailures += 1;
@@ -1226,10 +1271,11 @@ async function main() {
 
   if (syncFailures > 0) {
     fail(`Notion sync finished with ${syncFailures} failure(s)`);
-    process.exit(1);
+    return finalize(1);
   }
 
   ok("Notion sync finished successfully");
+  return finalize(0);
 }
 
-await main();
+process.exit(await main());

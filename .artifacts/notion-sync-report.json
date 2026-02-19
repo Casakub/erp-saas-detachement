@@ -1,0 +1,42 @@
+{
+  "mode": "full",
+  "changed_md_files_count": 38,
+  "synced": [
+    "ERP Détachement europe 308688d6a59680d8950feccf07ea2018.md",
+    "ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md",
+    "ERP Détachement europe/SECTION 10 — META STRUCTURE PRODUIT & GOUVERNANCE (INDEX) 30b688d6a59680e6967cd98ee0aa6a50.md",
+    "ERP Détachement europe/SECTION 10.A — PILIERS FONCTIONNELS (6 PILIERS ↔ M1..M13) 30b688d6a59680698d88fef0d6fa06f7.md",
+    "ERP Détachement europe/SECTION 10.B — RÔLES & PERMISSIONS (INDEX) 30b688d6a59680aa9271e0b904b76d93.md",
+    "ERP Détachement europe/SECTION 10.C — DATA & LEGAL SOURCES REGISTER (IDCC + COUNTRY RULES) 30b688d6a596802fb409c572fc2d3892.md",
+    "ERP Détachement europe/SECTION 10.D — SECURITY BASELINE (HASHING, LOGS, ENCRYPTION, RETENTION, KEY ROTATION, INCIDENT, PII) 30b688d6a59680a698c4d882eaea9fd5.md",
+    "ERP Détachement europe/SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E 30b688d6a59680adaadedb2ffea55aa7.md",
+    "ERP Détachement europe/SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1) 30b688d6a59680e78855eae07f3c9771.md",
+    "ERP Détachement europe/SECTION 2 — PROMPTS IA BACKEND (PAR MODULE) (DEV) 308688d6a59680ebb64fe4ddb4223b41.md",
+    "ERP Détachement europe/SECTION 3 — TEMPLATE NOTION CLICKUP (PILOTAGE IA) 308688d6a59680acb6b6f7306e1d9a4b.md",
+    "ERP Détachement europe/SECTION 3.T1 — TEMPLATE — PRD MODULE (STANDARD IA) 30b688d6a596806181dac50b3fd334ce.md",
+    "ERP Détachement europe/SECTION 3.T2 — TEMPLATE — DB CHANGE AND MIGRATION IMPACT (STANDARD IA) 30b688d6a596809bb763d2cd469a3c2f.md",
+    "ERP Détachement europe/SECTION 3.T3 — TEMPLATE — SERVICE AND EVENTS HANDLER CONTRACT (STANDARD IA) 30b688d6a596805eb30df1905ec0bfa8.md",
+    "ERP Détachement europe/SECTION 3.T4 — TEMPLATE — IMPACT AND CHANGELOG (STANDARD IA) 30b688d6a59680268053f7be15164fa2.md",
+    "ERP Détachement europe/SECTION 4 — AI CONTRIBUTION RULES (OFFICIEL) 308688d6a5968046b8c5d098ffffff15.md",
+    "ERP Détachement europe/SECTION 5 — “DEFINITION OF DONE” GLOBAL (DoD) 308688d6a596807789b6f97e7433f4fd.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale) 308688d6a5968026b6d6e3a94a6817f4.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 1 — CHECKLIST “LOT 1 IA” (FOUNDATION) — Core Aut 309688d6a59680289ab6c2610e2ea8c2.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 2 A — CHECKLIST DE VALIDATION INTER-MODULES (LOT 30a688d6a59680cd973bcefa1b8dea2e.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 2 — CHECKLIST “LOT 2 IA” (CORE MÉTIER) — Mission 309688d6a5968025b83ee89daae2af50.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 3 — CHECKLIST — LOT 3 IA (TIMESHEETS & MOBILE) 309688d6a596802db703f94bc41b8d6c.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 4 — CHECKLIST “LOT 6 IA” — FINANCE BILLING (M10) — MODE C1 309688d6a5968030a7c6e1d4b9f2c5a1.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 5 — CHECKLIST — LOT 4 IA (CRM, CLIENTS, VIGILANCE, RFP) 30b688d6a596805a8ee3fa3fc97db271.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 6 — CHECKLIST — LOT 5 IA (ATS, WORKERS) 30b688d6a5968097b150ebf02aa52ca0.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 7 — CHECKLIST — LOT 7 IA (COMPLIANCE ENGINE REMUNERATION) 30b688d6a59680cca2c4f65092f93b55.md",
+    "ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 8 — CHECKLIST — LOT 8 IA (RISK, CERTIFICATION, MARKETPLACE) 30b688d6a59680fba415f73561265313.md",
+    "ERP Détachement europe/SECTION 7 — ORCHESTRATION NO-CODE (AUTORISÉE) 308688d6a59680f2bff6f404c1ac8b90.md",
+    "ERP Détachement europe/SECTION 8 — PLAN D’EXÉCUTION (ordre conseillé) 308688d6a596809584e4eef380abe47c.md",
+    "ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 309688d6a59680f9b1a2c3d4e5f60789.md"
+  ],
+  "skipped_unchanged": [],
+  "unmappable": [
+    "AGENTS.md",
+    "ERP Détachement europe/ERRATA — Clarifications contractuelles V1.1 309688d6a59680b4c1d2e3f4a5b6c7d8.md"
+  ],
+  "locked_skipped_count": 6
+}
