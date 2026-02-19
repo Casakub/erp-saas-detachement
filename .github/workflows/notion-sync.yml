@@ -45,12 +45,21 @@ jobs:
           BASE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
           NOTION_SYNC_MODE: full_replace
-          NOTION_SYNC_SIGNATURE_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.signature_mode || 'off' }}
+          NOTION_SYNC_SIGNATURE_MODE: ${{ inputs.signature_mode }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'sync' }}
         run: |
           set -euo pipefail
           mode="${MODE:-sync}"
           echo "INFO: mode=${mode}"
+
+          resolved_signature_mode="${NOTION_SYNC_SIGNATURE_MODE:-off}"
+          if [ -z "${resolved_signature_mode}" ] || [ "${resolved_signature_mode}" = "false" ]; then
+            resolved_signature_mode="off"
+          fi
+          if [ "${resolved_signature_mode}" = "true" ]; then
+            resolved_signature_mode="on"
+          fi
+          echo "INFO: signature_mode=${resolved_signature_mode}"
 
           if [ "${mode}" = "resolve_ids" ]; then
             if [ -z "${NOTION_TOKEN:-}" ]; then
@@ -91,7 +100,7 @@ jobs:
             echo "INFO: workflow HEAD_SHA unresolved"
           fi
 
-          BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" node scripts/notion_sync.mjs
+          BASE_SHA="${resolved_base_sha}" HEAD_SHA="${resolved_head_sha}" NOTION_SYNC_SIGNATURE_MODE="${resolved_signature_mode}" node scripts/notion_sync.mjs
 
       - name: Upload resolve-ids report
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'resolve_ids' }}
