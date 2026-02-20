@@ -650,6 +650,11 @@ async function archiveSpecificChildren(token, children) {
       archived += 1;
     } catch (error) {
       const message = String(error.message ?? error);
+      if (message.includes("Can't edit block that is archived")) {
+        skippedAlreadyArchived += 1;
+        warn(`skip archiving already archived block (api): ${child.id}`);
+        continue;
+      }
       if (message.includes("Updating a page via the blocks endpoint unsupported")) {
         skippedUnsupported += 1;
         warn(`skip archiving unsupported page block: ${child.id}`);
