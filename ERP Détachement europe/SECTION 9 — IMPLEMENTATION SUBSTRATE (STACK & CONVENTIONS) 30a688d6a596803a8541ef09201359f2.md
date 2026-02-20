@@ -486,11 +486,11 @@ Artefacts verrouillés:
 
 - Script dédié de vérification substrat: `scripts/substrate_check.sh`.
 - Mapping doc -> implémentation utilisé par le script:
-- `ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 309688d6a59680f9b1a2c3d4e5f60789.md`
+- `ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 30a688d6a596803a8541ef09201359f2.md`
 - `ERP Détachement europe/SECTION 2 — PROMPTS IA BACKEND (PAR MODULE) (DEV) 308688d6a59680ebb64fe4ddb4223b41.md`
-- `ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/`
-- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11.A — OPENAPI EXECUTION SCHEMAS (ANNEXE) 309688d6a59680c1b2d3e4f5a6b7c8d9.md`
-- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 308688d6a596802bad05fb3834118422.md`
+- `ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/ 308688d6a59680ebb64fe4ddb4223b41`
+- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2.11.A — OPENAPI EXECUTION SCHEMAS (ANNEXE) 30b688d6a59680889d57de90b0df5efb.md`
+- `ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2.10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 30a688d6a5968047ad41e7305d7d9b39.md`
 - Intégration CI substrate check: `.github/workflows/substrate-check.yml`.
 
 ---
