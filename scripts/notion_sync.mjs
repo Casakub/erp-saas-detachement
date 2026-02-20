@@ -10,6 +10,7 @@ import process from "node:process";
 const NOTION_API_BASE = "https://api.notion.com/v1";
 const NOTION_VERSION = "2022-06-28";
 const MAP_FILE = "notion-sync-map.json";
+const DIRECTION_FILE = "notion-sync-direction.json";
 const UNMAPPABLE_ALLOWLIST_FILE = "notion-unmappable-allowlist.json";
 const MAX_CHILDREN_PER_APPEND = 100;
 const MAX_RICH_TEXT_CHUNK = 1900;
@@ -27,6 +28,8 @@ const EFFECTIVE_SYNC_MODE_FULL = "full";
 const SYNC_HASH_PREFIX = "SYNC_HASH:";
 const SYNC_HASH_REGEX = /SYNC_HASH:\s*([0-9a-f]{64})/i;
 const REPORT_PATH = ".artifacts/notion-sync-report.json";
+const DIRECTION_GITHUB_MASTER = "github_master";
+const DIRECTION_NOTION_MASTER = "notion_master";
 
 function info(message) {
   console.log(`INFO: ${message}`);
@@ -949,6 +952,57 @@ async function loadUnmappableAllowlist() {
   return new Set(parsed.map((item) => normalizePathForMatch(item)));
 }
 
+async function loadDirectionConfig() {
+  const directionPath = path.resolve(process.cwd(), DIRECTION_FILE);
+  if (!existsSync(directionPath)) {
+    return {
+      defaultDirection: DIRECTION_GITHUB_MASTER,
+      notionMasterPaths: new Set()
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(await readFile(directionPath, "utf8"));
+  } catch (error) {
+    throw new Error(`unable to parse ${DIRECTION_FILE}: ${String(error.message)}`);
+  }
+
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+    throw new Error(
+      `${DIRECTION_FILE} must be a JSON object: { "default": "github_master", "notion_master": ["path.md"] }`
+    );
+  }
+
+  const defaultDirectionRaw = String(parsed.default ?? DIRECTION_GITHUB_MASTER).trim().toLowerCase();
+  if (defaultDirectionRaw !== DIRECTION_GITHUB_MASTER && defaultDirectionRaw !== DIRECTION_NOTION_MASTER) {
+    throw new Error(
+      `${DIRECTION_FILE} "default" must be "${DIRECTION_GITHUB_MASTER}" or "${DIRECTION_NOTION_MASTER}"`
+    );
+  }
+
+  const notionMasterRaw = parsed.notion_master ?? [];
+  if (!Array.isArray(notionMasterRaw) || notionMasterRaw.some((item) => typeof item !== "string")) {
+    throw new Error(`${DIRECTION_FILE} "notion_master" must be a JSON array of markdown file paths`);
+  }
+
+  const notionMasterPaths = new Set();
+  for (const filePath of notionMasterRaw) {
+    if (!isMarkdownPath(filePath)) {
+      throw new Error(`invalid notion_master entry (not markdown): ${filePath}`);
+    }
+    if (isLockedPath(filePath)) {
+      throw new Error(`invalid notion_master entry (LOCKED path forbidden): ${filePath}`);
+    }
+    notionMasterPaths.add(normalizePathForMatch(filePath));
+  }
+
+  return {
+    defaultDirection: defaultDirectionRaw,
+    notionMasterPaths
+  };
+}
+
 function enforceCollisionGuard(targets) {
   const grouped = new Map();
   for (const target of targets) {
@@ -1022,6 +1076,7 @@ async function main() {
     changed_md_files_count: 0,
     synced: [],
     skipped_unchanged: [],
+    skipped_direction: [],
     unmappable: [],
     locked_skipped_count: 0,
     errors: []
@@ -1087,8 +1142,18 @@ async function main() {
     return finalize(1);
   }
 
+  let directionConfig;
+  try {
+    directionConfig = await loadDirectionConfig();
+  } catch (error) {
+    fail(String(error.message || error));
+    return finalize(1);
+  }
+
   info(`mapped_files_considered: ${mappingEntries.length}`);
   info(`unmappable_allowlist_entries: ${unmappableAllowlist.size}`);
+  info(`direction_default: ${directionConfig.defaultDirection}`);
+  info(`direction_notion_master_entries: ${directionConfig.notionMasterPaths.size}`);
 
   const changedFilesContext = loadChangedFiles(effectiveSyncMode);
   if (changedFilesContext.error) {
@@ -1116,6 +1181,7 @@ async function main() {
   const mappedPageIdLookup = buildMappedPageIdLookup(mappingEntries, trackedFiles);
   let targets = [];
   const unmappableFiles = [];
+  let directionSkippedCount = 0;
   let mappableFromMap = 0;
   let mappableFromAuto = 0;
 
@@ -1126,7 +1192,18 @@ async function main() {
       continue;
     }
 
-    const mappedFromJson = mappedPageIdLookup.get(normalizePathForMatch(repoPath)) ?? null;
+    const normalizedRepoPath = normalizePathForMatch(repoPath);
+    const direction = directionConfig.notionMasterPaths.has(normalizedRepoPath)
+      ? DIRECTION_NOTION_MASTER
+      : directionConfig.defaultDirection;
+    if (direction === DIRECTION_NOTION_MASTER) {
+      directionSkippedCount += 1;
+      pushUnique(report.skipped_direction, repoPath);
+      info(`direction_skip: notion_master ${repoPath}`);
+      continue;
+    }
+
+    const mappedFromJson = mappedPageIdLookup.get(normalizedRepoPath) ?? null;
     const mappedFromAuto = mappedFromJson ? null : extractPageIdFromPath(repoPath);
     const mappedPageId = mappedFromJson ?? mappedFromAuto;
     const source = mappedFromJson ? "map_json" : mappedFromAuto ? "auto_id" : null;
@@ -1155,6 +1232,7 @@ async function main() {
 
   info(`mappable_count (map json): ${mappableFromMap}`);
   info(`mappable_count (auto id): ${mappableFromAuto}`);
+  info(`direction_skipped_count: ${directionSkippedCount}`);
   info(`unmappable_count: ${unmappableFiles.length}`);
   report.unmappable = [...unmappableFiles];
 

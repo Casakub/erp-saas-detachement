@@ -1,0 +1,87 @@
+name: notion-pull-sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply_changes:
+        description: "Apply Notion -> GitHub updates (opens PR when changes exist)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  notion-pull-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Pull notion_master pages to repo
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.apply_changes }}" = "true" ]; then
+            node scripts/notion_pull_from_notion.mjs --apply
+          else
+            node scripts/notion_pull_from_notion.mjs --dry-run
+          fi
+
+      - name: Verify pull report exists
+        run: |
+          set -euo pipefail
+          if [ ! -f .artifacts/notion-pull-report.json ]; then
+            echo "ERROR: missing .artifacts/notion-pull-report.json"
+            exit 1
+          fi
+
+      - name: Upload pull report
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-pull-report
+          path: .artifacts/notion-pull-report.json
+          if-no-files-found: error
+
+      - name: Append GitHub Actions summary
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+          const report = JSON.parse(fs.readFileSync('.artifacts/notion-pull-report.json', 'utf8'));
+          const summary = [
+            '## Notion Pull Sync Summary',
+            `- mode: \`${report.mode}\``,
+            `- notion_master_count: \`${report.notion_master_count || 0}\``,
+            `- processed_count: \`${(report.processed || []).length}\``,
+            `- updated_count: \`${(report.updated || []).length}\``,
+            `- created_count: \`${(report.created || []).length}\``,
+            `- unchanged_count: \`${(report.unchanged || []).length}\``,
+            `- skipped_locked_count: \`${(report.skipped_locked || []).length}\``,
+            `- errors_count: \`${(report.errors || []).length}\``
+          ].join('\n');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+          console.log('INFO: wrote pull summary');
+          NODE
+
+      - name: Create PR with pulled updates
+        if: ${{ inputs.apply_changes == true }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "docs(notion-sync): pull notion_master updates from Notion"
+          branch: "chore/notion-pull-sync"
+          delete-branch: true
+          title: "docs: pull notion_master updates from Notion"
+          body: |
+            Automated Notion -> GitHub sync for `notion_master` pages.
+
+            Source report: `.artifacts/notion-pull-report.json`
