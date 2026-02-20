@@ -1,4 +1,4 @@
-# 2 12 — RBAC & PERMISSIONS (MATRIX) — V1.2 (PATCH)
+# 2.12.a — RBAC & PERMISSIONS (MATRIX) — V1.2 (PATCH)
 
 - Statut: DRAFT
 - Type: DERIVED / DRAFT — does not override LOCKED V1
