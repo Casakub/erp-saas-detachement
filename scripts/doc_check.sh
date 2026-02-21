@@ -4,28 +4,36 @@ set -u
 
 LC_ALL=C
 
-resolve_locked_doc_by_id() {
-  local file_id="$1"
-  local match
-  match="$(find . -type f -name "*${file_id}.md" -print -quit)"
-  if [[ -z "$match" ]]; then
-    echo "KO: fichier introuvable (id=${file_id})"
-    exit 1
-  fi
-  printf '%s' "$match"
+resolve_locked_doc_by_ids() {
+  local file_id match
+  for file_id in "$@"; do
+    match="$(find . -type f -name "*${file_id}*" -print -quit)"
+    if [[ -n "$match" ]]; then
+      printf '%s' "$match"
+      return 0
+    fi
+  done
+  echo "KO: fichier introuvable (ids=$*)"
+  exit 1
 }
 
-resolve_doc_by_id_optional() {
-  local file_id="$1"
-  find . -type f -name "*${file_id}.md" -print -quit
+resolve_doc_by_ids_optional() {
+  local file_id match
+  for file_id in "$@"; do
+    match="$(find . -type f -name "*${file_id}*" -print -quit)"
+    if [[ -n "$match" ]]; then
+      printf '%s' "$match"
+      return 0
+    fi
+  done
+  return 0
 }
 
-SOCLE_FILE="$(resolve_doc_by_id_optional "308688d6a596805b8e40c7f8a22944ea")"
-OPENAPI_FILE="$(resolve_locked_doc_by_id "308688d6a596801dad76e1c4a1a96c02")"
-OPENAPI_SCHEMAS_FILE="$(resolve_doc_by_id_optional "309688d6a59680c1b2d3e4f5a6b7c8d9")"
-RBAC_FILE="$(resolve_locked_doc_by_id "308688d6a596802d8e81c1623900db41")"
-EVENTS_FILE="$(resolve_locked_doc_by_id "308688d6a596802bad05fb3834118422")"
-
+SOCLE_FILE="$(resolve_doc_by_ids_optional "308688d6a596805b8e40c7f8a22944ea")"
+OPENAPI_FILE="$(resolve_locked_doc_by_ids "30a688d6a59680b8a5cfc33e26910adb" "308688d6a596801dad76e1c4a1a96c02")"
+OPENAPI_SCHEMAS_FILE="$(resolve_doc_by_ids_optional "30b688d6a59680889d57de90b0df5efb" "309688d6a59680c1b2d3e4f5a6b7c8d9")"
+RBAC_FILE="$(resolve_locked_doc_by_ids "30a688d6a596805ea41ae2abb55cbb97" "308688d6a596802d8e81c1623900db41")"
+EVENTS_FILE="$(resolve_locked_doc_by_ids "30a688d6a5968047ad41e7305d7d9b39" "308688d6a596802bad05fb3834118422")"
 FAIL=0
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -69,7 +77,7 @@ info "Resolved OpenAPI V1 (2.11): $OPENAPI_FILE"
 if [[ -n "$OPENAPI_SCHEMAS_FILE" ]]; then
   info "Resolved OpenAPI Execution Schemas (2.11.A): $OPENAPI_SCHEMAS_FILE"
 else
-  info "Resolved OpenAPI Execution Schemas (2.11.A): not found (id=309688d6a59680c1b2d3e4f5a6b7c8d9)"
+  info "Resolved OpenAPI Execution Schemas (2.11.A): not found (ids=30b688d6a59680889d57de90b0df5efb|309688d6a59680c1b2d3e4f5a6b7c8d9)"
 fi
 info "Resolved Events (2.10): $EVENTS_FILE"
 info "Resolved RBAC (2.12): $RBAC_FILE"
