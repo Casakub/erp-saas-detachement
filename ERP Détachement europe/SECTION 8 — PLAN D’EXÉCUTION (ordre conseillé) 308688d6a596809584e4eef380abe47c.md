@@ -56,6 +56,83 @@ Objectif: rendre le produit utilisable et vendable.
 
 ---
 
+
+## 📦 LOT 1 — FOUNDATION (V1)
+
+Objectif du lot  
+Poser les fondations techniques de la plateforme multi-tenant :
+authentification, RBAC, audit logs immuables, coffre-fort chiffré, et bus d'events (Outbox).
+Aucun lot métier ne peut démarrer avant validation complète du Lot 1.
+
+Modules concernés :
+- M1 — Foundation (Core/Auth, Tenant, RBAC, Audit, Events Outbox)
+- M9 — Vault (coffre-fort chiffré, partiel — base sécurité)
+
+Décisions structurantes :
+- JWT claims : `tenant_id`, `user_id`, `role` — présents sur chaque requête
+- RLS Supabase : activé sur toutes les tables métier dès le Lot 1
+- Outbox pattern : `events_outbox` créée ici, dispatcher toutes les 60s, max_retries=8
+- RBAC 6 rôles : `tenant_admin`, `agency_user`, `consultant`, `client_user`, `worker`, `system`
+- Audit logs : insert-only, jamais de delete ni d'update
+
+Ordre recommandé :
+1) Schéma DB initial (tenants, users, roles, sessions, events_outbox, audit_logs)
+2) Auth multi-tenant (JWT + refresh + RLS bootstrap)
+3) RBAC middleware + policy enforcement
+4) Audit logs (immutables, toutes actions critiques)
+5) Outbox dispatcher (retry + DLQ)
+6) Vault M9 : tables vault_items + chiffrement AES-256 + hash intégrité
+
+Conditions de sortie :
+☐ Isolation multi-tenant testée (tenant B ne voit jamais données tenant A)
+☐ RBAC testé par rôle : chaque endpoint couvert
+☐ Audit logs insert-only (test dédié : no delete/update possible)
+☐ Outbox dispatcher opérationnel (retry + DLQ)
+☐ Vault chiffré accessible et lié aux objets métier futurs
+
+Référence checklist : 6.1 — Checklist Lot 1 (LOCKED)
+
+---
+
+## 📦 LOT 2 — CORE MÉTIER : MISSIONS + COMPLIANCE CASE BASE (V1)
+
+Objectif du lot  
+Activer le cœur métier du produit : création de missions, affectation workers,
+Compliance Case automatique par mission, et enforcement flags de base.
+Le Compliance Case est le pivot de toute la chaîne conformité V1.
+
+Modules concernés :
+- M7 — Missions (création, affectation, statuts, planning)
+- M8 — Compliance Détachement (base : Compliance Case, enforcement flags, A1 tracking assisté)
+- M9 — Vault (extension : liaison vault aux missions et workers)
+
+Décisions structurantes :
+- `compliance_case` créé automatiquement à chaque nouvelle mission (trigger backend)
+- Enforcement flags : `can_activate_mission`, `can_validate_timesheets`, `can_issue_invoice` — calculés par M8 uniquement
+- A1 tracking assisté (pas automatisé) : statut A1 saisi manuellement, alertes expiration
+- Documents obligatoires : checklist dynamique liée à la mission (pays + IDCC)
+- Vault M9 : chaque document uploadé est chiffré, hashé, lié à la mission ou au worker
+
+Ordre recommandé :
+1) Missions CRUD (M7) : création, affectation worker, statuts (draft→active→closed)
+2) Compliance Case auto-création (M8) : trigger post-création mission
+3) Enforcement flags base (M8) : initialisation à `true`, mise à jour par events
+4) A1 tracking assisté (M8) : statut, dates, alertes expiration
+5) Checklist documents dynamique (M8) : items obligatoires par pays/IDCC
+6) Vault extension M9 : upload, hash, chiffrement, liaison mission/worker
+
+Conditions de sortie :
+☐ Compliance Case créé automatiquement pour chaque nouvelle mission
+☐ Enforcement flags initialisés et mis à jour via events (MissionEnforcementEvaluated)
+☐ Upload documents : ownership check strict, hash SHA-256, chiffrement vault
+☐ A1 : alertes expiration publiées (A1StatusChanged)
+☐ Multi-tenant isolation testée sur missions et compliance_cases
+☐ RBAC validé : worker exclu de la création/modification mission
+
+Référence checklist : 6.2 — Checklist Lot 2 (LOCKED) + 6.2.A — Checklist inter-modules
+
+---
+
 ## 📦 LOT 3 — TIMESHEETS & MOBILE WORKER (V1)
 
 Objectif du lot  
@@ -323,4 +400,5 @@ Référence checklist : 6.8 — Checklist Lot 8 (READY v1.1)
 
 - 2026-02-17: Normalisation fences — sans changement métier.
 - 2026-02-20: Ajout fiches Lots 4→8 avec objectifs, modules, décisions structurantes, ordre recommandé et conditions de sortie (même niveau de détail que Lot 3).
+- 2026-02-21: Ajout fiches Lots 1 et 2 (Foundation + Core Métier) — même niveau de détail que Lots 3→8. Couverture complète tous les lots V1.
 

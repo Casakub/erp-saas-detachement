@@ -116,6 +116,8 @@ Langues, pays/corridors actifs, secteurs, modèles scoring/enforcement (verrouil
 
 ## **1.17 — Mobile PWA Intérimaire (suite complète)**
 
+> ⚠️ **Remplacé et détaillé par 1.19 — Mobile PWA flows détaillés (A→F).** Ce prompt reste en référence pour les principes UX globaux. La conception opérationnelle flow par flow se fait sur la base du prompt **1.19**.
+
 Écrans: login OTP, dashboard, missions, conformité simplifiée, upload docs, planning, rémunération, notifications, support.
 UX: zéro jargon, actions simples, statut clair (OK / action requise).
 
@@ -125,9 +127,199 @@ UX: zéro jargon, actions simples, statut clair (OK / action requise).
 - Simplicité maximale
 - Priorité à la compréhension et à l’action
 
+## **1.18 — Timesheets (desktop agence + mobile worker)**
+
+### Vue desktop — Agence
+
+Concevoir l'écran de gestion des timesheets côté agence.
+
+Liste timesheets par mission :
+- Colonnes : worker, mission, période (semaine), total heures, statut, billing_status, actions.
+- Filtres : statut (`draft / submitted / client_validated / agency_validated / validated / rejected`), mission, worker, période.
+- Badges statut colorés : draft (gris), submitted (bleu), client_validated (bleu-clair), agency_validated (bleu-moyen), validated (vert), rejected (rouge).
+
+Fiche timesheet (détail) :
+- Header : mission liée, worker, période (lun→dim), total heures calculé.
+- Tableau entries daily : colonnes date, heures, notes. Ligne par jour de la semaine.
+- Bloc double validation : deux zones distinctes — "Validation client" (statut + date + nom) et "Validation agence" (idem). Badge "En attente" si non encore validé par le rôle.
+- Bloc enforcement : si `can_validate_timesheets = false` → banner rouge avec `blocking_reasons` explicites. Bouton "Valider" désactivé.
+- Actions : valider (si rôle autorisé + enforcement OK), rejeter (modal de rejet avec champ reason + notes), voir audit.
+
+États obligatoires à couvrir :
+- Timesheet soumise, en attente validation client.
+- Timesheet bloquée enforcement (mission non conforme) — actions désactivées + raison visible.
+- Timesheet rejetée — raison + possibilité de rework worker.
+- Timesheet fully validated — billing_status bascule `not_billed → billed` visible.
+
+### Vue mobile — Worker (saisie + soumission)
+
+Écran hebdomadaire :
+- Semaine courante avec 7 jours. Chaque jour = champ heures (0 à 24h, validation simple).
+- Bouton "+ Ajouter" pour entry quotidienne.
+- Total heures semaine recalculé en temps réel.
+- État de la mission affiché (active / bloquée enforcement). Si bloquée : message clair, saisie autorisée mais soumission bloquée.
+
+Soumission :
+- Bouton "Soumettre la semaine" — confirmation modale (récapitulatif heures + avertissement si mission warning).
+- Si `can_validate_timesheets = false` → bouton désactivé + message explication (jamais de jargon technique).
+
+Historique timesheets :
+- Liste des semaines passées avec statut visuel simple : soumis / validé / rejeté.
+- Timesheet rejetée : notification + raison lisible + bouton "Corriger".
+
+Contraintes UX mobile :
+- Zéro jargon : "Semaine validée" pas "TimesheetValidated". "Correction requise" pas "rejected".
+- Un écran = une action. Pas de tableau complexe.
+- Feedback immédiat sur chaque saisie.
+
+---
+
+## **1.19 — Mobile PWA — Flows détaillés (intérimaire terrain)**
+
+> Ce prompt remplace et précise 1.17. Concevoir chaque flow comme un parcours autonome.
+
+### Flow A — Onboarding & Login
+
+- Écran splash (logo produit + langue).
+- Login OTP : saisie numéro → code SMS → accès dashboard.
+- Premier login : confirmation identité + langue + notification de pièces à fournir.
+- États : erreur OTP, code expiré, compte désactivé (message clair).
+
+### Flow B — Dashboard mobile
+
+- Vue synthétique : missions actives (1 card par mission), alertes en cours (docs manquants / A1 / mission bloquée), notifications non lues.
+- Cards mission : client, dates, statut (active/warning/blocked), bouton check-in rapide.
+- Aucun chiffre de conformité brut — statut visuel uniquement : vert / orange / rouge + texte explicatif simple.
+
+### Flow C — Check-in / Check-out
+
+- Écran check-in : carte mission, bouton grand "Je pointe mon arrivée", heure côté serveur affichée après confirmation.
+- Confirmation visuelle : "Arrivée enregistrée à 08h47" (horodatage serveur, non modifiable).
+- Écran check-out : même logique, heure de départ.
+- État : déjà pointé → afficher heure d'arrivée + bouton check-out uniquement.
+- Erreur : mission inactive ou bloquée → message clair, pointage impossible, raison affichée sans jargon.
+- Pas de géolocalisation V1 (aucun champ GPS visible).
+
+### Flow D — Upload documents
+
+- Liste pièces demandées (classées : manquantes / en attente / valides / expirantes).
+- Card document : type, statut, date expiration si connue, bouton "Fournir".
+- Upload : sélection photo / fichier → aperçu → confirmation → spinner upload → statut mis à jour.
+- États : upload réussi (confirmation verte), erreur upload (retry), document refusé (raison + re-upload possible).
+- Aucun champ technique (hash, vault_id) visible.
+
+### Flow E — Consultation rémunération & indemnités
+
+- Écran lecture seule : rémunération déclarée (montant brut), indemnités (logement / transport / repas — séparées), total déclaré.
+- Mention claire : "Ces montants sont déclarés par l'agence. En cas de désaccord, contacter l'agence."
+- V1 : lecture des données saisies par l'agence (pas de calcul IDCC côté mobile).
+- Pas de snapshot ni calcul affiché — uniquement les valeurs déclarées.
+
+### Flow F — Notifications
+
+- Centre de notifications : liste chronologique (A1 à fournir / doc expirant / mission modifiée / timesheet rejetée).
+- Card notification : icône type, message clair en langue worker, date, action rapide si applicable ("Fournir le doc", "Voir la mission").
+- Badge non-lu sur l'icône dashboard.
+- Marquer tout comme lu.
+
+Contraintes transversales tous flows :
+- Langue résolue automatiquement selon préférence worker (`fr/en/pl/ro`).
+- Accessibilité : contraste élevé, taille texte minimum 16px actions, tap targets ≥ 44px.
+- Offline V1 : écran d'erreur explicite si pas de connexion (jamais de fausse action silencieuse).
+
+---
+
+## **1.20 — RFP Interne (M4) — Mise en concurrence agences**
+
+> À ne pas confondre avec le Marketplace RFP externe (1.15). Le RFP interne est l'outil de pilotage côté agence / admin pour comparer et sélectionner des agences partenaires sur un besoin client.
+
+### Liste RFPs internes
+
+- Tableau : titre besoin, client, corridor, secteur, dates, volume (headcount), statut (`draft / open / evaluating / closed`), visibilité (`private / public`).
+- Filtres : statut, client, corridor, secteur.
+- Bouton : "Créer une demande".
+
+### Création / édition RFP
+
+- Formulaire structuré : client (sélecteur), corridor origine/destination, secteur, intitulé poste, volume, dates souhaitées, IDCC cible (optionnel).
+- Champ visibilité : `Interne (privé)` ou `Publier sur Marketplace` (bascule).
+- Résumé besoin (texte libre).
+- CTA : "Enregistrer brouillon" / "Publier + inviter agences".
+
+### Gestion des réponses agences
+
+- Vue par RFP : liste des agences invitées + statut réponse (en attente / réponse reçue / refus).
+- Card réponse agence : nom agence, badge certification, taux proposé, délai, score comparateur (4 critères : prix / conformité / expérience / délai) + total pondéré.
+- Vue comparateur : tableau côte-à-côte des réponses reçues avec tri par critère.
+- CTA : "Sélectionner cette agence" → confirmation modale → statut RFP = `closed`, agence = allocated.
+
+### Log anti-désintermédiation
+
+- Bloc visible sur la fiche RFP : historique des contacts directs loggués (date, nature du contact, note contextuelle).
+- Mention : "Tout contact direct avec une agence est tracé automatiquement".
+
+États obligatoires :
+- RFP en brouillon (éditable, non publiée).
+- RFP ouverte (en attente réponses).
+- RFP en évaluation (réponses reçues, comparateur actif).
+- RFP clôturée (agence sélectionnée, décision tracée).
+- RFP publiée marketplace (`visibility=public`) — badge distinctif.
+
+---
+
+## **1.21 — Admin Plateforme (Super Admin)**
+
+> Interface réservée au rôle `Platform Super Admin`. Distincte des paramètres tenant (1.16). Accès global, multi-tenant, sans scope tenant.
+
+### Dashboard Admin Plateforme
+
+- Widgets globaux : nombre de tenants actifs, missions en cours (total), agences certifiées vs non certifiées, alertes compliance cross-tenants (sans données PII visibles), events outbox en erreur.
+- Accès rapide : gestion tenants, grilles IDCC, country-rulesets, audit trail global, suspensions.
+
+### Gestion des tenants
+
+- Liste tenants : nom, plan (Starter/Pro/Elite), statut (actif/suspendu/révoqué), date création, nombre missions actives.
+- Fiche tenant : informations générales, utilisateurs, modules activés, log activité, actions (suspendre / réactiver / révoquer).
+- Modal suspension : raison obligatoire + durée (temporaire / définitive).
+
+### Gestion grilles IDCC (salary-grids)
+
+- Liste grilles : IDCC, secteur, classification, montant minimum, `period_type`, `effective_date`, `model_version`, statut (active / archivée).
+- Import nouvelle grille : formulaire structuré (IDCC + classification + montant + period_type + date d'entrée en vigueur).
+- Historique versions : ligne par version, conservée — pas de delete. Mention visible "Historique immuable".
+- Filtres : secteur, IDCC, date d'application.
+
+### Gestion country-rulesets
+
+- Liste règles par pays : pays, seuil warning (jours), seuil critical (jours), statut.
+- Édition seuil : formulaire simple (warning_days / critical_days) + confirmation obligatoire ("Ce changement affecte tous les calculs de durée cumulée pour ce pays").
+
+### Gestion mandatory-pay-items
+
+- Liste primes obligatoires : libellé, `is_reimbursable` (toujours false ici), secteur/IDCC cible, statut.
+- Ajout / désactivation (pas de delete).
+
+### Audit trail global (cross-tenant)
+
+- Table d'audit filtrée par : module, action, tenant (optionnel), date, acteur.
+- Lecture seule. Export CSV.
+- Aucune donnée PII en clair — références par ID uniquement.
+
+### Suspensions / révocations agences marketplace
+
+- Liste agences avec accès marketplace actif.
+- Actions : suspendre (avec raison) / réactiver / révoquer certification.
+- Confirmation modale obligatoire avec récapitulatif de l'impact (missions en cours bloquées ?).
+
+États obligatoires :
+- Vue normale (tenant actif, grilles à jour).
+- Vue alerte (events outbox en erreur, tenant suspendu).
+- Import grille : succès / erreur validation (IDCC non reconnu, dates incohérentes).
+
 ---
 
 ## Changelog doc
 
 - 2026-02-17: Normalisation fences — sans changement métier.
 - 2026-02-17: Fix fence ambiguë (SECTION 1), sans changement métier.
+- 2026-02-21: Ajout prompts manquants 1.18 (Timesheets desktop + mobile), 1.19 (Mobile PWA flows détaillés A→F), 1.20 (RFP Interne M4), 1.21 (Admin Plateforme Super Admin). Couverture design 100 % alignée avec SOCLE + Section 2.

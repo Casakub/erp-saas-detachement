@@ -1,7 +1,7 @@
 # SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E
 
 - Statut: READY
-- Version: 1.2
+- Version: 1.3
 - Date: 2026-02-20
 - Portée: scénarios d'acceptation documentaires sur la chaîne critique rémunération → score → enforcement → billing + surfaces V1.2.2 (RFP contact-logs, SIPSI, Web Push, ATS, Worker Skills, Finance).
 - Règles:
@@ -301,6 +301,60 @@
 
 ---
 
+
+## Scénario E2E-12 — Moteur rémunération : IDCC, éligibilité, durées cumulées (Lot 7)
+
+- Given:
+  - Une `compliance_case` existe pour une mission BTP dans le tenant A.
+  - Les `remuneration_inputs` contiennent : `base_salary=14 EUR/h`, `idcc_code="BTP-1702"`, `classification_code="N2P2"`, `expense_logement=250 EUR/sem` (`is_reimbursable=true`).
+  - La grille `salary_grids` BTP-1702 / N2P2 est chargée avec `legal_minimum_amount=13 EUR/h` (period_type=hourly).
+  - L'acteur est `agency_user` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/compliance-cases/{id}/remuneration-check`.
+- Then:
+  - **Étape 1** : la grille BTP-1702/N2P2 est trouvée pour la date de début de mission.
+  - **Étape 2** : `excluded_expenses_amount = 250 EUR` (logement, is_reimbursable=true → exclu du calcul admissible). `eligible_remuneration_amount = 14 EUR/h`.
+  - **Étape 3** : `14 >= 13` → `is_compliant = true`.
+  - **Étape 4** : snapshot immuable créé (`worker_remuneration_snapshot`) sans champ `updated_at`. `engine_version = "pay-1.0"`. `calculation_details` contient le breakdown complet (prime exclue + raison).
+  - **Étape 5** : `MissionEnforcementEvaluated` publié. Enforcement flags réévalués.
+  - `RemunerationSnapshotCreated` publié via outbox.
+
+### Cas limite — IDCC non référencé
+
+- Given:
+  - `idcc_code` absent de `salary_grids` pour la période.
+- When:
+  - Même appel `POST /v1/compliance-cases/{id}/remuneration-check`.
+- Then:
+  - Snapshot créé avec `is_compliant = null`, `warning_code = "REF_MISSING"`.
+  - Mission non bloquée en V1 (`v1_mode.assisted_only = true`).
+  - `RemunerationSnapshotCreated` publié (non-bloquant).
+
+### Cas limite — Durées cumulées (batch quotidien)
+
+- Given:
+  - Batch quotidien M8 en cours. Une mission active dans le tenant A a `cumulative_duration_days = 305`.
+  - Seuils configurés dans `country_rulesets` : `warning_days = 300`, `critical_days = 365`.
+- When:
+  - Le batch recalcule les durées.
+- Then:
+  - `cumulative_duration_days = 305` ≥ 300 et < 365 → `ComplianceDurationAlert` publié avec `alert_level = "warning"`, `threshold_days = 300`.
+  - Si `cumulative_duration_days = 370` ≥ 365 → `ComplianceDurationAlert` publié avec `alert_level = "critical"`, enforcement flags mis à jour selon `country_rulesets`.
+
+### RBAC attendu
+
+- Autorisé (`POST remuneration-check`) : `tenant_admin`, `agency_user`.
+- Refusé : `consultant`, `client_user`, `worker`.
+- Lecture `GET /v1/admin/salary-grids` : `tenant_admin`, `agency_user` (lecture seule pour `agency_user`).
+- Écriture `POST /v1/admin/salary-grids` : `tenant_admin`, `system` uniquement.
+- Référence : `2.12.a V1.2.2 Q2-B`, `6.7 Checklist Lot 7`.
+
+### Isolation multi-tenant attendue
+
+- Un acteur tenant B ne peut pas déclencher un calcul rémunération sur une `compliance_case` tenant A.
+- Les `salary_grids` partagées (platform-level) sont en lecture seule pour les tenants (écriture `system` uniquement).
+- Référence : `2.9 LOCKED`, `SECTION 9 LOCKED v1.1`.
+
 ## Non-goals / Out of scope
 
 - Définir des jeux de données de test techniques.
@@ -310,4 +364,5 @@
 ## Mini-changelog
 
 - 2026-02-18: scénarios GWT complétés sur la chaîne critique avec attentes RBAC et multi-tenant.
-- 2026-02-20: v1.2 — ajout scénarios E2E-06 à E2E-11 couvrant les surfaces V1.2.2 (RFP contact-logs Q6-B, ATS shortlist, Worker Skills Q9-A, Web Push Q3-A, Marketplace gating Q5-B/M12, Finance quotes/commissions). Statut DRAFT → READY.
+- 2026-02-20: v1.2 — ajout scénarios E2E-06 à E2E-11 couvrant les surfaces V1.2.2
+- 2026-02-21: v1.3 — ajout scénario E2E-12 (Lot 7 — moteur rémunération IDCC + éligibilité + durées cumulées batch). Couverture tous les lots V1. (RFP contact-logs Q6-B, ATS shortlist, Worker Skills Q9-A, Web Push Q3-A, Marketplace gating Q5-B/M12, Finance quotes/commissions). Statut DRAFT → READY.
