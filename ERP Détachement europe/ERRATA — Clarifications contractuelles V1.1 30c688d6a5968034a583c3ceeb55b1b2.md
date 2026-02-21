@@ -31,6 +31,15 @@ Portée: clarification contractuelle sans changement métier
 - Aucune modification de périmètre fonctionnel.
 - Correction de cohérence documentaire uniquement.
 
+## 3b) Clarification 2 — Facturation depuis timesheets : actif en V1 (décision OWNER 2026-02-20)
+
+- **Décision OWNER (2026-02-20)** : l'endpoint `POST /v1/invoices:from-timesheet` est **actif en V1** sans feature flag.
+- **Source de décision** : §2 ci-dessus (OpenAPI 2.11 prime sur mention narrative SOCLE).
+- **Conséquence** : toute mention "feature flag OFF" ou "V2 uniquement" relative à la facturation depuis timesheets dans SECTION 10.F et Lot 6 est caduque.
+- **Lot 6 statut** : passe de PARTIAL → **READY**.
+- **Aucun changement contractuel dans 2.11** : l'endpoint était déjà présent et LOCKED.
+
 ## 6) Changelog doc
 
-- 2026-02-18: Création errata V1.1 pour clarification de priorité contractuelle OpenAPI sur mention SOCLE contradictoire, sans changement métier.
+- 2026-02-18: Création errata V1.1 — priorité contractuelle OpenAPI sur mention SOCLE contradictoire, sans changement métier.
+- 2026-02-20: Ajout clarification 2 — facturation depuis timesheets actif V1 sans feature flag (décision OWNER Q1).

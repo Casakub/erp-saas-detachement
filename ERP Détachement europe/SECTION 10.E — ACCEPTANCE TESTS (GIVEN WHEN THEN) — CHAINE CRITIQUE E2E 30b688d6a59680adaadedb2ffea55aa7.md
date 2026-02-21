@@ -1,7 +1,9 @@
 # SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E
 
-- Statut: DRAFT
-- Portée: définir des scénarios d'acceptation documentaires sur la chaîne critique rémunération -> score -> enforcement -> billing.
+- Statut: READY
+- Version: 1.2
+- Date: 2026-02-20
+- Portée: scénarios d'acceptation documentaires sur la chaîne critique rémunération → score → enforcement → billing + surfaces V1.2.2 (RFP contact-logs, SIPSI, Web Push, ATS, Worker Skills, Finance).
 - Règles:
 - Scénarios d'acceptation uniquement (pas de code, pas d'implémentation).
 - Référencer explicitement RBAC et isolation multi-tenant.
@@ -127,6 +129,178 @@
 - Les transitions de billing status ne doivent jamais modifier une timesheet d'un autre tenant.
 - Référence: `OPENAPI:715`, `SECTION9:251`.
 
+## Scénario E2E-06 — RFP Contact Log (anti-désintermédiation Q6-B)
+
+- Given:
+  - Une `rfp_request` existe en statut `open` ou `evaluating` dans le tenant A.
+  - L'acteur est `agency_user` ou `tenant_admin` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/rfps/{rfp_id}/contact-logs` avec `{ contact_type, client_id, context_note }`.
+- Then:
+  - Le contact log est créé dans `rfp_contact_logs` avec `occurred_at = now()` si non fourni.
+  - L'event `RfpContactLogged` est publié via outbox.
+  - Le log est conservé 12 mois minimum (retention policy — pas de delete avant 12 mois).
+
+### RBAC attendu
+
+- Autorisé: `tenant_admin`, `agency_user`.
+- Refusé: `consultant`, `client_user`, `worker`.
+- Référence: `2.12.a V1.2.2`, `6.5 Checklist Lot 4`.
+
+### Isolation multi-tenant attendue
+
+- Un acteur tenant B ne peut pas créer un contact log sur une `rfp_request` tenant A.
+- Référence: `DB:2.9.16-E`, `2.11.a V1.2.2`.
+
+---
+
+## Scénario E2E-07 — ATS : Shortlist candidat (gating rôle)
+
+- Given:
+  - Une `application` est en statut `reviewed` sur une `job_offer` publiée dans le tenant A.
+  - L'acteur est `agency_user` ou `tenant_admin` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/applications/{application_id}:shortlist`.
+- Then:
+  - Le statut de l'application passe à `shortlisted`.
+  - L'event `CandidateScored` n'est pas re-publié (score immuable).
+  - Le no-code reçoit notification via outbox (si abonné).
+- When (cas refusé):
+  - L'acteur est `consultant` → réponse `403 Forbidden`.
+
+### RBAC attendu
+
+- Autorisé: `tenant_admin`, `agency_user`.
+- Refusé strict: `consultant`, `client_user`, `worker`.
+- Référence: `2.12.a V1.2.2`, `6.6 Checklist Lot 5`.
+
+### Isolation multi-tenant attendue
+
+- Une application d'un autre tenant retourne `403/404`.
+- Référence: `2.9 LOCKED`, `SECTION 9 LOCKED v1.1`.
+
+---
+
+## Scénario E2E-08 — Worker Skills : ajout et lecture (Q9-A)
+
+- Given:
+  - Un `worker` existe dans le tenant A avec `user_id` associé.
+  - L'acteur est `agency_user` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/workers/{worker_id}/skills` avec `{ skill_code, skill_label, level: "expert" }`.
+- Then:
+  - Le skill est créé dans `worker_skills` avec `level = expert`.
+  - L'event `WorkerSkillAdded` est publié via outbox.
+- When (lecture par le worker):
+  - L'acteur est le `worker` lui-même → `GET /v1/workers/{worker_id}/skills` retourne 200 avec la liste.
+- When (écriture par le worker):
+  - L'acteur est le `worker` → `POST /v1/workers/{worker_id}/skills` → `403 Forbidden`.
+
+### RBAC attendu
+
+- Écriture: `tenant_admin`, `agency_user` uniquement.
+- Lecture: `tenant_admin`, `agency_user`, `consultant` (scoped), `worker` (own only).
+- Référence: `2.12.a V1.2.2`, `2.9.16-D`, `6.6 Checklist Lot 5`.
+
+### Isolation multi-tenant attendue
+
+- Un worker d'un autre tenant retourne `403/404`.
+- Référence: `DB:2.9 LOCKED`.
+
+---
+
+## Scénario E2E-09 — Web Push VAPID : abonnement et réception notification (Q3-A)
+
+- Given:
+  - Un `worker` est authentifié dans le tenant A avec un navigateur supportant Web Push API.
+  - L'acteur est le `worker` lui-même.
+- When:
+  - L'acteur appelle `POST /v1/worker/push-subscription` avec payload VAPID valide `{ endpoint, p256dh, auth }`.
+- Then:
+  - L'abonnement est stocké dans `worker_push_subscriptions` (un enregistrement par worker).
+  - Réponse `201 Created`.
+- When (déclenchement event):
+  - Un `TimesheetRejected` est publié pour une timesheet de ce worker.
+- Then:
+  - Le serveur envoie une notification push via VAPID à l'endpoint enregistré.
+- When (désabonnement):
+  - L'acteur appelle `DELETE /v1/worker/push-subscription` → `204 No Content`, abonnement supprimé.
+
+### RBAC attendu
+
+- `GET/POST/DELETE /v1/worker/push-subscription` : `worker` uniquement (own only).
+- Aucun autre rôle ne peut accéder à ces endpoints.
+- Référence: `2.12.a V1.2.2`, `6.3 Checklist Lot 3 v1.3`.
+
+### Isolation multi-tenant attendue
+
+- Un worker d'un tenant ne peut pas lire/modifier l'abonnement push d'un worker d'un autre tenant.
+- Référence: `2.9.16-C`, `SECTION 9 LOCKED v1.1`.
+
+---
+
+## Scénario E2E-10 — Marketplace : gating certification et suspension automatique
+
+- Given:
+  - Une agence du tenant A a `risk_score = 75` (supérieur au seuil 70).
+  - Le batch M12 quotidien vient de calculer ce score.
+- When:
+  - Le batch publie `AgencyRiskScoreCalculated`.
+- Then:
+  - `marketplace_access.status` passe à `suspended`.
+  - `MarketplaceAccessChanged` est publié via outbox.
+  - `AgencyCertificationStatusChanged` est publié si le niveau de certification change.
+  - `GET /v1/marketplace/agencies` ne retourne plus cette agence (filtrée côté backend).
+- When (tentative d'accès RFP par l'agence suspendue):
+  - L'agence suspendue tente `POST /v1/rfps/{id}/responses` → `403 Forbidden` (gating marketplace).
+
+### RBAC attendu
+
+- Lecture catalogue: `tenant_admin`, `agency_user`, `client_user` (selon settings).
+- `worker` : `403 Forbidden` sur tous les endpoints marketplace.
+- Référence: `2.12 LOCKED`, `6.8 Checklist Lot 8 v1.1`.
+
+### Isolation multi-tenant attendue
+
+- Le calcul de risk score et la suspension ne peuvent affecter qu'une agence du tenant propriétaire.
+- `GET /v1/marketplace/agencies` ne retourne jamais des agences cross-tenant.
+- Référence: `2.9 LOCKED`, `SECTION 9 LOCKED v1.1`.
+
+---
+
+## Scénario E2E-11 — Finance : devis → commission → comptabilité (surfaces V1.2.2)
+
+- Given:
+  - Une mission est en statut `active` dans le tenant A avec `can_issue_invoice = true`.
+  - L'acteur est `agency_user` ou `tenant_admin` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/quotes` pour créer un devis lié à la mission.
+- Then:
+  - Le devis est créé, `QuoteCreated` est publié via outbox.
+- When:
+  - L'acteur appelle `PATCH /v1/commissions/{commission_id}/status` avec `{ status: "approved" }`.
+- Then:
+  - La commission est approuvée, `CommissionApproved` est publié via outbox.
+- When:
+  - L'acteur appelle `GET /v1/accounting-exports` ou `POST /v1/accounting-exports` pour exporter.
+- Then:
+  - L'export comptable est généré/retourné selon le format configuré.
+  - `client_user` et `worker` reçoivent `403 Forbidden` sur tous ces endpoints.
+
+### RBAC attendu
+
+- `POST /v1/quotes`, `PATCH /v1/commissions/{id}/status` : `tenant_admin`, `agency_user`.
+- `GET /v1/accounting-exports` : `tenant_admin` uniquement.
+- Refusé: `consultant`, `client_user`, `worker`.
+- Référence: `2.12.a V1.2.2`, `6.4 Checklist Lot 6 v1.3`.
+
+### Isolation multi-tenant attendue
+
+- Devis, commissions et exports comptables sont strictement scoped au tenant de l'acteur.
+- Référence: `2.9 LOCKED`, `SECTION 9 LOCKED v1.1`.
+
+---
+
 ## Non-goals / Out of scope
 
 - Définir des jeux de données de test techniques.
@@ -136,3 +310,4 @@
 ## Mini-changelog
 
 - 2026-02-18: scénarios GWT complétés sur la chaîne critique avec attentes RBAC et multi-tenant.
+- 2026-02-20: v1.2 — ajout scénarios E2E-06 à E2E-11 couvrant les surfaces V1.2.2 (RFP contact-logs Q6-B, ATS shortlist, Worker Skills Q9-A, Web Push Q3-A, Marketplace gating Q5-B/M12, Finance quotes/commissions). Statut DRAFT → READY.

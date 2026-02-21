@@ -63,6 +63,29 @@
 - Référencer par identifiants (`*_id`) plutôt que payloads complets (`SECTION9:214`, `SECTION9:215`).
 - Les rôles lecture limitée (`client_user`, `worker`) réduisent l'exposition des données (`RBAC:33`).
 
+## Politique Sécurité Baseline (10.D)
+
+Chiffrement : AES-256-GCM pour fichiers au repos. TLS 1.2+ en transit (obligation).
+
+Retention des données :
+
+audit_logs : conservation minimum 5 ans (exigence inspection)
+file_access_logs : conservation minimum 5 ans
+worker_remuneration_snapshot : conservation minimum 5 ans + durée mission
+Fichiers documents (preuves) : conservation minimum 5 ans après fin de mission
+Leads/CRM données prospection : 3 ans maximum (RGPD)
+Utilisateurs inactifs : anonymisation après 3 ans
+Key rotation :
+
+JWT signing key : rotation tous les 90 jours maximum
+Storage encryption keys : rotation annuelle
+Webhook signing secret : rotation sur demande + à chaque suspicion de fuite
+Incident handling :
+
+Niveau 1 (violation RBAC détectée) : alert automatique (outbox SecurityIncidentDetected), notification admin
+Niveau 2 (fuite cross-tenant) : coupure accès tenant concerné + notification CNIL si données personnelles (72h)
+Niveau 3 (compromission signing key) : rotation immédiate + révocation sessions actives
+
 ## Non-goals / Out of scope
 
 - Définir des paramètres de chiffrement, des clés, des TTL ou des procédures d'astreinte.

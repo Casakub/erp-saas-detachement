@@ -134,16 +134,27 @@ Artifacts:
 4. Review “AI Contribution Rules”
 5. Merge
 
-## 📦 LOT COURANT ACTIF
+## 📦 ÉTAT DES LOTS (mise à jour 2026-02-20)
 
-- Lot actif : Lot 2 — Missions / Compliance Case / Enforcement
-- Lots gelés : Lot 1
-- Lots non autorisés : Lot 3+
+| Lot | Modules | Statut CDC | Checklist | Prêt à coder |
+| --- | --- | --- | --- | --- |
+| Lot 1 | M1 Foundation (tenant, users, RBAC, Vault, Outbox) | LOCKED | — | ✅ |
+| Lot 2 | M7 Missions + M8 Compliance Case base + M9 Vault | LOCKED | — | ✅ |
+| Lot 3 | M7.T Timesheets + M7bis Mobile PWA | READY v1.3 | 6.3 READY | ✅ |
+| Lot 4 | M2 CRM + M3 Clients/Vigilance + M4 RFP | READY v1.1 | 6.5 READY | ✅ |
+| Lot 5 | M5 ATS + M6 Workers & Dossiers | READY v1.1 | 6.6 READY | ✅ |
+| Lot 6 | M10 Finance / Billing | READY v1.3 | 6.4 READY | ✅ |
+| Lot 7 | M8 extension Salary Engine + Snapshots + Durées | READY | 6.7 READY | ✅ |
+| Lot 8 | M11 Marketplace + M12 Risk & Certification | READY v1.1 | 6.8 READY | ✅ |
 
-⚠️ Toute IA doit vérifier le lot actif avant toute implémentation.
+**Lot actif recommandé** : Lot 1 (Foundation) — débuter l'implémentation ici.
+**Séquence obligatoire** : Lot 1 → Lot 2 → Lot 3 → Lot 4 → Lot 5 → Lot 6 → Lot 7 → Lot 8.
+
+⚠️ Toute IA doit respecter la séquence des lots. Un lot ne peut démarrer qu'une fois le lot précédent validé (gate DoD cochée dans la checklist correspondante). Référence: `SECTION 9 LOCKED v1.1`.
 
 ---
 
 ## Changelog doc
 
 - 2026-02-17: Normalisation fences — sans changement métier.
+- 2026-02-20: Mise à jour LOT COURANT ACTIF → tableau état complet Lots 1→8 (tous READY, séquence implémentation clarifiée).

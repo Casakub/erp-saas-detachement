@@ -1,9 +1,9 @@
 # 6.4 — CHECKLIST “LOT 6 IA” — FINANCE / BILLING (M10) — MODE C1
 
-**Statut** : PARTIAL
-**Version** : 1.2
+**Statut** : READY
+**Version** : 1.3
 **Date** : 2026-02-19
-**Objectif** : ancrer Lot 6 sur les contrats LOCKED (OpenAPI/Events/RBAC) avec explicitation de l'ambiguïté V1/V2.
+**Objectif** : ancrer Lot 6 sur les contrats LOCKED (OpenAPI/Events/RBAC). `POST /v1/invoices:from-timesheet` est actif en V1 (décision OWNER 2026-02-20, ERRATA V1.1 §3b).
 
 ## 6.4.1 Décisions structurantes (LOCKED)
 
@@ -22,11 +22,13 @@
 
 `operationId`: non spécifié dans le document LOCKED 2.11.
 
-## 6.4.3 OpenAPI anchors (V1.2.1 patch policy note)
+## 6.4.3 Décision OWNER — `POST /v1/invoices:from-timesheet` actif en V1 (2026-02-20)
 
-- Endpoint `POST /v1/invoices:from-timesheet` est exposé en OpenAPI LOCKED (`...2 11...md:553`).
-- Politique produit V1.2.1: endpoint présent mais feature flag OFF en V1; activation V2 uniquement (référence `SECTION 10.F ...30b688d6...9771.md:36`).
-- Statut Lot 6: PARTIAL documented & acceptable tant que l'arbitrage reste "feature flag OFF" en V1.
+- **Décision OWNER (2026-02-20)** : `POST /v1/invoices:from-timesheet` est **actif en V1** sans feature flag.
+- **Source** : ERRATA V1.1 §3b + SECTION 10.F (ligne matrice mise à jour) — OpenAPI 2.11 LOCKED fait foi.
+- **Conséquence** : toute mention antérieure "feature flag OFF" ou "V2 uniquement" relative à cet endpoint est **caduque**.
+- **Lot 6 statut** : passe de PARTIAL → **READY**.
+- Aucun changement contractuel dans 2.11 : l'endpoint était déjà LOCKED et présent.
 
 ## 6.4.4 Events anchors (LOCKED 2.10)
 
@@ -71,11 +73,37 @@ Résumé dérivé (sans nouvelle règle):
 ## 6.4.8 Impact & Changelog (docs-only)
 
 - Impact: anchors OpenAPI/Events/RBAC + GWT dérivés ajoutés.
-- Contradiction SOCLE/OpenAPI documentée avec politique V1.2.1 "feature flag OFF", sans modification des contrats LOCKED.
-- Aucun endpoint/event/permission nouveau ajouté.
+- Contradiction SOCLE/OpenAPI résolue par décision OWNER Q1 (ERRATA V1.1 §3b) — feature flag OFF caduc.
+- Nouveaux events V1.2.2 : `QuoteCreated`, `CommissionApproved` (décisions Q1-Q4, surfaces M10 V1.2.2).
+- Aucun changement contractuel dans 2.11 LOCKED.
+
+
+## 6.4.9 Surfaces M10 V1.2.2 (décisions OWNER 2026-02-20)
+
+Nouveaux events (addendum 2.10.4.11, DRAFT) :
+
+- `QuoteCreated` (Producer: M10) — déclenché sur `POST /v1/quotes`
+- `CommissionApproved` (Producer: M10) — déclenché sur `PATCH /v1/commissions/{id}/status` → `approved`
+
+Nouveaux endpoints V1.2.2 (2.11.a patch) à implémenter dans ce lot :
+
+| Endpoint | Rôles autorisés | Notes |
+| --- | --- | --- |
+| `POST /v1/quotes` | `tenant_admin`, `agency_user` | Création devis |
+| `PATCH /v1/quotes/{id}` | `tenant_admin`, `agency_user` | Modification devis |
+| `POST /v1/quotes/{id}:send` | `tenant_admin`, `agency_user` | Envoi devis au client |
+| `POST /v1/quotes/{id}:accept` | `tenant_admin`, `agency_user`, `client_user` (si flag=full) | Validation devis (Q4-C) |
+| `GET /v1/quotes/{id}` | `tenant_admin`, `agency_user`, `consultant` (scoped), `client_user` (own) | Lecture |
+| `GET /v1/invoices/{id}/commissions` | `tenant_admin`, `agency_user` | Lecture commissions |
+| `PATCH /v1/commissions/{id}/status` | `tenant_admin` uniquement | Approbation commission |
+| `POST /v1/accounting-exports` | `tenant_admin`, `agency_user` | Export CSV compta V1 |
+| `GET /v1/accounting-exports/{id}` | `tenant_admin`, `agency_user` | Lecture export |
+
+Note: `client_user` sur `POST /v1/quotes/{id}:accept` conditionné au flag `tenant_settings.modules.client_portal.level = full` (décision Q4-C).
 
 ## Changelog doc
 
 - 2026-02-17: Création checklist Lot 6 (Finance/Billing), sans changement métier.
 - 2026-02-19: patch P0 executable-spec (anchors + GWT dérivés + note d'arbitrage V1/V2), sans changement métier.
 - 2026-02-19: alignement V1.2.1 (feature flag OFF V1 pour invoices-from-timesheet), Lot 6 PARTIAL documented & acceptable.
+- 2026-02-20: décision OWNER Q1 — feature flag OFF caduc, `from-timesheet` actif V1, statut PARTIAL → READY. Surfaces M10 V1.2.2 (quotes/commissions/accounting-exports) ajoutées (2.11.a patch V1.2.2). Events QuoteCreated + CommissionApproved référencés.

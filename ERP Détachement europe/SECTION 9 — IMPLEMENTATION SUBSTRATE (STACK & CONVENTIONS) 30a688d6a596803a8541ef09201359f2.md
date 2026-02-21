@@ -1,6 +1,8 @@
 # SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS)
 
-Statut: DRAFT (LOCK REQUIRED)
+Statut: LOCKED
+Version: 1.1
+Date de lock: 2026-02-20
 Portée: substrat d’exécution backend (stack, conventions, outillage, runbooks)
 Règle: aucun changement de périmètre métier; les contrats 2.9/2.10/2.11/2.12 restent source de vérité
 
@@ -468,6 +470,55 @@ Règles d’exploitation:
 - [ ] Events M10 publiés via outbox sur toutes mutations.
 - [ ] Contrôles multi-tenant/RBAC validés sur endpoints finance.
 
+### Lot 4 — CRM, Clients, Vigilance, RFP (M2, M3, M4)
+
+- [ ] Migrations M2/M3/M4 nommées `lot4_m2_*`, `lot4_m3_*`, `lot4_m4_*` (9.3).
+- [ ] RLS tenant-scoped validé sur `leads`, `clients`, `client_sites`, `client_documents`, `rfp_requests`, `rfp_contact_logs`.
+- [ ] Convention `visibility` sur `rfp_requests` conforme 2.9.16-E (enum `private|public`).
+- [ ] Events M2/M3/M4 publiés via outbox — aucun event hors catalogue 2.10/2.10.4.11.
+- [ ] RBAC validé par endpoint (unit tests): `client_user` conditionnel au flag `client_portal.level`.
+- [ ] Batch quotidien expiration docs client opérationnel et testé.
+- [ ] Rétention `rfp_contact_logs` : 12 mois (politique documentée).
+- [ ] Audit logs sur toutes mutations critiques corrélés `correlation_id`.
+
+### Lot 5 — ATS & Workers (M5, M6)
+
+- [ ] Migrations M5/M6 nommées `lot5_m5_*`, `lot5_m6_*` (9.3).
+- [ ] RLS tenant-scoped validé sur `job_offers`, `applications`, `candidates`, `workers`, `worker_documents`, `worker_skills`.
+- [ ] `worker_skills` livré V1 (décision Q9-A) — `level` enum `beginner|intermediate|expert|null`.
+- [ ] Ownership check strict `worker` → own-only sur upload docs et lecture skills.
+- [ ] Pipeline parsing IA ATS déclenché de façon asynchrone (backend job), résultat via events.
+- [ ] Events M5/M6 publiés via outbox — `WorkerSkillAdded` conforme addendum 2.10.4.11.
+- [ ] Batch quotidien expiration docs worker opérationnel et testé.
+- [ ] RBAC validé par endpoint: `consultant` scoped uniquement, `client_user`/`worker` exclus surfaces admin.
+- [ ] Audit logs sur toutes mutations critiques.
+
+### Lot 7 — Compliance Engine Rémunération (M8 extension)
+
+- [ ] Migrations Lot 7 nommées `lot7_m8_*` (9.3).
+- [ ] RLS tenant-scoped validé sur `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `worker_remuneration_snapshots`.
+- [ ] `worker_remuneration_snapshots` : champ `updated_at` absent (immuabilité vérifiée en test).
+- [ ] Algorithme moteur rémunération 5 étapes implémenté et couvert par tests unitaires.
+- [ ] Données IDCC V1 chargées (BTP, Métallurgie, Transport) — fixtures ou admin panel.
+- [ ] Seuils durée `country_rulesets` (300d warning / 365d critical France) configurables et testés.
+- [ ] Batch quotidien `ComplianceDurationAlert` : publié pour seuils franchis, re-publié chaque jour tant que non résolu.
+- [ ] Events M8 extension publiés via outbox — `ComplianceDurationAlert` conforme addendum 2.10.4.11.
+- [ ] RBAC validé: `client_user`/`worker`/`consultant` exclus des endpoints moteur.
+- [ ] Intégration enforcement : `MissionEnforcementEvaluated` publié après chaque snapshot.
+
+### Lot 8 — Risk, Certification, Marketplace (M11, M12)
+
+- [ ] Migrations Lot 8 nommées `lot8_m11_*`, `lot8_m12_*` (9.3).
+- [ ] RLS tenant-scoped validé sur `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`.
+- [ ] Historique `agency_risk_scores` conservé (pas de delete — audit-ready).
+- [ ] Gating marketplace : `certification_level ≥ controlled` + `marketplace_access.status = active` requis.
+- [ ] Suspension automatique si `risk_score > 70` — testé en intégration.
+- [ ] Certification V1 : validation manuelle `tenant_admin` uniquement (pas d'automatisation).
+- [ ] RFP visibility flag (`private|public`) opérationnel via `PATCH /v1/rfps/{id}/visibility` (dépend Lot 4).
+- [ ] Events M11/M12 publiés via outbox — `AgencyRiskScoreCalculated`, `AgencyCertificationStatusChanged`, `MarketplaceAccessChanged`, `MarketplaceRankingUpdated`.
+- [ ] Allocation auto RFP NON implémentée (V2 uniquement — vérification explicite en PR).
+- [ ] RBAC validé par endpoint : `worker` exclu de toutes surfaces marketplace.
+
 ## 9.12 Anti-dérive doc ↔ exécution (checks automatiques futurs)
 
 Objectif: prévenir toute divergence entre contrats documentaires et implémentation backend.
@@ -508,3 +559,4 @@ Artefacts verrouillés:
 - 2026-02-18: LOCK CI backend gates (section 9.9) + ajout workflow backend-ci minimal, sans changement métier.
 - 2026-02-18: LOCK runbooks 9.10 (bootstrap local + rollback migrations), sans changement métier.
 - 2026-02-18: LOCK anti-dérive 9.12 + script substrate_check + intégration validation AGENTS/CI, sans changement métier.
+- 2026-02-20: LOCK statut global DRAFT → LOCKED (v1.1). Gates 9.11 complétés pour Lots 4/5/7/8 (décisions Q2-B, Q5-B, Q9-A intégrées). Aucun changement de contenu technique.

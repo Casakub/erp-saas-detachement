@@ -27,15 +27,14 @@
 | Exports comptables | Export CSV V1 | Connecteurs comptables V2 | Source SOCLE `SOCLE:253`. |
 | RFP allocation | Attribution assistée | Allocation auto en phase suivante | Source SOCLE `SOCLE:406`, `SOCLE:407`. |
 | Moteur conformité rémunération | Snapshot et conformité disponibles en V1 via M8/OpenAPI | Renforcement avancé planifié lot 7 | Sources SOCLE `SOCLE:335`, `SOCLE:532`; OpenAPI `OPENAPI:337`. |
+| Facturation depuis timesheets | **Actif en V1** (Mode C1) via `POST /v1/invoices:from-timesheet` | V2 : automatisation étendue (règles de déclenchement auto) | Décision OWNER 2026-02-20 — ERRATA V1.1 §3b. OpenAPI 2.11 fait foi. |
 
-## Point d'ambiguïté contractuelle à arbitrer (sans décision locale)
+## Décision arbitrée — Facturation depuis timesheets (OWNER 2026-02-20)
 
-- Sujet: "Facturation depuis timesheets".
-- Source 1 (SOCLE): "Facturation depuis timesheets = V2" (`SOCLE:259`).
-- Source 2 (OpenAPI V1): endpoints actifs `POST /v1/invoices:from-timesheet` et décision V1 C1 (`OPENAPI:553`, `OPENAPI:735`).
-- Note d'arbitrage documentaire (non contractuelle): Endpoint exists in contract but is disabled/not used in V1 per SOCLE; V1 behaviour: manual invoice only; V2: invoice-from-timesheet activated.
-- Politique V1.2.1 (documentaire): endpoint exposé mais `feature_flag` OFF en V1; activation prévue en V2.
-- État dans cette page: contradiction explicitée, aucune modification des contrats LOCKED.
+- **Décision OWNER** : endpoint `POST /v1/invoices:from-timesheet` **actif en V1** (Option A choisie).
+- Référence : ERRATA V1.1 §3b.
+- La mention "feature flag OFF" et "V2 uniquement" de la version précédente de cette page est **caduque**.
+- **Aucun feature flag** requis : l'endpoint est opérationnel dès Lot 6.
 
 ## Non-goals / Out of scope
 
@@ -47,3 +46,4 @@
 
 - 2026-02-18: matrice V1/V2 complétée à partir des distinctions explicites et ambiguïtés documentées.
 - 2026-02-19: ajout de la note d'arbitrage documentaire V1/V2 sur invoice-from-timesheet, sans changement contractuel.
+- 2026-02-20: décision OWNER Q1 — facturation depuis timesheets actif V1, suppression de la politique feature-flag OFF, ajout ligne matrice.

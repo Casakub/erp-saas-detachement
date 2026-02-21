@@ -563,7 +563,76 @@ Pour analytics/monitoring, sans impact métier direct.
 
 ---
 
+## 2.10.4.11 — Addendum V1.2 (décisions OWNER 2026-02-20)
+
+Events ajoutés en réponse aux décisions Q3/Q4/Q5/Q6/Q7/Q9/Q10 du 2026-02-20.
+Ces events sont DRAFT tant que 2.11.a V1.2 n'est pas LOCKED.
+
+### QuoteCreated
+
+- **Producer**: M10
+- **Entity**: quote
+- **Consumers**: no-code (notify client), analytics
+- **Data**: `{ "quote_id": "...", "client_id": "...", "rfp_id": "uuid|null", "total": 12500, "currency": "EUR", "created_by_user_id": "..." }`
+- **Trigger**: `POST /v1/quotes` (V1.2.2).
+
+### CommissionApproved
+
+- **Producer**: M10
+- **Entity**: consultant_commission
+- **Consumers**: payout workflow (V2), analytics, no-code (notify consultant)
+- **Data**: `{ "commission_id": "...", "invoice_id": "...", "consultant_user_id": "...", "commission_amount": 1200, "approved_at": "..." }`
+- **Trigger**: `PATCH /v1/commissions/{id}/status` → `approved` (V1.2.2).
+- **Note**: payout non déclenché en V1 ; event seul suffit pour traçabilité.
+
+### RfpContactLogged
+
+- **Producer**: M4
+- **Entity**: rfp_contact_log
+- **Consumers**: anti-désintermédiation dashboard, analytics, no-code (alert si pattern suspect)
+- **Data**: `{ "rfp_id": "...", "contact_log_id": "...", "logged_by_user_id": "...", "contact_type": "email|call|meeting|other", "occurred_at": "..." }`
+- **Trigger**: `POST /v1/rfps/{id}/contact-logs` (V1.2.2, décision Q6-B).
+- **Note**: conservation minimale 12 mois (période de protection anti-désintermédiation).
+
+### SipsiDeclarationSubmitted
+
+- **Producer**: M8
+- **Entity**: sipsi_declaration
+- **Consumers**: compliance dashboard, no-code (confirmation PDF), audit trail
+- **Data**: `{ "sipsi_declaration_id": "...", "compliance_case_id": "...", "mission_id": "...", "submitted_at": "...", "submitted_by_user_id": "...", "corridor": "PL->FR" }`
+- **Trigger**: `POST /v1/sipsi-declarations/{id}:submit` (V1.2.2, décision Q10 A+B).
+- **Criticité**: Compliance Event (audit-required, inspection-ready).
+
+### MissionIncidentReported
+
+- **Producer**: M7
+- **Entity**: mission
+- **Consumers**: compliance dashboard, risk engine (M12), no-code (alert admin)
+- **Data**: `{ "mission_id": "...", "incident_type": "duration_alert|compliance_block|...", "details": "...", "reported_at": "..." }`
+- **Note**: event générique pour tout incident mission non couvert par events spécialisés.
+
+### WorkerSkillAdded
+
+- **Producer**: M6
+- **Entity**: worker_skill
+- **Consumers**: ATS matching pipeline (backend), analytics
+- **Data**: `{ "worker_id": "...", "skill_id": "...", "skill_code": "...", "skill_label": "...", "level": "beginner|intermediate|expert|null", "added_by_user_id": "..." }`
+- **Trigger**: `POST /v1/workers/{id}/skills` (V1.2.2, décision Q9-A, livraison V1).
+
+### ComplianceDurationAlert
+
+- **Producer**: M8 (batch quotidien)
+- **Entity**: compliance_case
+- **Consumers**: no-code (alert agency_user + tenant_admin), analytics, risk engine
+- **Data**: `{ "compliance_case_id": "...", "mission_id": "...", "worker_id": "...", "cumulative_duration_days": 305, "threshold_days": 300, "alert_level": "warning|critical", "corridor": "PL->FR" }`
+- **Trigger**: batch quotidien quand `cumulative_duration_days` franchit 300j (warning) ou 365j (critical) — décision Q7-C.
+- **Criticité**: Compliance Event (audit-required).
+- **Note**: seuils 300d/365d configurables par `country_rulesets` (M8 admin). Alert re-publiée chaque jour tant que non résolue.
+
+---
+
 ## Changelog doc
 
 - 2026-02-17: Normalisation Producer (format + valeurs atomiques), sans changement métier.
 - 2026-02-17: Complétion des Events (OpenAPI) + ajout events Finance manquants (2.10), sans changement métier.
+- 2026-02-20: Addendum V1.2 — 7 events ajoutés (QuoteCreated, CommissionApproved, RfpContactLogged, SipsiDeclarationSubmitted, MissionIncidentReported, WorkerSkillAdded, ComplianceDurationAlert). Décisions OWNER Q3/Q4/Q5/Q6/Q7/Q9/Q10.
