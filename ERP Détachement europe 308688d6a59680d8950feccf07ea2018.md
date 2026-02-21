@@ -2,7 +2,7 @@
 
 # ERP Détachement europe — HUB PILOTAGE IA (V1)
 
-**Statut**: 🟡 Build
+**Statut**: 🟢 Ready-to-code (CDC complet — Lots 1→8 READY)
 **Owner**: Alexandre
 **Vision**: RegTech HR SaaS (France-first, Europe-ready) — moteur conformité intelligent + marketplace certifiée.
 **Personas**: Agence (desktop), Intérimaire (mobile-first), Client (lecture), Admin plateforme.
@@ -116,9 +116,9 @@ Fonctionnalités mobile :
 ](ERP%20D%C3%A9tachement%20europe/SECTION%208%20%E2%80%94%20PLAN%20D%E2%80%99EX%C3%89CUTION%20(ordre%20conseill%C3%A9)%20308688d6a596809584e4eef380abe47c.md)
 
 [**SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS)**
-](ERP%20D%C3%A9tachement%20europe/SECTION%209%20%E2%80%94%20IMPLEMENTATION%20SUBSTRATE%20(STACK%20&%20CONVENTIONS)%20309688d6a59680f9b1a2c3d4e5f60789.md)
+](ERP%20D%C3%A9tachement%20europe/SECTION%209%20%E2%80%94%20IMPLEMENTATION%20SUBSTRATE%20(STACK%20%26%20CONVENTIONS)%2030a688d6a596803a8541ef09201359f2.md)
 
-Ready-to-code requires LOCK SECTION 9.
+✅ SECTION 9 LOCKED v1.1 (2026-02-20) — Ready-to-code activé.
 SECTION 9 (substrat d’exécution backend) est distincte de la PHASE 9 de la SECTION 8 (no-code & automatisation).
 
 [SOCLE TECHNIQUE GELÉ — V1 (LOCKED)](ERP%20D%C3%A9tachement%20europe/SOCLE%20TECHNIQUE%20GEL%C3%89%20%E2%80%94%20V1%20(LOCKED)%20308688d6a596805b8e40c7f8a22944ea.md)
@@ -128,3 +128,4 @@ Socle V1 gelé au 2026-02-17 (voir page SOCLE TECHNIQUE GELÉ — V1 (LOCKED)).
 ## Changelog doc
 
 - 2026-02-18: Ajout référence SECTION 9 dans le hub + rappel Ready-to-code (LOCK SECTION 9), sans changement métier.
+- 2026-02-21: Statut 🟡 Build → 🟢 Ready-to-code. SECTION 9 LOCKED v1.1. Lien SECTION 9 corrigé (bon ID fichier). CDC complet Lots 1→8.

@@ -552,15 +552,18 @@ Toute logique métier critique hors backend = rejet.
 - Aucun lot ne modifie un lot précédent sans validation explicite
 - Toute logique critique doit être testée + auditable
 - Toute ambiguïté = STOP + clarification dans le socle
+- ✅ SECTION 9 (substrat d'exécution backend) LOCKED v1.1 — 2026-02-20 (conventions nommage, outbox, Vault, gates ready-to-code Lots 1→8)
 
 ## 10) POINTS À AJOUTER DANS NOTION (POUR NE RIEN PERDRE)
 
-- A. Ajouter une SECTION “PILIERS FONCTIONNELS” (les 6 pôles) avec liens vers modules M1..M13
-- B. Ajouter une SECTION “RÔLES & PERMISSIONS” (matrice RBAC) + parcours par rôle
-- C. Ajouter une SECTION “DATA & LEGAL SOURCES” (sources IDCC, versions, effective dates)
-- D. Ajouter une SECTION “SECURITY BASELINE” (hashing, access logs, encryption, retention)
-- E. Ajouter une SECTION “ACCEPTANCE TESTS” (Given/When/Then) pour la chaîne critique
-- F. Ajouter une SECTION “MVP V1/V2” (ce qui est assisté vs auto) — notamment SIPSI/A1
+> ✅ Tous les points ci-dessous ont été livrés (SECTION 10.A→F, statut READY — 2026-02-20).
+
+- ✅ A. SECTION 10.A — PILIERS FONCTIONNELS (6 pôles ↔ M1..M13) — READY
+- ✅ B. SECTION 10.B — RÔLES & PERMISSIONS (matrice RBAC + parcours rôle) — READY
+- ✅ C. SECTION 10.C — DATA & LEGAL SOURCES (IDCC V1: BTP/Métallurgie/Transport + country_rulesets FR) — READY v1.2
+- ✅ D. SECTION 10.D — SECURITY BASELINE (hashing, logs, encryption, retention, rotation, PII) — READY
+- ✅ E. SECTION 10.E — ACCEPTANCE TESTS (11 scénarios GWT E2E — chaîne critique + surfaces V1.2.2) — READY v1.2
+- ✅ F. SECTION 10.F — MVP V1/V2 MATRIX (assisté vs automatisé + exclusions V1) — READY
 
 ## 11) PROMPT “MAÎTRE” À DONNER AUX IA (COMMUN À TOUS)
 
@@ -575,3 +578,4 @@ Toute sortie hors périmètre = rejet.
 
 - 2026-02-17: Normalisation fences — sans changement métier.
 - 2026-02-17: Gel V1 officialisé (socle verrouillé).
+- 2026-02-21: Note traçabilité ajoutée (docs-only) — SECTION 9 LOCKED v1.1 référencée en §9.1 + Section 10 points A→F marqués livrés (READY). Aucun changement aux contrats LOCKED.
