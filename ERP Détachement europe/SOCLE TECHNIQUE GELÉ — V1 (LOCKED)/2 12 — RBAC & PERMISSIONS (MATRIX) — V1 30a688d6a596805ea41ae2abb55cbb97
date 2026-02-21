@@ -184,31 +184,6 @@
     - recalcul snapshots
 - Toute tentative hors RBAC ⇒ **403 + audit_log**
 
-## 2.12.8 RBAC Manquant : M5 (ATS) et M6 (Workers)
-
-### ATS — Job Offers & Applications (M5)
-
-| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
-|---|---|---|---|---|---|
-| POST /v1/job-offers | ✅ | ✅ | ❌ | ❌ | ❌ |
-| PATCH /v1/job-offers/{id}/status | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GET /v1/job-offers | ✅ | ✅ | ✅ | ❌ | ❌ |
-| POST /v1/applications | ✅ | ✅ | ✅ | ❌ | ❌ |
-| PATCH /v1/applications/{id}/status | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GET /v1/applications | ✅ | ✅ | ✅ (scoped) | ❌ | ❌ |
-| POST /v1/applications/{id}:shortlist | ✅ | ✅ | ❌ | ❌ | ❌ |
-
-### Workers & Documents (M6)
-
-| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
-|---|---|---|---|---|---|
-| POST /v1/workers | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GET /v1/workers/{id} | ✅ | ✅ | ✅ (scoped) | ❌ | 👁️ (own only) |
-| PATCH /v1/workers/{id} | ✅ | ✅ | ❌ | ❌ | ❌ |
-| POST /v1/workers/{id}/documents | ✅ | ✅ | ❌ | ❌ | ✅ (own only, upload only) |
-| GET /v1/workers/{id}/documents | ✅ | ✅ | ✅ (scoped) | ❌ | 👁️ (own only) |
-
-
 ---
 
 ## Changelog doc

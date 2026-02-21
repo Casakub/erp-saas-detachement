@@ -1212,28 +1212,6 @@ Mode facturation : **C1**
 - POST /payments → PaymentRecorded (+ ConsultantCommissionCalculated)
 - PATCH /timesheets/{timesheet_id}/billing-status → TimesheetBillingStatusChanged (M10)
 
-## **2.11.7 M10 Devis & Commissions**
-
-Objectif : Permettre la création et le suivi des devis + commissions sans inventer de contrat.
-
-Endpoints minimum à contractualiser :
-
-POST   /v1/quotes              — Créer un devis (draft)
-PATCH  /v1/quotes/{id}         — Modifier un devis draft
-POST   /v1/quotes/{id}:send    — Envoyer au client (→ QuoteSent)
-POST   /v1/quotes/{id}:accept  — Accepter (→ QuoteAccepted)
-GET    /v1/quotes/{id}         — Lire un devis
-
-GET    /v1/invoices/{id}/commissions    — Lire commissions liées à une facture
-PATCH  /v1/commissions/{id}/status      — Approuver/payer une commission
-
-POST   /v1/accounting-exports           — Déclencher un export CSV
-GET    /v1/accounting-exports/{id}      — Statut de l'export
-
-Règle métier clé : devis jamais bloqué par enforcement (conforme SOCLE §2.6).
-
-Events à associer : QuoteSent, QuoteAccepted (déjà dans 2.10). Ajouter : QuoteCreated, CommissionApproved.
-
 ---
 
 ## Changelog doc
