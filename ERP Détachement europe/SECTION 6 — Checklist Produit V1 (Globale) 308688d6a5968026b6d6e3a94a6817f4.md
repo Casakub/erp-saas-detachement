@@ -33,6 +33,26 @@ mais **ne remplacent pas** cette validation globale.
 
 → Saisie temps / PWA worker / check-in-out
 
+- [ ]  **6.4 — Checklist Lot 6 IA — Finance / Billing**
+
+→ Devis / Factures / Commissions / Gating enforcement
+
+- [ ]  **6.5 — Checklist Lot 4 IA — CRM / Clients / Vigilance / RFP**
+
+→ Leads / pipeline / clients multi-sites / documents vigilance / RFP interne
+
+- [ ]  **6.6 — Checklist Lot 5 IA — ATS / Workers**
+
+→ Annonces / candidatures / parsing IA / dossiers intérimaires
+
+- [ ]  **6.7 — Checklist Lot 7 IA — Compliance Engine Rémunération**
+
+→ Moteur salaire / IDCC / snapshots immuables / durées cumulées / enforcement flags
+
+- [ ]  **6.8 — Checklist Lot 8 IA — Risk / Certification / Marketplace**
+
+→ Risk score agence / certification / gating marketplace / ranking / RFP externe
+
 ➡️ Chaque checklist de lot doit être **100 % cochée**
 avant validation finale du produit V1.
 
@@ -159,3 +179,13 @@ Rémunération → snapshot → score → enforcement
 [6.2.A — CHECKLIST DE VALIDATION INTER-MODULES (LOT 2) (1)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%202%20A%20%E2%80%94%20CHECKLIST%20DE%20VALIDATION%20INTER-MODULES%20(LOT%2030a688d6a59680cd973bcefa1b8dea2e.md)
 
 [6.3 — CHECKLIST — LOT 3 IA (TIMESHEETS & MOBILE)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%203%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%203%20IA%20(TIMESHEETS%20&%20MOBILE)%20309688d6a596802db703f94bc41b8d6c.md)
+
+[6.4 — CHECKLIST "LOT 6 IA" — FINANCE BILLING (M10)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%204%20%E2%80%94%20CHECKLIST%20%E2%80%9CLOT%206%20IA%E2%80%9D%20%E2%80%94%20FINANCE%20BILLING%20(M10)%20%E2%80%94%20MODE%20C1%2030a688d6a59680d4aab4f458847c3353.md)
+
+[6.5 — CHECKLIST — LOT 4 IA (CRM, CLIENTS, VIGILANCE, RFP)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%205%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%204%20IA%20(CRM%2C%20CLIENTS%2C%20VIGILANCE%2C%20RFP)%2030b688d6a596805a8ee3fa3fc97db271.md)
+
+[6.6 — CHECKLIST — LOT 5 IA (ATS, WORKERS)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%206%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%205%20IA%20(ATS%2C%20WORKERS)%2030b688d6a5968097b150ebf02aa52ca0.md)
+
+[6.7 — CHECKLIST — LOT 7 IA (COMPLIANCE ENGINE RÉMUNÉRATION)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%207%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%207%20IA%20(COMPLIANCE%20ENGINE%20REMUNERATION)%2030b688d6a59680cca2c4f65092f93b55.md)
+
+[6.8 — CHECKLIST — LOT 8 IA (RISK, CERTIFICATION, MARKETPLACE)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%208%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%208%20IA%20(RISK%2C%20CERTIFICATION%2C%20MARKETPLACE)%2030b688d6a59680fba415f73561265313.md)
