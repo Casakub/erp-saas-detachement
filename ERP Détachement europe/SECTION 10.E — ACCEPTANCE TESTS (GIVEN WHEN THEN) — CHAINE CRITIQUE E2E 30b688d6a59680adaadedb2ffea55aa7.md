@@ -135,10 +135,9 @@
   - Une `rfp_request` existe en statut `open` ou `evaluating` dans le tenant A.
   - L'acteur est `agency_user` ou `tenant_admin` du tenant A.
 - When:
-  - L'acteur appelle `POST /v1/rfps/{rfp_id}/contact-logs` avec `{ contact_type, client_id, context_note }`.
+  - L'acteur appelle `POST /v1/rfps/{rfp_id}/contact-logs` avec `{ contact_type, counterpart_tenant_id, notes }`.
 - Then:
   - Le contact log est créé dans `rfp_contact_logs` avec `occurred_at = now()` si non fourni.
-  - L'event `RfpContactLogged` est publié via outbox.
   - Le log est conservé 12 mois minimum (retention policy — pas de delete avant 12 mois).
 
 ### RBAC attendu
@@ -276,21 +275,25 @@
 - When:
   - L'acteur appelle `POST /v1/quotes` pour créer un devis lié à la mission.
 - Then:
-  - Le devis est créé, `QuoteCreated` est publié via outbox.
+  - Le devis est créé en statut `draft`.
+- When:
+  - L'acteur appelle `POST /v1/quotes/{quote_id}:send`.
+- Then:
+  - Le devis passe en statut `sent`, `QuoteSent` est publié via outbox.
 - When:
   - L'acteur appelle `PATCH /v1/commissions/{commission_id}/status` avec `{ status: "approved" }`.
 - Then:
-  - La commission est approuvée, `CommissionApproved` est publié via outbox.
+  - La commission est approuvée (pas d'event canonique dédié en 2.10/2.10.4.11).
 - When:
-  - L'acteur appelle `GET /v1/accounting-exports` ou `POST /v1/accounting-exports` pour exporter.
+  - L'acteur appelle `POST /v1/accounting-exports` puis `GET /v1/accounting-exports/{export_id}` pour suivre l'export.
 - Then:
   - L'export comptable est généré/retourné selon le format configuré.
   - `client_user` et `worker` reçoivent `403 Forbidden` sur tous ces endpoints.
 
 ### RBAC attendu
 
-- `POST /v1/quotes`, `PATCH /v1/commissions/{id}/status` : `tenant_admin`, `agency_user`.
-- `GET /v1/accounting-exports` : `tenant_admin` uniquement.
+- `POST /v1/quotes`, `POST /v1/quotes/{id}:send`, `PATCH /v1/commissions/{id}/status` : `tenant_admin`, `agency_user`.
+- `POST /v1/accounting-exports`, `GET /v1/accounting-exports/{id}` : `tenant_admin`, `agency_user`.
 - Refusé: `consultant`, `client_user`, `worker`.
 - Référence: `2.12.a V1.2.2`, `6.4 Checklist Lot 6 v1.3`.
 
@@ -310,7 +313,8 @@
   - La grille `salary_grids` BTP-1702 / N2P2 est chargée avec `legal_minimum_amount=13 EUR/h` (period_type=hourly).
   - L'acteur est `agency_user` du tenant A.
 - When:
-  - L'acteur appelle `POST /v1/compliance-cases/{id}/remuneration-check`.
+  - L'acteur appelle `POST /v1/compliance-cases/{id}/remuneration/inputs`.
+  - Puis l'acteur appelle `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate`.
 - Then:
   - **Étape 1** : la grille BTP-1702/N2P2 est trouvée pour la date de début de mission.
   - **Étape 2** : `excluded_expenses_amount = 250 EUR` (logement, is_reimbursable=true → exclu du calcul admissible). `eligible_remuneration_amount = 14 EUR/h`.
@@ -324,7 +328,7 @@
 - Given:
   - `idcc_code` absent de `salary_grids` pour la période.
 - When:
-  - Même appel `POST /v1/compliance-cases/{id}/remuneration-check`.
+  - Même séquence: `POST /v1/compliance-cases/{id}/remuneration/inputs` puis `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate`.
 - Then:
   - Snapshot créé avec `is_compliant = null`, `warning_code = "REF_MISSING"`.
   - Mission non bloquée en V1 (`v1_mode.assisted_only = true`).
@@ -343,7 +347,7 @@
 
 ### RBAC attendu
 
-- Autorisé (`POST remuneration-check`) : `tenant_admin`, `agency_user`.
+- Autorisé (`POST remuneration/inputs` et `POST remuneration/snapshots:calculate`) : `tenant_admin`, `agency_user`.
 - Refusé : `consultant`, `client_user`, `worker`.
 - Lecture `GET /v1/admin/salary-grids` : `tenant_admin`, `agency_user` (lecture seule pour `agency_user`).
 - Écriture `POST /v1/admin/salary-grids` : `tenant_admin`, `system` uniquement.

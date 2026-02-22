@@ -36,8 +36,8 @@
 
 ### Ancres contractuelles
 
-- DB: `worker_remuneration_snapshots`, `remuneration_inputs`, `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `mission_enforcement_flags`, `compliance_cases` (2.9 LOCKED + 2.9.16-D, 2.9.16-F)
-- OpenAPI: `POST /v1/compliance-cases/{id}/remuneration-check`, `GET /v1/compliance-cases/{id}/remuneration-snapshot`, `GET /v1/admin/salary-grids`, `POST /v1/admin/salary-grids`, `POST /v1/admin/mandatory-pay-items`, `GET /v1/admin/country-rulesets` (2.11 LOCKED + 2.11.a V1.2.2)
+- DB: `worker_remuneration_snapshot`, `remuneration_inputs`, `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `mission_enforcement_flags`, `compliance_cases` (2.9 LOCKED + 2.9.16-D, 2.9.16-F)
+- OpenAPI: `POST /v1/compliance-cases/{id}/remuneration/inputs`, `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate`, `GET /v1/admin/salary-grids`, `POST /v1/admin/salary-grids`, `POST /v1/admin/mandatory-pay-items`, `GET /v1/admin/country-rulesets` (2.11 LOCKED + 2.11.a V1.2.2)
 - Events: `RemunerationSnapshotCreated`, `MissionEnforcementEvaluated`, `ComplianceDurationAlert`, `ComplianceScoreCalculated`, `ComplianceStatusChanged` (2.10.4.7, 2.10.4.11)
 - RBAC: `tenant_admin` + `agency_user` lecture/écriture; `system` sur admin salary-grids (import batch); `client_user`, `worker`, `consultant` exclus du moteur (2.12.a V1.2.2 Q2-B)
 
@@ -156,7 +156,7 @@ Plan de données grilles salariales V1:
 **Given** `cumulative_duration_days=370`, seuil critical=365 →
 **Then** `ComplianceDurationAlert` publié avec `alert_level="critical"`, enforcement flags mis à jour selon `country_rulesets`.
 
-**Given** `client_user` tentant `POST /v1/compliance-cases/{id}/remuneration-check` →
+**Given** `client_user` tentant `POST /v1/compliance-cases/{id}/remuneration/inputs` ou `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate` →
 **Then** 403 Forbidden.
 
 **Given** `agency_user` accédant `GET /v1/admin/salary-grids` →
@@ -165,7 +165,7 @@ Plan de données grilles salariales V1:
 ### Definition of Done (M8 Lot 7)
 
 - [ ] Tables `salary_grids`, `mandatory_pay_items`, `country_rulesets` migrées avec RLS + versioning
-- [ ] Table `worker_remuneration_snapshots` migrée — champ `updated_at` absent (immuabilité garantie)
+- [ ] Table `worker_remuneration_snapshot` migrée — champ `updated_at` absent (immuabilité garantie)
 - [ ] Algorithme moteur rémunération en 5 étapes implémenté (backend uniquement)
 - [ ] 3 IDCC V1 chargés: BTP, Métallurgie, Transport (via admin panel ou fixtures)
 - [ ] Seuils durée `country_rulesets` configurables (300d/365d France par défaut)
@@ -181,7 +181,7 @@ Plan de données grilles salariales V1:
 
 ## Livrables obligatoires (Lot 7 global)
 
-- [ ] DB / migrations (salary_grids, mandatory_pay_items, country_rulesets, worker_remuneration_snapshots)
+- [ ] DB / migrations (salary_grids, mandatory_pay_items, country_rulesets, worker_remuneration_snapshot)
 - [ ] Algorithme moteur rémunération (5 étapes) déployé en backend
 - [ ] Events outbox: `RemunerationSnapshotCreated`, `MissionEnforcementEvaluated`, `ComplianceDurationAlert`, `ComplianceScoreCalculated`
 - [ ] OpenAPI contrat respecté (endpoints V1 LOCKED + V1.2.2 admin salary-grids)

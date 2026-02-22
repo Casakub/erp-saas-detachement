@@ -74,7 +74,7 @@ Résumé dérivé (sans nouvelle règle):
 
 - Impact: anchors OpenAPI/Events/RBAC + GWT dérivés ajoutés.
 - Contradiction SOCLE/OpenAPI résolue par décision OWNER Q1 (ERRATA V1.1 §3b) — feature flag OFF caduc.
-- Nouveaux events V1.2.2 : `QuoteCreated`, `CommissionApproved` (décisions Q1-Q4, surfaces M10 V1.2.2).
+- Events canoniques finance (2.10.4.8) : `QuoteSent`, `QuoteAccepted`, `InvoiceIssued`, `InvoiceBlocked`, `InvoiceVoided`, `PaymentRecorded`, `ConsultantCommissionCalculated`.
 - Aucun changement contractuel dans 2.11 LOCKED.
 
 
@@ -82,8 +82,9 @@ Résumé dérivé (sans nouvelle règle):
 
 Nouveaux events (addendum 2.10.4.11, DRAFT) :
 
-- `QuoteCreated` (Producer: M10) — déclenché sur `POST /v1/quotes`
-- `CommissionApproved` (Producer: M10) — déclenché sur `PATCH /v1/commissions/{id}/status` → `approved`
+- `QuoteSent` (Producer: M10) — déclenché sur `POST /v1/quotes/{id}:send`
+- `QuoteAccepted` (Producer: M10) — déclenché sur `POST /v1/quotes/{id}:accept`
+- `PATCH /v1/commissions/{id}/status` : aucun event canonique dédié en 2.10/2.10.4.11
 
 Nouveaux endpoints V1.2.2 (2.11.a patch) à implémenter dans ce lot :
 
@@ -106,4 +107,4 @@ Note: `client_user` sur `POST /v1/quotes/{id}:accept` conditionné au flag `tena
 - 2026-02-17: Création checklist Lot 6 (Finance/Billing), sans changement métier.
 - 2026-02-19: patch P0 executable-spec (anchors + GWT dérivés + note d'arbitrage V1/V2), sans changement métier.
 - 2026-02-19: alignement V1.2.1 (feature flag OFF V1 pour invoices-from-timesheet), Lot 6 PARTIAL documented & acceptable.
-- 2026-02-20: décision OWNER Q1 — feature flag OFF caduc, `from-timesheet` actif V1, statut PARTIAL → READY. Surfaces M10 V1.2.2 (quotes/commissions/accounting-exports) ajoutées (2.11.a patch V1.2.2). Events QuoteCreated + CommissionApproved référencés.
+- 2026-02-20: décision OWNER Q1 — feature flag OFF caduc, `from-timesheet` actif V1, statut PARTIAL → READY. Surfaces M10 V1.2.2 (quotes/commissions/accounting-exports) ajoutées (2.11.a patch V1.2.2). Events finance alignés sur 2.10.4.8.

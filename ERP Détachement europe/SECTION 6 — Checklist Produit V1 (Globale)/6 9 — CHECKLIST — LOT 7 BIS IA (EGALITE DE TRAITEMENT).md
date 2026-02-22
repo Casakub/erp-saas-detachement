@@ -40,7 +40,7 @@
 
 - [ ] Lot 1 validé (Foundation: tenant, users, RBAC)
 - [ ] Lot 2 validé (Core Métier: missions, compliance_case)
-- [ ] Lot 7 validé (Salary Engine: `worker_remuneration_snapshots` disponibles — fournit `worker_eligible_wage`)
+- [ ] Lot 7 validé (Salary Engine: `worker_remuneration_snapshot` disponibles — fournit `worker_eligible_wage`)
 
 ---
 
@@ -166,7 +166,7 @@ ENTRÉES (saisies manuellement par agent) :
 ## Ready-to-code gate
 
 - [ ] Gate ready-to-code validée (tous DoD ci-dessus cochés)
-- [ ] Lot 7 (Salary Engine) validé en prérequis (`worker_remuneration_snapshots` disponibles)
+- [ ] Lot 7 (Salary Engine) validé en prérequis (`worker_remuneration_snapshot` disponibles)
 
 ---
 

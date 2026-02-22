@@ -54,7 +54,7 @@ Ce lot est le plus impacté par la distinction V1/V2. La matrice SECTION 10.F fa
 
 ### Ancres contractuelles
 
-- DB: `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`, `agency_profiles` (2.9 LOCKED)
+- DB: `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_ranking`, `agency_profiles` (2.9 LOCKED)
 - OpenAPI: endpoints M12 référencés dans 2.11 LOCKED (risk score calculation, certification status)
 - Events: `AgencyRiskScoreCalculated`, `AgencyCertificationStatusChanged`, `MarketplaceAccessChanged`, `MarketplaceRankingUpdated`, `AgencyProfileUpdated` (2.10.4.9, 2.10.4.10 LOCKED)
 - RBAC: `tenant_admin` en lecture/écriture sur risk/certification; `agency_user` en lecture sur son propre score; `client_user`, `worker`, `consultant` exclus (2.12 LOCKED)
@@ -94,7 +94,7 @@ Ce lot est le plus impacté par la distinction V1/V2. La matrice SECTION 10.F fa
 
 ### Definition of Done (M12)
 
-- [ ] Tables `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`, `agency_profiles` migrées avec RLS
+- [ ] Tables `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_ranking`, `agency_profiles` migrées avec RLS
 - [ ] Algorithme risk score V1 implémenté (règles-based, batch quotidien)
 - [ ] Gating certification: `controlled` requis pour marketplace access
 - [ ] Certification V1: validation manuelle `tenant_admin` + critères documentés
@@ -110,7 +110,7 @@ Ce lot est le plus impacté par la distinction V1/V2. La matrice SECTION 10.F fa
 
 ### Ancres contractuelles
 
-- DB: `rfp_requests` (avec champ `visibility: private|public` — 2.9.16-E, décision Q5-B), `agency_marketplace_rankings` (2.9 LOCKED)
+- DB: `rfp_requests` (avec champ `visibility: private|public` — 2.9.16-E, décision Q5-B), `agency_marketplace_ranking` (2.9 LOCKED)
 - OpenAPI: endpoints marketplace listing + RFP unifiée (visibility flag via `PATCH /v1/rfps/{id}/visibility` — 2.11.a V1.2.2)
 - Events: `MarketplaceRankingUpdated`, `RfpAllocated` (2.10.4.3, 2.10.4.9 LOCKED)
 - RBAC: `tenant_admin` + `agency_user` sur listing/RFP; `client_user` en lecture catalogue selon settings; `worker` exclu (2.12 LOCKED + 2.12.a V1.2.2)
@@ -171,7 +171,7 @@ Ce lot est le plus impacté par la distinction V1/V2. La matrice SECTION 10.F fa
 
 ## Livrables obligatoires (Lot 8 global)
 
-- [ ] DB / migrations (M11 + M12: agency_risk_scores, agency_certifications, marketplace_access, agency_marketplace_rankings, agency_profiles)
+- [ ] DB / migrations (M11 + M12: agency_risk_scores, agency_certifications, marketplace_access, agency_marketplace_ranking, agency_profiles)
 - [ ] Algorithme risk score V1 (batch quotidien)
 - [ ] Algorithme ranking V1 (batch quotidien)
 - [ ] Events outbox: `AgencyRiskScoreCalculated`, `AgencyCertificationStatusChanged`, `MarketplaceAccessChanged`, `MarketplaceRankingUpdated`, `AgencyProfileUpdated`

@@ -785,7 +785,7 @@ Endpoints (2.11.a V1.2.2):
 Events publiés (via outbox):
 - `LeadCreated`, `LeadConverted` (M2)
 - `ClientCreated`, `ClientDocumentExpired` (M3)
-- `RfpCreated`, `RfpPublished`, `RfpResponseReceived`, `RfpAllocated`, `RfpContactLogged` (M4)
+- `RfpCreated`, `RfpPublished`, `RfpResponseSubmitted`, `RfpAllocated` (M4)
 
 INTERDICTIONS ABSOLUES
 - Aucune logique de facturation ou de paie dans ce lot.
@@ -809,7 +809,7 @@ RBAC MINIMUM
 RÈGLES MÉTIER CLÉS
 - M2: `lead.status` lifecycle: `new → contacted → qualified → converted → lost`. `LeadConverted` publie `client_id` créé. Conversion atomique: lead → client dans une transaction.
 - M3: batch quotidien recalcule `client_document.status` (`valid|expiring|expired`). `ClientDocumentExpired` publié si `valid_to < now()`.
-- M4: `rfp_request.status` lifecycle: `draft → open → evaluating → closed`. `visibility` modifiable via PATCH uniquement. Score comparateur calculé backend à la soumission de chaque réponse. Contact log: `occurred_at` optionnel (défaut `now()`), enrichi avec `context_note`.
+- M4: `rfp_request.status` lifecycle: `draft → open → evaluating → closed`. `visibility` modifiable via PATCH uniquement. Score comparateur calculé backend à la soumission de chaque réponse. Contact log: `occurred_at` optionnel (défaut `now()`), enrichi avec `notes`.
 
 OUTPUT ATTENDU (LIVRABLES)
 - Migrations `lot4_m2_*`, `lot4_m3_*`, `lot4_m4_*` avec RLS
@@ -925,7 +925,7 @@ DÉCISIONS STRUCTURANTES (LOCKED)
 - Historique scores: chaque calcul de risk score = nouveau record dans `agency_risk_scores`. Jamais de delete (audit trail).
 
 DOCUMENTS CONTRACTUELS (OBLIGATOIRES — lire avant toute implémentation)
-- `2.9 — DB Schema V1` (LOCKED) : tables `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`, `agency_profiles`
+- `2.9 — DB Schema V1` (LOCKED) : tables `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_ranking`, `agency_profiles`
 - `2.10 — Events métier V1` (LOCKED + addendum 2.10.4.9/2.10.4.10) : events M11/M12
 - `2.11 — OpenAPI V1` (LOCKED) + `2.11.a V1.2.2` : endpoints M11/M12
 - `2.12 — RBAC` (LOCKED) + `2.12.a V1.2.2` : matrice rôles M11/M12
@@ -934,8 +934,8 @@ DOCUMENTS CONTRACTUELS (OBLIGATOIRES — lire avant toute implémentation)
 
 PÉRIMÈTRE AUTORISÉ
 Tables (lecture/écriture):
-- M12: `agency_risk_scores` (insert only — no update, no delete), `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`
-- M11: `agency_profiles` (lecture principale), `agency_marketplace_rankings` (lecture)
+- M12: `agency_risk_scores` (insert only — no update, no delete), `agency_certifications`, `marketplace_access`, `agency_marketplace_ranking`
+- M11: `agency_profiles` (lecture principale), `agency_marketplace_ranking` (lecture)
 - Lecture: `compliance_cases` (signaux M8, lecture seule), `missions` (lecture seule pour condition certification)
 
 Endpoints (2.11 LOCKED + 2.11.a V1.2.2):
@@ -997,13 +997,13 @@ Tu n'as accès qu'aux tables, endpoints et events listés ci-dessous.
 
 DÉCISIONS STRUCTURANTES (LOCKED — LOT 7)
 - Moteur rémunération V1 = rules-based backend uniquement (aucun ML, aucune logique no-code).
-- Snapshots immuables : `worker_remuneration_snapshots` n'a pas de champ `updated_at`. Tout recalcul crée un nouveau snapshot (l'ancien est conservé — audit trail).
+- Snapshots immuables : `worker_remuneration_snapshot` n'a pas de champ `updated_at`. Tout recalcul crée un nouveau snapshot (l'ancien est conservé — audit trail).
 - IDCC V1 couverts : BTP-1702, METAL-3109, TRANSPORT-16 (données chargées via admin panel).
 - Durées cumulées : per-worker × per-mission individuelle (pas cross-missions). Seuils configurables dans `country_rulesets` (défaut FR : warning=300j, critical=365j).
 - Gating enforcement : tout snapshot `is_compliant=false` → flags bloquants recalculés et publiés via outbox.
 
 DOCUMENTS CONTRACTUELS (OBLIGATOIRES — lire avant toute implémentation)
-- `2.9 — DB Schema V1` (LOCKED + patch 2.9.16-D, 2.9.16-F) : tables `worker_remuneration_snapshots`, `remuneration_inputs`, `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `mission_enforcement_flags`, `compliance_cases`
+- `2.9 — DB Schema V1` (LOCKED + patch 2.9.16-D, 2.9.16-F) : tables `worker_remuneration_snapshot`, `remuneration_inputs`, `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `mission_enforcement_flags`, `compliance_cases`
 - `2.10 — Events métier V1` (LOCKED + addendum 2.10.4.7, 2.10.4.11) : events M8 extension
 - `2.11 — OpenAPI V1` (LOCKED) + `2.11.a — OpenAPI V1.2.2` : endpoints moteur rémunération
 - `2.12.a — RBAC V1.2.2` : matrice rôles M8 extension (Q2-B)
@@ -1015,7 +1015,7 @@ Tables (lecture/écriture) :
 - `salary_grids` (insert/read — no delete, historique conservé)
 - `mandatory_pay_items` (CRUD — `tenant_admin` + `system`)
 - `country_rulesets` (CRUD — `tenant_admin`)
-- `worker_remuneration_snapshots` (insert only — jamais de update, jamais de delete)
+- `worker_remuneration_snapshot` (insert only — jamais de update, jamais de delete)
 - `mission_enforcement_flags` (update — recalcul après snapshot)
 - `compliance_cases` (lecture — pour rattachement)
 Tables (lecture seule) :
@@ -1023,8 +1023,9 @@ Tables (lecture seule) :
 - `workers` (lecture pour worker_id)
 
 Endpoints (2.11 LOCKED + 2.11.a V1.2.2) :
-- `POST /v1/compliance-cases/{id}/remuneration-check` (calcul moteur + création snapshot)
-- `GET /v1/compliance-cases/{id}/remuneration-snapshot` (lecture dernier snapshot ou liste)
+- `POST /v1/compliance-cases/{id}/remuneration/inputs` (saisie des entrées rémunération)
+- `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate` (calcul moteur + création snapshot)
+- Lecture snapshot : via table `worker_remuneration_snapshot` (pas d'endpoint GET dédié contractuel V1)
 - `GET /v1/admin/salary-grids` (lecture grilles — `tenant_admin` + `agency_user`)
 - `POST /v1/admin/salary-grids` (import grille — `tenant_admin` + `system`)
 - `POST /v1/admin/mandatory-pay-items` (création — `tenant_admin`)
@@ -1072,14 +1073,14 @@ BATCH QUOTIDIEN — DURÉES CUMULÉES
 INTERDICTIONS ABSOLUES
 - Aucun calcul de rémunération, scoring ou enforcement dans le no-code
 - Aucune logique pays hardcodée — tout passe par `country_rulesets`
-- Aucun update ou delete sur `worker_remuneration_snapshots` (insert-only strict)
+- Aucun update ou delete sur `worker_remuneration_snapshot` (insert-only strict)
 - Aucun update ou delete sur `salary_grids` — nouvel enregistrement si mise à jour grille (versioning)
 - `client_user`, `worker`, `consultant` : aucun accès aux endpoints moteur rémunération — 403 strict
 - Aucun cross-tenant : RLS sur toutes les tables du lot
 
 RBAC MINIMUM
-- `POST /v1/compliance-cases/{id}/remuneration-check` : `tenant_admin`, `agency_user`
-- `GET /v1/compliance-cases/{id}/remuneration-snapshot` : `tenant_admin`, `agency_user`
+- `POST /v1/compliance-cases/{id}/remuneration/inputs` : `tenant_admin`, `agency_user`
+- `POST /v1/compliance-cases/{id}/remuneration/snapshots:calculate` : `tenant_admin`, `agency_user`
 - `GET /v1/admin/salary-grids` : `tenant_admin`, `agency_user` (lecture seule)
 - `POST /v1/admin/salary-grids` : `tenant_admin`, `system` (import batch)
 - `POST /v1/admin/mandatory-pay-items` : `tenant_admin`
@@ -1095,14 +1096,14 @@ RÈGLES MÉTIER CLÉS — CAS LIMITES
 - Prime obligatoire (`mandatory_pay_items`, `is_reimbursable=false`) incluse dans inputs : elle est intégrée dans `eligible_remuneration_amount`
 
 OUTPUT ATTENDU (LIVRABLES)
-- Migrations `lot7_m8_*` pour `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `worker_remuneration_snapshots` avec RLS + `updated_at` absent sur snapshots
+- Migrations `lot7_m8_*` pour `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `worker_remuneration_snapshot` avec RLS + `updated_at` absent sur snapshots
 - Algorithme moteur rémunération 5 étapes implémenté (backend uniquement)
 - Données IDCC V1 chargées : BTP-1702, METAL-3109, TRANSPORT-16 (fixtures ou admin panel)
 - Seuils `country_rulesets` configurables : 300d warning / 365d critical (France par défaut)
 - Batch quotidien durées cumulées + `ComplianceDurationAlert` opérationnel
 - Endpoints admin `salary-grids`, `mandatory-pay-items`, `country-rulesets` implémentés + RBAC
 - Tests unitaires : algorithme 5 étapes (cas limite : `is_compliant=false`, `REF_MISSING`, expenses exclus, prime obligatoire incluse, score=40/70/0/100 durée)
-- Tests d'intégration : remuneration-check end-to-end, batch durée alert, gating enforcement après snapshot
+- Tests d'intégration : remuneration inputs + snapshots:calculate end-to-end, batch durée alert, gating enforcement après snapshot
 - Tests RBAC : `client_user`/`worker`/`consultant` → 403 sur tous les endpoints moteur
 - Tests multi-tenant : isolation RLS vérifiée
 - Audit logs sur toutes les mutations

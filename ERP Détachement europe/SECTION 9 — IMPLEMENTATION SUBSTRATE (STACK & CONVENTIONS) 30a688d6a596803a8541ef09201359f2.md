@@ -496,8 +496,8 @@ Règles d’exploitation:
 ### Lot 7 — Compliance Engine Rémunération (M8 extension)
 
 - [ ] Migrations Lot 7 nommées `lot7_m8_*` (9.3).
-- [ ] RLS tenant-scoped validé sur `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `worker_remuneration_snapshots`.
-- [ ] `worker_remuneration_snapshots` : champ `updated_at` absent (immuabilité vérifiée en test).
+- [ ] RLS tenant-scoped validé sur `salary_grids`, `mandatory_pay_items`, `country_rulesets`, `worker_remuneration_snapshot`.
+- [ ] `worker_remuneration_snapshot` : champ `updated_at` absent (immuabilité vérifiée en test).
 - [ ] Algorithme moteur rémunération 5 étapes implémenté et couvert par tests unitaires.
 - [ ] Données IDCC V1 chargées (BTP, Métallurgie, Transport) — fixtures ou admin panel.
 - [ ] Seuils durée `country_rulesets` (300d warning / 365d critical France) configurables et testés.
@@ -509,7 +509,7 @@ Règles d’exploitation:
 ### Lot 8 — Risk, Certification, Marketplace (M11, M12)
 
 - [ ] Migrations Lot 8 nommées `lot8_m11_*`, `lot8_m12_*` (9.3).
-- [ ] RLS tenant-scoped validé sur `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_rankings`.
+- [ ] RLS tenant-scoped validé sur `agency_risk_scores`, `agency_certifications`, `marketplace_access`, `agency_marketplace_ranking`.
 - [ ] Historique `agency_risk_scores` conservé (pas de delete — audit-ready).
 - [ ] Gating marketplace : `certification_level ≥ controlled` + `marketplace_access.status = active` requis.
 - [ ] Suspension automatique si `risk_score > 70` — testé en intégration.

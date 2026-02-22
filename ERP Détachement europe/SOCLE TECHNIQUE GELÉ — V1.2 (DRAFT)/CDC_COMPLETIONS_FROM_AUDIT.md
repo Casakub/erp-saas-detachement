@@ -72,7 +72,7 @@ CREATE TABLE equal_treatment_checks (
 
   engine_version              TEXT        NOT NULL DEFAULT 'etreq-1.0',
 
-  -- Snapshot immuable (comme worker_remuneration_snapshots)
+  -- Snapshot immuable (comme worker_remuneration_snapshot)
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_by                  UUID        NOT NULL REFERENCES users(id)
   -- PAS de updated_at — snapshot immuable audit-ready
@@ -85,7 +85,7 @@ CREATE INDEX idx_etc_compliant     ON equal_treatment_checks(tenant_id, is_compl
 
 ALTER TABLE equal_treatment_checks ENABLE ROW LEVEL SECURITY;
 
--- RLS standard (cohérent avec worker_remuneration_snapshots)
+-- RLS standard (cohérent avec worker_remuneration_snapshot)
 CREATE POLICY rls_etc_tenant_staff ON equal_treatment_checks FOR ALL TO authenticated
   USING (tenant_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'tenant_id')::uuid
          AND (current_setting('request.jwt.claims', true)::jsonb ->> 'role_type') IN ('tenant_admin', 'agency_user'));
@@ -155,7 +155,7 @@ EqualTreatmentViolationDetected
 
 ```
 ALGORITHME V1 (règles-based, pas ML) :
-  1. Récupérer worker_eligible_wage depuis worker_remuneration_snapshots (dernier)
+  1. Récupérer worker_eligible_wage depuis worker_remuneration_snapshot (dernier)
   2. Comparer avec host_country_reference_wage (saisie manuelle V1)
   3. is_compliant = (worker_eligible_wage >= host_country_reference_wage)
   4. gap_amount = worker_eligible_wage - host_country_reference_wage (négatif = non conforme)
@@ -163,7 +163,7 @@ ALGORITHME V1 (règles-based, pas ML) :
 RÈGLE SPÉCIALE V1 : host_country_reference_wage est saisi MANUELLEMENT par tenant_admin/agency_user
   → V2 : récupération automatique depuis API externe (salaires minimums pays hôte)
 
-SNAPSHOT IMMUABLE : même comportement que worker_remuneration_snapshots
+SNAPSHOT IMMUABLE : même comportement que worker_remuneration_snapshot
   → Chaque check = nouveau record (audit trail complet)
   → Pas de DELETE
 ```

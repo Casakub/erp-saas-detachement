@@ -118,7 +118,7 @@
 
 - DB: `rfp_requests` (+ champ `visibility` enum `private|public`), `rfp_invites`, `rfp_responses`, `rfp_allocations`, `rfp_contact_logs` (2.9.16-A, 2.9.16-E)
 - OpenAPI: `POST /v1/rfps`, `GET /v1/rfps`, `PATCH /v1/rfps/{id}`, `POST /v1/rfps/{id}:publish`, `POST /v1/rfps/{id}/invites`, `POST /v1/rfps/{id}/responses`, `POST /v1/rfps/{id}:allocate`, `PATCH /v1/rfps/{id}/visibility`, `POST /v1/rfps/{id}/contact-logs`, `GET /v1/rfps/{id}/contact-logs` (2.11 LOCKED + 2.11.a V1.2.2)
-- Events: `RfpCreated`, `RfpPublished`, `RfpInviteCreated`, `RfpResponseSubmitted`, `RfpAllocated`, `RfpContactLogged` (2.10.4.3, 2.10.4.11)
+- Events: `RfpCreated`, `RfpPublished`, `RfpInviteCreated`, `RfpResponseSubmitted`, `RfpAllocated` (2.10.4.3)
 - RBAC: `tenant_admin` + `agency_user` + `consultant` (scoped) en lecture/écriture; `client_user` et `worker` exclus (2.12.a V1.2.2 Q5-B, Q6-B)
 
 ### Mécanisme RFP unifié (Q5-B)
@@ -132,10 +132,10 @@
 ### Anti-désintermédiation — Contact Logs (Q6-B)
 
 - `rfp_contact_logs`: chaque interaction entre une agence et un client sur un RFP doit être tracée.
-- Champs: `rfp_id`, `logged_by_user_id`, `contact_type` (email|call|meeting|other), `counterparty_name`, `occurred_at`, `notes`.
+- Champs: `rfp_id`, `agency_id`, `logged_by`, `contact_type` (email|phone|platform|meeting|other), `counterpart_tenant_id`, `occurred_at`, `notes`.
 - Rétention minimale: 12 mois glissants.
 - RBAC: `POST` pour `tenant_admin` + `agency_user` + `consultant`; `GET` pour `tenant_admin` + `agency_user` uniquement.
-- Event `RfpContactLogged` publié à chaque log.
+- Aucun event canonique dédié en 2.10/2.10.4.11 pour les contact-logs.
 
 ### Modèle Scoring RFP Comparateur V1
 
@@ -162,7 +162,7 @@ Critères pondérés (versionnés — `model_version = "rfp-score-1.0"`):
 
 **Given** changement de poids scoring → **Then** anciens scores gardent leur `model_version`, nouveaux scores utilisent la nouvelle version.
 
-**Given** `POST /v1/rfps/{id}/contact-logs` par un `consultant` → **Then** log créé, `RfpContactLogged` publié, log accessible via `GET` par `agency_user`.
+**Given** `POST /v1/rfps/{id}/contact-logs` par un `consultant` → **Then** log créé, log accessible via `GET` par `agency_user`.
 
 **Given** `GET /v1/rfps/{id}/contact-logs` par un `consultant` → **Then** 403 (lecture réservée `tenant_admin` + `agency_user`).
 
@@ -175,7 +175,7 @@ Critères pondérés (versionnés — `model_version = "rfp-score-1.0"`):
 - [ ] `PATCH /v1/rfps/{id}/visibility` implémenté (Q5-B)
 - [ ] `POST/GET /v1/rfps/{id}/contact-logs` implémentés (Q6-B)
 - [ ] Scoring comparateur V1 implémenté en backend (score + score_breakdown immuables)
-- [ ] Events `RfpCreated`, `RfpPublished`, `RfpInviteCreated`, `RfpResponseSubmitted`, `RfpAllocated`, `RfpContactLogged` publiés via outbox
+- [ ] Events `RfpCreated`, `RfpPublished`, `RfpInviteCreated`, `RfpResponseSubmitted`, `RfpAllocated` publiés via outbox
 - [ ] RBAC par endpoint validé (tests unitaires par rôle)
 - [ ] Rétention contact logs: 12 mois (politique de purge documentée)
 - [ ] Tests: unit + integration + RBAC + multi-tenant + scoring

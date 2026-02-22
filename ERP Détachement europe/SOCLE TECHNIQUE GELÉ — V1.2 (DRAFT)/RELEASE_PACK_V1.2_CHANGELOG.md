@@ -43,8 +43,8 @@ Identifier les gaps dans le CDC et créer les patches manquants pour les surface
 **Raison** : Q6-B (anti-désintermédiation) exige traçabilité contacts RFP. Colonne `rfp_requests.visibility` et table `rfp_contact_logs` absentes de `2.9 LOCKED`.
 
 **Contenu créé** :
-- Colonne `rfp_requests.visibility` (enum: public, restricted, private)
-- DDL `rfp_contact_logs` (id, tenant_id, rfp_request_id, client_id, contact_type, occurred_at, context_note, created_by)
+- Colonne `rfp_requests.visibility` (enum: private, public)
+- DDL `rfp_contact_logs` (id, tenant_id, rfp_id, agency_id, counterpart_tenant_id, contact_type, occurred_at, notes, logged_by)
 - Retention policy : 12 mois minimum
 - RLS : tenant_staff, platform_admin
 - Migration : `20260222000003__lot4_m4_rfp_contact_logs.sql`

@@ -39,7 +39,7 @@ Format : `YYYYMMDDHHMMSS__lot<N>_m<M>_<slug>.sql`
 
 La Directive 2018/957/UE (révision de la Directive 96/71/CE) impose que les travailleurs détachés bénéficient des mêmes conditions de rémunération que les travailleurs locaux du pays hôte. Le contrôle V1 est **manuel et assisté** (saisie agent) — l'automatisation via API externe des salaires de référence est V2.
 
-Les snapshots sont **immuables** (pas de `updated_at`) — même comportement que `worker_remuneration_snapshots` (2.9 LOCKED).
+Les snapshots sont **immuables** (pas de `updated_at`) — même comportement que `worker_remuneration_snapshot` (2.9 LOCKED).
 
 ### DDL complet
 
@@ -107,7 +107,7 @@ CREATE TABLE equal_treatment_checks (
 
   engine_version              TEXT        NOT NULL DEFAULT 'etreq-1.0',
 
-  -- SNAPSHOT IMMUABLE — même règle que worker_remuneration_snapshots
+  -- SNAPSHOT IMMUABLE — même règle que worker_remuneration_snapshot
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_by                  UUID        NOT NULL REFERENCES users(id)
   -- PAS de updated_at — snapshot immuable (audit-ready, inspection-ready)
@@ -365,7 +365,7 @@ SECTIONS DU DOSSIER (ordre d'affichage) :
    - Client : nom, adresse site
    - Date de génération + version export
 
-2. RÉMUNÉRATION (worker_remuneration_snapshots)
+2. RÉMUNÉRATION (worker_remuneration_snapshot)
    - Dernier snapshot immuable
    - Champs : base_salary, eligible_amount, excluded_expenses, legal_minimum, is_compliant
    - IDCC appliqué + classification

@@ -19,13 +19,13 @@
 
 | Surface | DB | OpenAPI | Events | RBAC | E2E | Status global |
 |---|---|---|---|---|---|---|
-| Snapshot rémunération (M8) | ✅ `worker_remuneration_snapshots` 2.9 | ✅ `POST remuneration/snapshots:calculate` | ✅ `RemunerationSnapshotCreated` | ✅ 2.12 LOCKED | ✅ E2E-01 | **✅ OK** |
+| Snapshot rémunération (M8) | ✅ `worker_remuneration_snapshot` 2.9 | ✅ `POST remuneration/snapshots:calculate` | ✅ `RemunerationSnapshotCreated` | ✅ 2.12 LOCKED | ✅ E2E-01 | **✅ OK** |
 | Compliance score (M8) | ✅ `compliance_scores` 2.9 | ✅ `GET compliance-score` V1.3 §4 | ✅ `ComplianceScoreCalculated` 2.10 | ✅ 2.12 LOCKED | ✅ E2E-02 | **✅ OK** |
 | Enforcement timesheets | ✅ enforcement_flags 2.9 | ✅ `POST timesheets:validate` (422 gate) | ✅ `MissionEnforcementEvaluated` | ✅ 2.12 | ✅ E2E-03 | **✅ OK** |
 | Enforcement factures | ✅ enforcement_flags 2.9 | ✅ `POST invoices:from-timesheet` | ✅ `InvoiceBlocked` | ✅ 2.12 | ✅ E2E-04 | **✅ OK** |
 | Chaîne billing positive | ✅ timesheets.billing_status 2.9 | ✅ 2.11 LOCKED | ✅ `TimesheetBillingStatusChanged` | ✅ 2.12 | ✅ E2E-05 | **✅ OK** |
-| Finance : devis/commissions | ✅ quotes, commissions 2.9 | ✅ `POST quotes`, `PATCH commissions` | ✅ `QuoteCreated`, `CommissionApproved` | ✅ 2.12 | ✅ E2E-11 | **✅ OK** |
-| Moteur rémunération IDCC | ✅ salary_grids, remun. inputs | ✅ `POST remuneration-check` | ✅ `ComplianceDurationAlert` 2.10.4.11 §A | ✅ 2.12 | ✅ E2E-12 | **✅ OK** |
+| Finance : devis/commissions | ✅ quotes, commissions 2.9 | ✅ `POST quotes`, `PATCH commissions` | ✅ `QuoteSent` (`POST /quotes/{id}:send`) | ✅ 2.12 | ✅ E2E-11 | **✅ OK** |
+| Moteur rémunération IDCC | ✅ salary_grids, remun. inputs | ✅ `POST remuneration/inputs` + `POST remuneration/snapshots:calculate` | ✅ `ComplianceDurationAlert` 2.10.4.11 §A | ✅ 2.12 | ✅ E2E-12 | **✅ OK** |
 
 ---
 
@@ -34,7 +34,7 @@
 | Surface | DB | OpenAPI | Events | RBAC | E2E | Status global |
 |---|---|---|---|---|---|---|
 | Web Push VAPID (worker) | ✅ `worker_push_subscriptions` 2.9.16-C | ✅ `POST/DELETE /v1/worker/push-subscription` 2.11.a | N/A (déclencheur, pas event direct) | ✅ worker_own, 2.12.a | ✅ E2E-09 | **✅ OK** |
-| RFP Contact Logs | ✅ `rfp_contact_logs` 2.9.16-E | ✅ `POST /v1/rfps/{id}/contact-logs` 2.11.a | ✅ `RfpContactLogged` 2.10 | ✅ tenant_staff, 2.12.a | ✅ E2E-06 | **✅ OK** |
+| RFP Contact Logs | ✅ `rfp_contact_logs` 2.9.16-E | ✅ `POST /v1/rfps/{id}/contact-logs` 2.11.a | N/A (pas d'event canonique dédié) | ✅ tenant_staff, 2.12.a | ✅ E2E-06 | **✅ OK** |
 | RFP Visibility | ✅ `rfp_requests.visibility` 2.9.16-E | ✅ filtres GET rfps | N/A | ✅ 2.12.a | ⚠️ Pas E2E dédié | **✅ OK** |
 | SIPSI Declarations | ✅ `sipsi_declarations` 2.9.16-F | ✅ `POST/PATCH/GET sipsi-declaration` 2.11.a | ✅ `SipsiDeclarationCreated` + `StatusChanged` 2.10.4.11 §C | ✅ 2.12.a | ⚠️ Pas E2E dédié SIPSI | **⚠️ E2E SIPSI manquant** |
 | ATS Shortlist | ✅ `applications` 2.9 | ✅ `POST applications:shortlist` 2.11.a | ✅ `CandidateScored` 2.10.4.4 | ✅ 2.12.a | ✅ E2E-07 | **✅ OK** |
@@ -64,7 +64,7 @@
 | Endpoint push notifications | `/v1/worker/push-subscription` (singulier) | ✅ Aligné | ⚠️ Corrigé dans PATCH_DB_2.9.16-C (pluriel → singulier) |
 | Opération export | `:export-dossier` (hyphen, sans espace) | ✅ Cohérent 14 occurrences | N/A |
 | Endpoint égalité | `/equal-treatment-check` (hyphen) | ✅ Cohérent 21 occurrences | N/A |
-| Table snapshot rémunération | `worker_remuneration_snapshots` (underscore) | ✅ Cohérent | N/A |
+| Table snapshot rémunération | `worker_remuneration_snapshot` (underscore) | ✅ Cohérent | N/A |
 | Table égalité | `equal_treatment_checks` (underscore) | ✅ Cohérent | N/A |
 | Table export | `compliance_exports` (underscore) | ✅ Cohérent | N/A |
 | Immuabilité `equal_treatment_checks` | Pas d'`updated_at` | ✅ Vérifié dans DDL | N/A |

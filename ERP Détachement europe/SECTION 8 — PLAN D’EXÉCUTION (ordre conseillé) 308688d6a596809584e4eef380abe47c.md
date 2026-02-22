@@ -308,13 +308,13 @@ Ordre recommandé :
 2) Devis (POST /v1/quotes)
 3) Émission facture (POST /v1/invoices/{id}:issue) + enforcement gate
 4) Commissions (PATCH /v1/commissions/{id}/status)
-5) Exports comptables (GET /v1/accounting-exports)
+5) Exports comptables (POST /v1/accounting-exports puis GET /v1/accounting-exports/{export_id})
 
 Conditions de sortie :
 ☐ Impossible de facturer si can_issue_invoice=false (422 + blocking_reasons)
 ☐ Impossible d'émettre si can_issue_invoice=false (422 + blocking_reasons)
 ☐ InvoiceIssued + TimesheetBillingStatusChanged publiés
-☐ QuoteCreated + CommissionApproved publiés
+☐ QuoteSent publié (sur `POST /v1/quotes/{id}:send`)
 ☐ client_user / worker exclus (403)
 ☐ Multi-tenant isolation testée
 
@@ -338,7 +338,7 @@ Décisions structurantes :
 - Durées per-mission: seuils 300d warning / 365d critical (Q7-C)
 
 Ordre recommandé :
-1) Migrations salary_grids, mandatory_pay_items, country_rulesets, worker_remuneration_snapshots
+1) Migrations salary_grids, mandatory_pay_items, country_rulesets, worker_remuneration_snapshot
 2) Algorithme moteur 5 étapes (backend uniquement)
 3) Seed IDCC V1 (fixtures BTP/Métallurgie/Transport)
 4) Admin endpoints salary-grids / mandatory-pay-items / country-rulesets
@@ -378,7 +378,7 @@ Ordre recommandé :
 1) M12 migrations + algorithme risk score V1
 2) M12 certification gating (validation manuelle tenant_admin)
 3) M12 suspension automatique + MarketplaceAccessChanged
-4) M12 ranking batch (agency_marketplace_rankings)
+4) M12 ranking batch (agency_marketplace_ranking)
 5) M11 catalogue marketplace (GET /v1/marketplace/agencies + filtres)
 6) M11 RFP publique (réutilise PATCH /v1/rfps/{id}/visibility de M4)
 
@@ -401,4 +401,3 @@ Référence checklist : 6.8 — Checklist Lot 8 (READY v1.1)
 - 2026-02-17: Normalisation fences — sans changement métier.
 - 2026-02-20: Ajout fiches Lots 4→8 avec objectifs, modules, décisions structurantes, ordre recommandé et conditions de sortie (même niveau de détail que Lot 3).
 - 2026-02-21: Ajout fiches Lots 1 et 2 (Foundation + Core Métier) — même niveau de détail que Lots 3→8. Couverture complète tous les lots V1.
-
