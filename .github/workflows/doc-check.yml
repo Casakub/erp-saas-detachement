@@ -19,6 +19,19 @@ jobs:
       # 1) fix all fence errors reported by scripts/doc_check.sh
       # 2) remove continue-on-error below to restore blocking gate
       - name: Run doc check (non-blocking temporary gate)
+        id: doc_check
         continue-on-error: true
         run: |
           bash scripts/run_doc_check.sh
+
+      - name: Warn on non-blocking doc-check failure
+        if: ${{ always() && steps.doc_check.outcome == 'failure' }}
+        run: |
+          {
+            echo "## WARNING — doc-check failed (non-blocking temporary gate)"
+            echo "- workflow: doc-check.yml"
+            echo "- policy: continue-on-error=true (PR0-bis)"
+            echo "- action: follow scripts/PR0_BIS_DOC_CHECK_GATE_NOTE.md + DOC_REMEDIATION_PLAN.md"
+            echo "- rollback condition: restore blocking gate before end of PR1"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::doc-check failed but remains non-blocking by temporary PR0-bis policy."

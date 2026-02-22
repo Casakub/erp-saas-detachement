@@ -97,7 +97,20 @@ jobs:
       # Keep backend CI green while doc-check failures are pre-existing in non-LOCKED docs.
       # Revert by removing continue-on-error after remediating doc_check fence errors.
       - name: Run doc check (non-blocking temporary gate)
+        id: doc_check
         continue-on-error: true
         run: |
           set -euo pipefail
           bash scripts/run_doc_check.sh
+
+      - name: Warn on non-blocking doc-check failure
+        if: ${{ always() && steps.doc_check.outcome == 'failure' }}
+        run: |
+          {
+            echo "## WARNING — doc-check failed in backend-ci (non-blocking temporary gate)"
+            echo "- workflow: backend-ci.yml"
+            echo "- policy: continue-on-error=true (PR0-bis)"
+            echo "- action: follow scripts/PR0_BIS_DOC_CHECK_GATE_NOTE.md + DOC_REMEDIATION_PLAN.md"
+            echo "- rollback condition: restore blocking gate before end of PR1"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::doc-check failed in backend-ci but is non-blocking by temporary PR0-bis policy."

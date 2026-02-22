@@ -10,6 +10,36 @@ Impacted CI workflows:
 - `.github/workflows/doc-check.yml`
 - `.github/workflows/backend-ci.yml` (step `Run doc check`)
 
+## Owner
+
+- **Owner**: Tech Lead documentation gates (`doc_check`) + Release Pack maintainer.
+
+## Deadline
+
+- **Deadline**: rollback du mode non-bloquant **avant la fin de PR1**.
+
+## Scope de remediation
+
+Remediation documentaire limitée au périmètre non-LOCKED suivant:
+
+- **H1-bis**: patches (`SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)`).
+- **Release Pack**: index/alignment/open-items/changelog.
+- **Checklists**: `SECTION 6` (lots).
+
+Exclusion explicite:
+
+- aucun changement sur `SOCLE TECHNIQUE GELÉ — V1 (LOCKED)`.
+
+## Rollback condition
+
+Le gate doc-check redevient bloquant quand **toutes** les conditions suivantes sont vraies:
+
+1. `bash scripts/run_doc_check.sh` retourne `0` (plus de violations fences).
+2. Le plan `DOC_REMEDIATION_PLAN.md` est soldé (statut des fichiers = done).
+3. Les deux workflows suivants retirent `continue-on-error: true` sur le step doc-check:
+   - `.github/workflows/doc-check.yml`
+   - `.github/workflows/backend-ci.yml`
+
 ## How to restore blocking gate
 
 1. Fix all remaining fence violations reported by:
