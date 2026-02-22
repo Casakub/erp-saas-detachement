@@ -7,10 +7,18 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 if [[ -d "${ROOT_DIR}/backend/node_modules" ]]; then
   echo "INFO: pruning node_modules markdown"
-  if [[ -f "${ROOT_DIR}/backend/prune-node-modules-md.cjs" ]]; then
-    echo "INFO: using prune helper: backend/prune-node-modules-md.cjs"
+  PRUNE_HELPER=""
+  if [[ -f "${ROOT_DIR}/backend/scripts/prune-node-modules-md.cjs" ]]; then
+    PRUNE_HELPER="backend/scripts/prune-node-modules-md.cjs"
+  elif [[ -f "${ROOT_DIR}/backend/prune-node-modules-md.cjs" ]]; then
+    # Backward-compatible fallback for older repo layouts.
+    PRUNE_HELPER="backend/prune-node-modules-md.cjs"
+  fi
+
+  if [[ -n "${PRUNE_HELPER}" ]]; then
+    echo "INFO: using prune helper: ${PRUNE_HELPER}"
     if command -v node >/dev/null 2>&1; then
-      (cd "${ROOT_DIR}" && node backend/prune-node-modules-md.cjs)
+      (cd "${ROOT_DIR}" && node "${PRUNE_HELPER}")
     else
       echo "INFO: node unavailable, fallback prune via find"
       find "${ROOT_DIR}/backend/node_modules" -type f -name "*.md" -delete

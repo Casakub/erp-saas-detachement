@@ -13,7 +13,7 @@ shadow_port = 54320
 major_version = 15
 
 [db.migrations]
-schema_paths = ["./backend/migrations/*.sql"]
+schema_paths = ["../backend/migrations/*.sql"]
 
 [db.seed]
 enabled = false

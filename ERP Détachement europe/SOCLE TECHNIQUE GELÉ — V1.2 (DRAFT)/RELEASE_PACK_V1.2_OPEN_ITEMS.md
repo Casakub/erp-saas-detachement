@@ -24,11 +24,11 @@
 
 ### PRIORITÉ 1 — Validation OWNER requise avant build des lots concernés
 
-| Item | Décision | Lot impacté | Délai recommandé |
-|---|---|---|---|
-| **D1 — platform_admin Option A** | `tenant_id=null`, bypass RLS, SELECT global (contrat OpenAPI V1.4 désormais en place) | Lot 1 (Foundation RBAC) | Avant démarrage Lot 1 |
-| **D2 — ATS scoring rules-v1.0** | 4 composantes, `model_version="rules-v1.0"`, LLM=V2 | Lot 5 (ATS) | Avant démarrage Lot 5 |
-| **D6 — Égalité traitement V1 manuel** | Check manuel, snapshot immuable, pas de blocage auto | Lot 7 Bis | Avant démarrage Lot 7 Bis |
+| Item | Décision | Lot impacté | Délai recommandé | Go-live blocker ? |
+|---|---|---|---|---|
+| **D1 — platform_admin Option A** | `tenant_id=null`, bypass RLS, SELECT global (contrat OpenAPI V1.4 désormais en place) | Lot 1 (Foundation RBAC) | Avant démarrage Lot 1 | **Oui** |
+| **D2 — ATS scoring rules-v1.0** | 4 composantes, `model_version="rules-v1.0"`, LLM=V2 | Lot 5 (ATS) | Avant démarrage Lot 5 | **Oui** |
+| **D6 — Égalité traitement V1 manuel** | Check manuel, snapshot immuable, pas de blocage auto | Lot 7 Bis | Avant démarrage Lot 7 Bis | **Oui** |
 
 **Action** : Soumettre `DECISIONS_OWNER_V1.2.md` au Product Owner. Absence de réponse dans 5 jours ouvrés = approbation tacite.
 
@@ -38,9 +38,9 @@
 
 ### PRIORITÉ 2 — Gaps E2E (non bloquants build, bloquants QA Lot)
 
-| Item | Description | Lot | Action recommandée |
-|---|---|---|---|
-| **E2E SIPSI manquant** | Aucun scénario E2E dédié pour `sipsi_declarations` (workflow draft→submitted→validated→rejected) | 2/7 | Créer E2E-14 en Vague 4 avant QA Lot 7 |
+| Item | Description | Lot | Action recommandée | Go-live blocker ? |
+|---|---|---|---|---|
+| **E2E SIPSI manquant** | Aucun scénario E2E dédié pour `sipsi_declarations` (workflow draft→submitted→validated→rejected) | 2/7 | Créer E2E-14 en Vague 4 avant QA Lot 7 | **Oui** |
 
 **Couverture actuelle SIPSI** : GWT dans `6.7 CHECKLIST LOT 7 IA` + events définis `2.10.4.11 §C`. Suffisant pour le build, pas pour l'acceptance testing complet.
 
@@ -48,9 +48,9 @@
 
 ### PRIORITÉ 3 — Event candidat (à confirmer avant build CRM)
 
-| Item | Description | Lot | Action recommandée |
-|---|---|---|---|
-| **`LeadActivityCreated` — statut CANDIDAT** | Event référencé comme "CANDIDAT V1" dans `PATCH_OPENAPI_V1.3 §2`. Pas de payload défini dans `PATCH_EVENTS_2.10.4.11`. | 4 (CRM) | Valider ou supprimer avant démarrage Lot 4 |
+| Item | Description | Lot | Action recommandée | Go-live blocker ? |
+|---|---|---|---|---|
+| **`LeadActivityCreated` — statut CANDIDAT** | Event référencé comme "CANDIDAT V1" dans `PATCH_OPENAPI_V1.3 §2`. Pas de payload défini dans `PATCH_EVENTS_2.10.4.11`. | 4 (CRM) | Valider ou supprimer avant démarrage Lot 4 | **Non** |
 
 **Options** :
 1. Valider → ajouter §F dans `PATCH_EVENTS_2.10.4.11.md` avec payload complet
@@ -88,7 +88,18 @@ ITEMS V2 DOCUMENTÉS (hors scope) : 7
 
 ---
 
+## Ordre de résolution recommandé (go-live)
+
+1. **D1 signé** (`OWNER_SIGNOFF_V1.2.md`) — verrouiller l'architecture `platform_admin`.
+2. **D6 signé** (`OWNER_SIGNOFF_V1.2.md`) — verrouiller le périmètre conformité légal V1.
+3. **D2 signé** (`OWNER_SIGNOFF_V1.2.md`) — verrouiller le scoring ATS V1.
+4. **E2E SIPSI ajouté et validé** — fermer le gap test bloquant QA go-live.
+5. **Statut final `LeadActivityCreated`** — valider payload event ou reporter explicitement V2.
+
+---
+
 ## Mini-changelog
 
 - 2026-02-22 : Création — 5 items ouverts post-QA Final. 0 bloquant build. 3 décisions OWNER requises. 1 E2E manquant. 1 event à statuer.
 - 2026-02-22 : Mise à jour post-hardening — item `platform admin OpenAPI missing` marqué **RESOLU** après contractualisation via `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md`.
+- 2026-02-22 : Ajout du champ `Go-live blocker ?` sur tous les items ouverts + ordre de résolution recommandé.
