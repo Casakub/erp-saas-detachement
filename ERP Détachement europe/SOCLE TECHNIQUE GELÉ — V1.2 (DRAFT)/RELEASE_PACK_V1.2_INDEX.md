@@ -36,6 +36,7 @@ H1-bis — Patches faisant autorité (ne modifient pas LOCKED)
          ├── PATCH_DB_2.9.16-C à G
          ├── PATCH_EVENTS_2.10.4.11
          ├── PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES
+         ├── PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES
          ├── PATCH_RBAC_2.12.b_PLATFORM_ADMIN
          ├── PATCH_ATS_SCORING_Q7_V1_RULES_BASED
          └── DECISIONS_OWNER_V1.2
@@ -77,6 +78,9 @@ H4 — Prototypes (non normatifs)
 |---|---|---|
 | `2.11.a — OPENAPI V1.2 (PATCH)` | Web Push VAPID, SIPSI, RFP contact-logs, ATS shortlist, Worker Skills | V1.2.2 |
 | `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md` | marketplace/agencies, leads/activities, export-dossier (POST+GET polling), compliance-score, equal-treatment-check (POST+GET) | V1.3.1 |
+| `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` | `/v1/admin/platform/stats`, `/v1/admin/platform/tenants`, `/v1/admin/platform/tenants/{tenant_id}`, `/v1/admin/platform/tenants/{tenant_id}/status`, `/v1/admin/platform/compliance-overview` | V1.4 |
+
+**Raison de mise à jour (post hardening)** : les surfaces API `platform_admin` sont désormais contractées via `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` (et non via `2.11` LOCKED, `2.11.a`, ni `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md`).
 
 ### Patches RBAC
 
@@ -128,7 +132,7 @@ H4 — Prototypes (non normatifs)
 | Surface | Décision V1 |
 |---|---|
 | ATS Scoring | Rules-based, `model_version="rules-v1.0"` — 4 composantes |
-| platform_admin | `tenant_id=null`, bypass RLS, SELECT global + write config |
+| platform_admin | `tenant_id=null`, bypass RLS, SELECT global + write config ; API `/v1/admin/platform/*` contractée via `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` |
 | Égalité traitement | Check manuel assisté, snapshot immuable, events outbox |
 | Export dossier | PDF async (202 + polling), signed URL 1h, TTL 7j |
 | SIPSI | Déclaration assistée manuelle, pas de connecteur API |
@@ -172,3 +176,4 @@ H4 — Prototypes (non normatifs)
 ## Mini-changelog
 
 - 2026-02-22 : Création — QA Final V1.2 réalisé. 1 divergence corrigée (push-subscription). 7/8 gates satisfaites.
+- 2026-02-22 : Mise à jour post-hardening — ajout `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` dans le catalogue; contractualisation explicite des surfaces `platform_admin` via V1.4.

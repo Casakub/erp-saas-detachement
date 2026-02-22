@@ -12,13 +12,21 @@
 
 ---
 
+## Items résolus depuis hardening V1.4
+
+| Item | Statut | Preuve documentaire | Raison de clôture |
+|---|---|---|---|
+| **platform admin OpenAPI missing** | ✅ **RESOLU** | `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md`, `RELEASE_PACK_V1.2_INDEX.md`, `RELEASE_PACK_V1.2_ALIGNMENT_CHECKLIST.md` | Surfaces `/v1/admin/platform/*` désormais contractées via OpenAPI V1.4 (pas via `2.11`/`2.11.a`/V1.3). |
+
+---
+
 ## Items ouverts — Classés par priorité
 
 ### PRIORITÉ 1 — Validation OWNER requise avant build des lots concernés
 
 | Item | Décision | Lot impacté | Délai recommandé |
 |---|---|---|---|
-| **D1 — platform_admin Option A** | `tenant_id=null`, bypass RLS, SELECT global | Lot 1 (Foundation RBAC) | Avant démarrage Lot 1 |
+| **D1 — platform_admin Option A** | `tenant_id=null`, bypass RLS, SELECT global (contrat OpenAPI V1.4 désormais en place) | Lot 1 (Foundation RBAC) | Avant démarrage Lot 1 |
 | **D2 — ATS scoring rules-v1.0** | 4 composantes, `model_version="rules-v1.0"`, LLM=V2 | Lot 5 (ATS) | Avant démarrage Lot 5 |
 | **D6 — Égalité traitement V1 manuel** | Check manuel, snapshot immuable, pas de blocage auto | Lot 7 Bis | Avant démarrage Lot 7 Bis |
 
@@ -83,3 +91,4 @@ ITEMS V2 DOCUMENTÉS (hors scope) : 7
 ## Mini-changelog
 
 - 2026-02-22 : Création — 5 items ouverts post-QA Final. 0 bloquant build. 3 décisions OWNER requises. 1 E2E manquant. 1 event à statuer.
+- 2026-02-22 : Mise à jour post-hardening — item `platform admin OpenAPI missing` marqué **RESOLU** après contractualisation via `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md`.

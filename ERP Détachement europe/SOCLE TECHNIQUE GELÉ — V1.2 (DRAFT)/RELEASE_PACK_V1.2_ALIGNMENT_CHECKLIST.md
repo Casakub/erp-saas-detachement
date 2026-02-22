@@ -52,8 +52,10 @@
 | Export dossier inspection-ready | ✅ `compliance_exports` 2.9.16-G §B | ✅ `POST :export-dossier` + `GET /exports/{id}` V1.3 §3+4 | ✅ `ExportRequested` + `ExportCompleted` 2.10.4.11 §D | ✅ tenant_admin/agency_user only | ✅ **E2E-13** | **✅ OK** |
 | Égalité traitement M8.3 | ✅ `equal_treatment_checks` 2.9.16-G §A | ✅ `POST/GET equal-treatment-check` V1.3 §5 | ✅ `CheckCreated` + `ViolationDetected` 2.10.4.11 §E | ✅ tenant_staff + worker_read | ✅ 6.9 GWT | **✅ OK** |
 | ATS Scoring rules-v1.0 | ✅ `applications.ai_score`, `score_breakdown` | ✅ `CandidateScored` payload | ✅ `CandidateScored` 2.10.4.4 | ✅ 6.6 §M5 | ✅ E2E-07 + GWT Q7 | **✅ OK** |
-| platform_admin RBAC | ✅ RLS policies (bypass tenant_id=null) | ✅ `/v1/admin/platform/*` | N/A (cross-tenant read) | ✅ PATCH_RBAC_2.12.b | ✅ DoD RBAC tests | **✅ OK** |
+| Platform Admin surfaces | ✅ tables existantes (`tenants`, `tenant_settings`, `agency_profiles`, `missions`, `compliance_cases`) | ✅ `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` (`/v1/admin/platform/*`) | N/A | ✅ `PATCH_RBAC_2.12.b_PLATFORM_ADMIN.md` | ⚠️ Tests RBAC dédiés à créer (DoD V1.4), couverture partielle via contrôles RBAC transverses | **⚠️ TESTS À AJOUTER** |
 | Compliance Score (lecture) | ✅ `compliance_scores` 2.9 | ✅ `GET compliance-score` V1.3 §4 | N/A | ✅ tenant_staff | ⚠️ Couvert E2E-01/02 | **✅ OK** |
+
+**Raison de mise à jour (post hardening)** : les endpoints `platform_admin` sont désormais contractualisés explicitement dans `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` (pas via `2.11`/`2.11.a`/V1.3).
 
 ---
 
@@ -148,3 +150,4 @@ Gates satisfaites : 7/8
 ## Mini-changelog
 
 - 2026-02-22 : Création — QA Final V1.2. 2 divergences détectées et corrigées. 3 points d'attention documentés. Verdict : READY-TO-CODE V1.2 (7/8 gates).
+- 2026-02-22 : Mise à jour post-hardening — ajout de la ligne "Platform Admin surfaces" avec OpenAPI V1.4, RBAC 2.12.b, events=N/A et besoin de tests RBAC dédiés.
