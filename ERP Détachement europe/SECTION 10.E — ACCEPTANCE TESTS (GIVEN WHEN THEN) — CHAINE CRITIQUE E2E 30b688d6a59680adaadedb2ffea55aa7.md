@@ -355,6 +355,69 @@
 - Les `salary_grids` partagées (platform-level) sont en lecture seule pour les tenants (écriture `system` uniquement).
 - Référence : `2.9 LOCKED`, `SECTION 9 LOCKED v1.1`.
 
+---
+
+## Scénario E2E-13 — Export dossier inspection-ready (async flow)
+
+- Given:
+  - Une `compliance_case` existe en statut `active` dans le tenant A avec au moins un `worker_remuneration_snapshot`.
+  - L'acteur est `agency_user` ou `tenant_admin` du tenant A.
+- When:
+  - L'acteur appelle `POST /v1/compliance-cases/{compliance_case_id}:export-dossier` avec `{ format: "pdf" }`.
+- Then:
+  - La réponse est `202 Accepted` avec `{ export_id, status: "pending", poll_url }`.
+  - Un enregistrement `compliance_exports` est créé avec `status = "pending"`.
+  - L'event `ComplianceDossierExportRequested` est publié via `events_outbox`.
+
+### Flow polling (statut intermédiaire)
+
+- When:
+  - L'acteur appelle `GET /v1/compliance-cases/{compliance_case_id}/exports/{export_id}` pendant le traitement.
+- Then:
+  - La réponse retourne `{ status: "processing" }` (ou `"pending"` si job non démarré).
+  - `download_url` est absent (`null`).
+
+### Flow completion (export prêt)
+
+- When:
+  - Le job async termine la génération PDF.
+- Then:
+  - `compliance_exports.status` passe à `"ready"`.
+  - `compliance_exports.storage_path` et `download_url` (signed URL Supabase, expiration 1h) sont renseignés.
+  - L'event `ComplianceDossierExportCompleted` est publié via `events_outbox`.
+  - `GET /v1/compliance-cases/{compliance_case_id}/exports/{export_id}` retourne `{ status: "ready", download_url, download_expires_at }`.
+  - Le fichier expire 7 jours après `completed_at` (champ `expires_at` GENERATED ALWAYS).
+
+### Cas d'échec (job en erreur)
+
+- When:
+  - Le job async échoue (ex: compliance_case sans snapshot valide).
+- Then:
+  - `compliance_exports.status` passe à `"failed"`.
+  - `GET …/exports/{export_id}` retourne `{ status: "failed", error_message }`.
+
+### RBAC attendu
+
+- Autorisé (`POST :export-dossier` + `GET exports/{id}`) : `tenant_admin`, `agency_user`.
+- Refusé strict : `worker` → `403 Forbidden`, `client_user` → `403 Forbidden`, `consultant` → `403 Forbidden`.
+- Référence : `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md §3`, `PATCH_RBAC_2.12.b_PLATFORM_ADMIN.md`.
+
+### Isolation multi-tenant attendue
+
+- Un acteur tenant B ne peut pas déclencher ni consulter un export sur une `compliance_case` tenant A.
+  - `POST :export-dossier` → `404` (RLS filtre le compliance_case_id cross-tenant).
+  - `GET exports/{export_id}` → `404` (RLS filtre par `tenant_id`).
+- Référence : `PATCH_DB_2.9.16-G §Table compliance_exports`, RLS policy `rls_cexp_tenant_staff`.
+
+### Sources
+
+- Flow async : `PATCH_DB_2.9.16-G_equal_treatment_compliance_exports.md §Table B compliance_exports`
+- Endpoints : `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md §3 + §4 (polling)`
+- Events : `PATCH_EVENTS_2.10.4.11.md §D (ComplianceDossierExportRequested, ComplianceDossierExportCompleted)`
+- Livrable obligatoire : `SECTION 6 — Checklist Globale 6.0 ligne 113`
+
+---
+
 ## Non-goals / Out of scope
 
 - Définir des jeux de données de test techniques.
@@ -366,3 +429,4 @@
 - 2026-02-18: scénarios GWT complétés sur la chaîne critique avec attentes RBAC et multi-tenant.
 - 2026-02-20: v1.2 — ajout scénarios E2E-06 à E2E-11 couvrant les surfaces V1.2.2
 - 2026-02-21: v1.3 — ajout scénario E2E-12 (Lot 7 — moteur rémunération IDCC + éligibilité + durées cumulées batch). Couverture tous les lots V1. (RFP contact-logs Q6-B, ATS shortlist, Worker Skills Q9-A, Web Push Q3-A, Marketplace gating Q5-B/M12, Finance quotes/commissions). Statut DRAFT → READY.
+- 2026-02-22: v1.4 — ajout scénario E2E-13 (Lot 7 — export dossier inspection-ready, flow async POST→202→polling→ready→download_url). Sources : PATCH_DB_2.9.16-G, PATCH_OPENAPI_V1.3, PATCH_EVENTS_2.10.4.11 §D. Statut reste READY.

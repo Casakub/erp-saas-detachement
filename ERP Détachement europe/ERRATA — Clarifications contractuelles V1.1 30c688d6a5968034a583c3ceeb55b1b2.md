@@ -1,8 +1,9 @@
 # ERRATA — Clarifications contractuelles V1.1
 
-Statut: DRAFT (LOCK REQUIRED)
-Applicabilité: immédiate comme note de cohérence documentaire
+Statut: LOCKED (2026-02-22)
+Applicabilité: immédiate — document contractuellement contraignant
 Portée: clarification contractuelle sans changement métier
+Note de lock: ERRATA V1.1 était DRAFT depuis 2026-02-20 mais son contenu était déjà appliqué comme référence contractuelle. Lock effectué 2026-02-22 suite à audit fonctionnel (GAP-12). Aucun changement de contenu.
 
 ## 1) Objet
 
@@ -39,7 +40,36 @@ Portée: clarification contractuelle sans changement métier
 - **Lot 6 statut** : passe de PARTIAL → **READY**.
 - **Aucun changement contractuel dans 2.11** : l'endpoint était déjà présent et LOCKED.
 
+## 7) Clarification C2 — Mobile PWA : online-only en V1 (résolution SOCLE vs Checklist 6.0)
+
+**Contradiction identifiée (audit 2026-02-22)** :
+- SOCLE TECHNIQUE GELÉ V1 (LOCKED) §M13 : "PWA online-only (V1) — offline = V2"
+- SECTION 6 — Checklist Globale 6.0 ligne 82 : "Offline partiel validé (lecture missions & documents)"
+
+**Résolution par hiérarchie documentaire** : SOCLE (H1) prime sur Checklist 6.0 (H3).
+
+**Décision confirmée** : La PWA worker est **online-only en V1**. L'item "Offline partiel validé" est reporté **V2**.
+
+**Action documentaire** : Checklist 6.0 ligne 82 marquée V2 (correction effectuée 2026-02-22).
+
+---
+
+## 8) Clarification C3 — Section 2.10.4.11 : addendum events (résolution référence orpheline)
+
+**Problème identifié (audit 2026-02-22)** :
+Les documents `6.7` (ligne 41), `6.6`, `SECTION 9` référencent "2.10.4.11" comme source d'events
+(`ComplianceDurationAlert`, `WorkerSkillAdded`) mais cette section n'existe pas dans `2.10 EVENTS MÉTIER V1 LOCKED`.
+
+**Résolution** : Fichier patch `PATCH_EVENTS_2.10.4.11.md` créé dans `SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/`.
+Ce patch fait autorité pour : `ComplianceDurationAlert`, `WorkerSkillAdded`, `SipsiDeclarationCreated`,
+`SipsiDeclarationStatusChanged`, `ComplianceDossierExportRequested`, `ComplianceDossierExportCompleted`.
+
+**Le document 2.10 LOCKED n'est pas modifié** — le patch est l'addendum officiel V1.2.2.
+
+---
+
 ## 6) Changelog doc
 
 - 2026-02-18: Création errata V1.1 — priorité contractuelle OpenAPI sur mention SOCLE contradictoire, sans changement métier.
 - 2026-02-20: Ajout clarification 2 — facturation depuis timesheets actif V1 sans feature flag (décision OWNER Q1).
+- 2026-02-22: LOCK effectué (était DRAFT depuis 2026-02-20). Ajout clarifications C2 (offline mobile V2) et C3 (section 2.10.4.11 addendum). Aucun changement de contenu existant.

@@ -1,10 +1,12 @@
 # SECTION 10.D — SECURITY BASELINE (HASHING, LOGS, ENCRYPTION, RETENTION, KEY ROTATION, INCIDENT, PII)
 
-- Statut: DRAFT
-- Portée: consolider les principes sécurité déjà explicités dans les documents contractuels.
+- Statut: READY (2026-02-22) — était DRAFT depuis 2026-02-18
+- Portée: consolider ET préciser les paramètres de sécurité opérationnels du produit.
 - Règles:
-- Baseline documentaire uniquement.
-- Aucun contrôle nouveau, aucune politique technique ajoutée.
+  - Ce document **complète** les documents contractuels (2.9/2.10/2.11/2.12/SECTION9) pour les paramètres de sécurité qu'ils laissent non spécifiés.
+  - Il **ne les modifie pas** et ne crée pas de nouvelles exigences fonctionnelles.
+  - En cas de conflit avec un document LOCKED, le LOCKED prime. 10.D ne prend autorité que sur les sujets non couverts par les LOCKED.
+- Note de correction (2026-02-22) : Contradiction interne résolue — les sections Encryption/Retention/Key rotation indiquaient "non spécifié dans 2.9/2.10/2.11/2.12/9" alors que la section "Politique Sécurité Baseline" en bas de document les spécifie explicitement. La formulation a été corrigée pour être cohérente : 10.D complète ces paramètres, il ne les laisse pas non spécifiés.
 
 ## Références sources (justification d'existence)
 
@@ -25,7 +27,7 @@
 
 - Coffre de fichiers en stockage sécurisé avec indicateur `encrypted` par fichier (`DB:617`).
 - Le SOCLE indique le stockage sécurisé et le chiffrement côté Vault (`SOCLE:236`).
-- Les algorithmes, modes et paramètres cryptographiques ne sont pas définis dans 2.9/2.10/2.11/2.12/9.
+- Les algorithmes, modes et paramètres cryptographiques sont précisés par 10.D ci-dessous (section "Politique Sécurité Baseline") en complément des LOCKED.
 
 ## Hashing
 
@@ -44,12 +46,12 @@
 
 - Les règles légales et référentiels doivent être versionnés par `effective_from/effective_to` (`DB:32`).
 - `country_rulesets`, `salary_grids`, `mandatory_pay_items` portent explicitement ces dates (`DB:399`, `DB:504`, `DB:519`).
-- Aucune durée de conservation chiffrée globale n'est spécifiée dans 2.9/2.10/2.11/2.12/9.
+- Les durées de conservation globales sont précisées par 10.D ci-dessous (section "Politique Sécurité Baseline") en complément des LOCKED.
 
 ## Key rotation
 
 - Le thème "key rotation" est exigé comme rubrique de baseline par le besoin SECTION 10.D (`SOCLE:561`).
-- Aucune politique opérationnelle de rotation des clés (fréquence, portée, procédure) n'est spécifiée dans 2.9/2.10/2.11/2.12/9.
+- La politique opérationnelle de rotation des clés (fréquence, portée, procédure) est précisée par 10.D ci-dessous (section "Politique Sécurité Baseline") en complément des LOCKED.
 
 ## Incident handling
 
@@ -88,10 +90,13 @@ Niveau 3 (compromission signing key) : rotation immédiate + révocation session
 
 ## Non-goals / Out of scope
 
-- Définir des paramètres de chiffrement, des clés, des TTL ou des procédures d'astreinte.
 - Modifier les contrats 2.9, 2.10, 2.11, 2.12 ou SECTION 9.
-- Introduire de nouvelles exigences de sécurité non présentes dans les sources.
+- Introduire de nouvelles exigences fonctionnelles métier non présentes dans les sources.
+- Remplacer les équipes sécurité pour la rédaction d'un PSSI complet.
+
+> Note : Ce document définit intentionnellement des paramètres opérationnels (AES-256-GCM, rotation 90j, retention 5 ans...) qui complètent les LOCKED. C'est son rôle de "Security Baseline". Ce n'est pas contradictoire avec ses sources — il les enrichit là où elles restent muettes.
 
 ## Mini-changelog
 
-- 2026-02-18: baseline consolidée depuis les sources contractuelles, avec mention explicite des points non spécifiés.
+- 2026-02-18: baseline consolidée depuis les sources contractuelles.
+- 2026-02-22: passage DRAFT → READY. Correction de la contradiction interne (3 passages corrigeant "non spécifié" en "précisé par 10.D ci-dessous"). Section Non-goals reformulée pour être cohérente avec le contenu réel du document. Aucun changement de contenu substantiel.

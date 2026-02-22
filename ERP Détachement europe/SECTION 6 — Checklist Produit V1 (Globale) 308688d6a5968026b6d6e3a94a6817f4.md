@@ -53,6 +53,10 @@ mais **ne remplacent pas** cette validation globale.
 
 → Risk score agence / certification / gating marketplace / ranking / RFP externe
 
+- [ ]  **6.9 — Checklist Lot 7 Bis IA — Égalité de Traitement** *(ajouté 2026-02-22 — obligation Directive 2018/957/UE)*
+
+→ Check égalité traitement / snapshot immuable equal_treatment_checks / events violation / RBAC
+
 ➡️ Chaque checklist de lot doit être **100 % cochée**
 avant validation finale du produit V1.
 
@@ -79,7 +83,7 @@ avant validation finale du produit V1.
 - [ ]  Check-in / Check-out opérationnel
 - [ ]  Consultation rémunération & indemnités
 - [ ]  Notifications (A1, documents, mission)
-- [ ]  Offline partiel validé (lecture missions & documents)
+- ~~Offline partiel validé (lecture missions & documents)~~ **→ V2** *(corrigé 2026-02-22 — SOCLE LOCKED §M13 "PWA online-only V1" prime. Source: ERRATA V1.1 §7 Clarification C2)*
 - [ ]  Aucun calcul métier côté mobile
 
 ---
@@ -110,7 +114,9 @@ avant validation finale du produit V1.
 - [ ]  A1 tracking (assisté) fonctionnel
 - [ ]  Calcul durée cumulée 12 mois + alertes
 - [ ]  Checklist documents dynamique + expirations
-- [ ]  Export dossier “inspection-ready” (PDF) fonctionnel
+- [ ]  Export dossier “inspection-ready” (PDF) fonctionnel *(async 202 + job — Source: PATCH_OPENAPI_V1.3, CDC_COMPLETIONS_FROM_AUDIT §2)*
+- [ ]  Égalité de traitement : check V1 manuel + snapshot immuable *(Directive 2018/957/UE Art.3 — Source: CDC_COMPLETIONS_FROM_AUDIT §1)*
+- [ ]  SIPSI assisté : déclaration pré-remplie + suivi statut *(V1 manuel — Source: PATCH_DB_2.9.16-F, 2.11.a V1.2.2)*
 
 ---
 
@@ -130,7 +136,7 @@ Rémunération → snapshot → score → enforcement
 
 ## 🧩 MARKETPLACE (V1 CONTRÔLÉE)
 
-- [ ]  Certification agence automatique fonctionnelle
+- [ ]  Certification agence fonctionnelle *(V1 = validation manuelle tenant_admin — Source: 6.8 ligne 76 "validation certification = action manuelle tenant_admin (pas d'automatisation)")*
 - [ ]  Gating marketplace actif (certification requise)
 - [ ]  Ranking agences calculé et visible
 - [ ]  RFP client avec shortlist et matching assisté
@@ -189,3 +195,25 @@ Rémunération → snapshot → score → enforcement
 [6.7 — CHECKLIST — LOT 7 IA (COMPLIANCE ENGINE RÉMUNÉRATION)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%207%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%207%20IA%20(COMPLIANCE%20ENGINE%20REMUNERATION)%2030b688d6a59680cca2c4f65092f93b55.md)
 
 [6.8 — CHECKLIST — LOT 8 IA (RISK, CERTIFICATION, MARKETPLACE)](SECTION%206%20%E2%80%94%20Checklist%20Produit%20V1%20(Globale)/6%208%20%E2%80%94%20CHECKLIST%20%E2%80%94%20LOT%208%20IA%20(RISK%2C%20CERTIFICATION%2C%20MARKETPLACE)%2030b688d6a59680fba415f73561265313.md)
+
+---
+
+## 🔧 Corrections & Patches appliqués (2026-02-22)
+
+Suite à audit fonctionnel complet du 2026-02-22 :
+
+| Correction | Type | Source patch |
+|---|---|---|
+| Offline mobile → V2 (ligne 82) | Contradiction SOCLE vs Checklist | ERRATA V1.1 §7 Clarification C2 |
+| "Certification automatique" → "manuelle V1" | Erreur terminologique | 6.8 ligne 76 |
+| Ajout : Export dossier inspection-ready | Item manquant | PATCH_OPENAPI_V1.3, CDC_COMPLETIONS §2 |
+| Ajout : Égalité de traitement V1 | Gap légal | CDC_COMPLETIONS §1 (Directive 2018/957) |
+| Ajout : SIPSI assisté V1 | Item manquant | PATCH_DB_2.9.16-F, 2.11.a V1.2.2 |
+
+**Patches associés** (dans `SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/`) :
+- `PATCH_DB_2.9.16-C_worker_push_subscriptions.md`
+- `PATCH_DB_2.9.16-E_rfp_visibility_contact_logs.md`
+- `PATCH_DB_2.9.16-F_sipsi_declarations.md`
+- `PATCH_EVENTS_2.10.4.11.md`
+- `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md`
+- `CDC_COMPLETIONS_FROM_AUDIT.md`
