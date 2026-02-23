@@ -157,9 +157,9 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 |---|---|
 | `PENDING` | demande créée, job non démarré |
 | `RUNNING` | job actif avec lock acquis |
-| `SUCCESS` | `core_identity` présente et aucune source en échec |
-| `PARTIAL` | `core_identity` présente, au moins une source en échec |
-| `FAILED` | aucune `core_identity` fiable récupérée |
+| `SUCCESS` | `core_identity` présente, 0 échec sur `required_sources`, et 0 échec sur optional appelées |
+| `PARTIAL` | `core_identity` présente, 0 échec sur `required_sources`, et au moins un échec sur optional appelées |
+| `FAILED` | échec d’au moins une `required_source` ou absence de `core_identity` |
 | `STALE` | données présentes mais `updated_at` hors TTL, refresh requis |
 
 ### `source_api`
@@ -191,10 +191,15 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 
 ## D) Minimum Success Fields
 
+Périmètre sources (contractuel):
+1. `required_sources = [API_RECHERCHE_ENTREPRISES]`
+2. `optional_sources = [INPI_RNE, API_ENTREPRISE_RCS]` (tant que non garanties à 100%)
+
 | Niveau | Champs minimum requis | Conditions additionnelles |
 |---|---|---|
-| `SUCCESS` | `siren`, `legal_name`, au moins un de `address_line1/postal_code/city` | `enrichment_status=SUCCESS`, `enrichment_error` vide, 0 source en échec |
-| `PARTIAL` | `siren`, `legal_name`, au moins un de `address_line1/postal_code/city` | `enrichment_status=PARTIAL`, au moins 1 source succès et au moins 1 source échec |
+| `SUCCESS` | `siren`, `legal_name`, au moins un de `address_line1/postal_code/city` | `enrichment_status=SUCCESS`, `core_identity` présente, `required_failed_count=0` |
+| `PARTIAL` | `siren`, `legal_name`, au moins un de `address_line1/postal_code/city` | `enrichment_status=PARTIAL`, `core_identity` présente, `required_failed_count=0`, et `optional_failed_count>0` sur des optional appelées |
+| `FAILED` | n/a | `enrichment_status=FAILED` si `required_failed_count>0` ou `core_identity` absente |
 
 ---
 
@@ -207,6 +212,7 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 5. Les statuts `PARTIAL` et `FAILED` ne suppriment pas les dernières données valides.
 6. `STALE` est autorisé uniquement si une donnée consolidée existe déjà en base.
 7. `RUNNING` est transitoire et ne doit pas rester bloqué au-delà du TTL lock défini en `M3C`.
+8. Un échec `NOT_FOUND` sur `API_RECHERCHE_ENTREPRISES` (required source) force `FAILED`.
 
 ---
 
@@ -229,11 +235,13 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 5. La règle `PATCH_M3A source of truth` est explicitement présente.
 6. La matrice de mapping précise source, priorité, merge, TTL et exigence `SUCCESS`.
 7. Le tableau `Minimum Success Fields` est présent et utilisé par `M3C`.
-8. Les contraintes minimales de validation format sont documentées.
-9. Les index de traçabilité (`checksum`, retrievals) sont documentés.
+8. `required_sources` et `optional_sources` sont explicités dans la section `D`.
+9. Les contraintes minimales de validation format sont documentées.
+10. Les index de traçabilité (`checksum`, retrievals) sont documentés.
 
 ---
 
 ## Changelog patch
 
 - 2026-02-23: Création du patch `M3A` (split contractuel du patch M3 unifié).
+- 2026-02-23: Ajustement required/optional sources pour rendre `SUCCESS/PARTIAL/FAILED` non ambigu.

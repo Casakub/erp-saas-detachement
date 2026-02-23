@@ -44,6 +44,7 @@ H1-bis — Patches faisant autorité (ne modifient pas LOCKED)
          ├── PATCH_M3C_EVENTS_ORCHESTRATION
          ├── PATCH_M3D_RBAC_SECURITY_COMPLIANCE
          ├── PATCH_M3E_TEST_SCENARIOS
+         ├── PATCH_M3F_IMPLEMENTATION_TASK_PACK
          ├── PATCH_ATS_SCORING_Q7_V1_RULES_BASED
          └── DECISIONS_OWNER_V1.2
 
@@ -107,6 +108,12 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 |---|---|---|
 | `PATCH_M3E_TEST_SCENARIOS.md` | 12 scénarios Gherkin-like pré-build pour validation M3 (input, cache/lock, partial/fail, stale refresh, observabilité) | Suite QA optionnelle V1.2.4 |
 
+### Patches Build Handover (Doc-only)
+
+| Fichier | Périmètre | Source |
+|---|---|---|
+| `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` | 6 tâches build contract-first (DB/API/Worker/UI/RBAC/Tests) avec Inputs/Outputs/DoD/Do-not-change-contracts | Handover M3 V1.2.4 |
+
 ### Décisions & Compléments
 
 | Fichier | Contenu |
@@ -114,6 +121,7 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 | `CDC_COMPLETIONS_FROM_AUDIT.md` | 5 compléments (M8.3, M8.4, M1.2, Corrections ERRATA, DB 2.9.16-G) |
 | `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` | Fil conducteur M3 (overview) et index vers `M3A/M3B/M3C/M3D` |
 | `PATCH_M3E_TEST_SCENARIOS.md` | Suite QA doc-only M3 (12 scénarios Given/When/Then) |
+| `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` | Task pack doc-only pour exécution build contract-first |
 | `PATCH_ATS_SCORING_Q7_V1_RULES_BASED.md` | Algorithme scoring ATS V1 rules-v1.0, 3 GWT |
 | `DECISIONS_OWNER_V1.2.md` | 6 décisions formelles D1→D6 |
 
@@ -185,6 +193,20 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 - [x] **Gate G7** — Décisions architecturales figées (ATS scoring, platform_admin, mobile)
 - [ ] **Gate G8** — Validation OWNER formelle D1/D2/D6 (⚠️ requise avant build)
 
+### Build Readiness Gate — M3 (post-freeze, GO/NO-GO)
+
+- [ ] Enums canoniques uniques (M3A) référencés partout (pas de duplication)
+- [ ] Minimum Success Fields validés (M3A) + utilisés dans M3C/M3B
+- [ ] Payload d’erreur API unique (M3B) + `error_code` canonique (M3A)
+- [ ] State machine unique (M3C) + transitions testées par M3E
+- [ ] TTL/Lock/Retry uniques (M3C) + UI staleness (M3B) aligné
+- [ ] RBAC matrix (M3D) couvre Company Card + docs/exports
+- [ ] Source of truth: M3A présent dans overview/index/changelog
+
+Règle d’activation build:
+1. GO uniquement si tous les points ci-dessus sont cochés.
+2. NO-GO si au moins un point n’est pas prouvé.
+
 ---
 
 ## Notes de traçabilité
@@ -192,6 +214,8 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 - Ce document ne modifie aucun LOCKED.
 - Source de vérité pour la cartographie documentaire V1.2.
 - Toute modification d'un patch doit être tracée dans `RELEASE_PACK_V1.2_CHANGELOG.md`.
+- Recommandation post-freeze M3: traiter `M3A/M3B/M3C/M3D/M3E` comme baseline stable.
+- Toute correction post-freeze M3 doit passer par un patch `M3x_FIX`.
 
 ## Mini-changelog
 
@@ -200,3 +224,5 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 - 2026-02-23 : Ajout `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` au catalogue V1.2 comme cadrage contract-first pour la capture obligatoire d'identifiant entreprise et l'enrichissement officiel FR.
 - 2026-02-23 : Refactor M3 en 4 patches synchronisés (`M3A`, `M3B`, `M3C`, `M3D`) et ajout de la règle de priorité `PATCH_M3A` source of truth en cas de conflit.
 - 2026-02-23 : Ajout optionnel `PATCH_M3E_TEST_SCENARIOS.md` pour industrialiser la QA documentaire M3 (12 scénarios Given/When/Then).
+- 2026-02-23 : Ajout `Build Readiness Gate — M3` + `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` + gouvernance post-freeze `M3x_FIX`.
+- 2026-02-23 : Ajustements minimaux post-freeze: required/optional sources, compteurs de failures dédiés, et Option A explicite (`SIRET` côté request).

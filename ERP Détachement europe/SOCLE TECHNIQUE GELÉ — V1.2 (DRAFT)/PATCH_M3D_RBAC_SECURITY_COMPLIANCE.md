@@ -42,6 +42,7 @@ Règles:
 1. `worker` ne peut pas créer ni relancer enrichissement client.
 2. `consultant` ne peut pas déclencher de mutation d’enrichissement.
 3. `system` est autorisé pour jobs backend planifiés.
+4. Les artefacts `documents`/`exports` inclus dans `GET /v1/requests/{request_id}` héritent strictement de la même matrice RBAC.
 
 ---
 

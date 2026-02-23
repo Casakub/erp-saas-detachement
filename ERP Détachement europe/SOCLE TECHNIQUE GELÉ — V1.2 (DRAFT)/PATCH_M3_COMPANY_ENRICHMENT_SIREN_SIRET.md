@@ -48,6 +48,10 @@ Option QA doc-only:
 1. `PATCH_M3E_TEST_SCENARIOS.md`
 - 12 scénarios Given/When/Then pour pré-aligner la QA avant build.
 
+Option build handover:
+1. `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md`
+- paquet de tâches contract-first pour passer doc -> build sans requalification design.
+
 ---
 
 ## Règles de priorité documentaire (M3)
@@ -61,6 +65,12 @@ Option QA doc-only:
 - `If conflict: PATCH_M3A is source of truth.`
 
 4. Ce document overview ne fait pas autorité sur les structures détaillées.
+
+## Gouvernance post-freeze (M3)
+
+1. Baseline stable recommandée: `M3A/M3B/M3C/M3D/M3E`.
+2. Toute correction fonctionnelle ou contractuelle après freeze passe par `M3x_FIX` + changelog.
+3. Le task pack build est dans `M3F`, sans autoriser de changement de contrat.
 
 ---
 

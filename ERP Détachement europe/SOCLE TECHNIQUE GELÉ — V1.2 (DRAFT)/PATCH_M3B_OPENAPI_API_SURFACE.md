@@ -113,8 +113,11 @@ Retourner le détail demande et la Company Card consolidée.
 | `source_retrievals` | array | derniers statuts par source (enum `source_api` canonique M3A) |
 | `enrichment_running` | boolean | état de job |
 
+`request` doit exposer au minimum:
+1. `siren`, `siret` (contexte de la demande).
+
 `company` doit exposer au minimum:
-1. `legal_name`, `siren`, `siret`.
+1. `legal_name`, `siren`.
 2. bloc adresse normalisée.
 3. `naf_code`, `naf_label` si disponible.
 4. `legal_form`, `creation_date`.
@@ -125,6 +128,39 @@ Retourner le détail demande et la Company Card consolidée.
 
 Cas:
 1. demande absente ou hors périmètre tenant.
+
+---
+
+## Mapping Table: DB ↔ API ↔ UI (maître)
+
+Référence:
+1. Schéma source de vérité: `PATCH_M3A_DB_DATA_CONTRACTS.md`.
+2. Cette table verrouille les noms de champs et chemins JSON exposés au frontend.
+
+| Canonical field (M3A) | DB column name | API JSON path | UI label / component | Nullability (must/should/may) | Example value |
+|---|---|---|---|---|---|
+| `siren` | `companies.siren` | `company.siren` | `CompanyCard.Identity.SIREN` | must | `123456789` |
+| `siret` | `requests.siret` | `request.siret` | `CompanyCard.Identity.SIRET` | should | `12345678900012` |
+| `company_siren` | `requests.company_siren` | `request.company_siren` | `RequestMeta.CompanyLink` | must | `123456789` |
+| `legal_name` | `companies.legal_name` | `company.legal_name` | `CompanyCard.Header.LegalName` | must | `OMNI TRAVAUX SAS` |
+| `trade_name` | `companies.trade_name` | `company.trade_name` | `CompanyCard.Header.TradeName` | may | `OMNI TRAVAUX` |
+| `brand_name` | `companies.brand_name` | `company.brand_name` | `CompanyCard.Header.BrandName` | may | `OMNI` |
+| `legal_form` | `companies.legal_form` | `company.legal_form` | `CompanyCard.Identity.LegalForm` | should | `SAS` |
+| `creation_date` | `companies.creation_date` | `company.creation_date` | `CompanyCard.Identity.CreationDate` | should | `2019-01-10` |
+| `active_status` | `companies.active_status` | `company.active_status` | `CompanyCard.Identity.ActiveStatus` | should | `A` |
+| `address_line1` | `companies.address_line1` | `company.address.line1` | `CompanyCard.Address.Line1` | must | `10 RUE EXEMPLE` |
+| `postal_code` | `companies.postal_code` | `company.address.postal_code` | `CompanyCard.Address.PostalCode` | should | `75001` |
+| `city` | `companies.city` | `company.address.city` | `CompanyCard.Address.City` | should | `PARIS` |
+| `country_code` | `companies.country_code` | `company.address.country_code` | `CompanyCard.Address.Country` | should | `FR` |
+| `naf_code` | `companies.naf_code` | `company.naf_code` | `CompanyCard.Activity.NAFCode` | should | `43.99C` |
+| `naf_label` | `companies.naf_label` | `company.naf_label` | `CompanyCard.Activity.NAFLabel` | may | `Travaux de maçonnerie` |
+| `headcount_range` | `companies.headcount_range` | `company.headcount_range` | `CompanyCard.Activity.HeadcountRange` | may | `10-19` |
+| `rcs_city` | `companies.rcs_city` | `company.registry.city` | `CompanyCard.Registry.City` | may | `PARIS` |
+| `registry_name` | `companies.registry_name` | `company.registry.name` | `CompanyCard.Registry.Name` | may | `RCS` |
+| `updated_at` | `companies.updated_at` | `company.updated_at` | `CompanyCard.Meta.UpdatedAt` | must | `2026-02-23T10:15:00Z` |
+| `enrichment_status` | `requests.enrichment_status` | `request.enrichment_status` | `CompanyCard.Meta.StatusBadge` | must | `PARTIAL` |
+| `enrichment_last_run_at` | `requests.enrichment_last_run_at` | `request.enrichment_last_run_at` | `CompanyCard.Meta.LastRunAt` | should | `2026-02-23T10:14:00Z` |
+| `enrichment_error` | `requests.enrichment_error` | `request.enrichment_error` | `CompanyCard.Meta.ErrorPanel` | may | `INPI_RNE:503:TIMEOUT` |
 
 ---
 
@@ -193,6 +229,11 @@ Codes fonctionnels minimaux:
 5. `FAILED` + running false: erreur claire + action relance.
 6. `STALE` + running false/true: afficher badge stale, conserver snapshot et déclencher refresh.
 
+Option A — rendu identifiants Company Card:
+1. afficher `SIREN` depuis `company.siren`.
+2. afficher `SIRET` depuis `request.siret`.
+3. si `request.siret` est null: masquer le champ ou afficher `non fourni`.
+
 Staleness UI:
 1. TTL de fraîcheur aligné sur `M3C`: 30 jours.
 2. Si stale détecté, l’UI doit afficher explicitement la date `updated_at`.
@@ -225,9 +266,12 @@ Auto-refresh recommandé:
 7. Les réponses exposent `enrichment_running` pour l’UI.
 8. Les artefacts documentaires sont renvoyés sans payload sensible.
 9. Les codes HTTP standard (`400/404/409/422`) sont cohérents.
+10. La table maître `DB↔API↔UI` est utilisée comme mapping unique au build.
+11. Option A est appliquée: `SIREN` lu depuis `company.siren`, `SIRET` lu depuis `request.siret`.
 
 ---
 
 ## Changelog patch
 
 - 2026-02-23: Création du patch `M3B` (split contractuel du patch M3 unifié).
+- 2026-02-23: Verrouillage Option A (`SIRET` contextuel à la demande, `SIREN` consolidé côté company).

@@ -75,7 +75,7 @@ Payload minimum:
 ### Event 3 — `CompanyEnrichmentSourceFetched`
 
 Trigger:
-1. fin de chaque call source A/B/C.
+1. fin de chaque call source (`API_RECHERCHE_ENTREPRISES`, `INPI_RNE`, `API_ENTREPRISE_RCS`).
 
 Payload minimum:
 1. `job_id`
@@ -98,6 +98,8 @@ Payload minimum:
 4. `sources_success_count`
 5. `sources_failed_count`
 6. `core_identity_present` boolean
+7. `required_sources_failed_count`
+8. `optional_sources_failed_count`
 
 ---
 
@@ -116,21 +118,28 @@ Transitions:
 | From | To | Condition |
 |---|---|---|
 | `PENDING` | `RUNNING` | job démarré et lock acquis |
-| `RUNNING` | `SUCCESS` | critères `SUCCESS` de `M3A` satisfaits |
-| `RUNNING` | `PARTIAL` | critères `PARTIAL` de `M3A` satisfaits |
-| `RUNNING` | `FAILED` | aucun minimum `PARTIAL` atteint |
+| `RUNNING` | `SUCCESS` | `core_identity_present=true` et `required_sources_failed_count=0` et `optional_sources_failed_count=0` |
+| `RUNNING` | `PARTIAL` | `core_identity_present=true` et `required_sources_failed_count=0` et `optional_sources_failed_count>0` |
+| `RUNNING` | `FAILED` | `required_sources_failed_count>0` ou `core_identity_present=false` |
 | `SUCCESS` | `STALE` | TTL expiré sur snapshot consolidé |
 | `PARTIAL` | `STALE` | TTL expiré sur snapshot partiel |
 | `STALE` | `RUNNING` | refresh auto ou manuel déclenché |
 | `FAILED` | `RUNNING` | relance manuelle ou auto |
 | `PARTIAL` | `RUNNING` | relance manuelle ou auto |
 
+Règle d’évaluation required vs optional sources:
+1. `required_sources = [API_RECHERCHE_ENTREPRISES]`.
+2. `optional_sources = [INPI_RNE, API_ENTREPRISE_RCS]`.
+3. `sources_failed_count = required_sources_failed_count + optional_sources_failed_count`.
+
 Invariants:
 1. `RUNNING` implique lock actif pour `company_siren`.
 2. `SUCCESS` interdit si `core_identity` absente.
-3. `FAILED` implique `enrichment_error` non vide.
-4. `PARTIAL` implique au moins un succès source.
-5. `STALE` implique snapshot existant et TTL expiré.
+3. `SUCCESS` impose `required_sources_failed_count=0`.
+4. `PARTIAL` impose `required_sources_failed_count=0` et `optional_sources_failed_count>0`.
+5. `FAILED` implique `required_sources_failed_count>0` ou `core_identity_present=false`.
+6. `FAILED` implique `enrichment_error` non vide.
+7. `STALE` implique snapshot existant et TTL expiré.
 
 ---
 
@@ -167,6 +176,7 @@ Invariants:
 4. erreurs retriables = timeout, `429`, `5xx`.
 5. erreurs non retriables = `400`, `401`, `403`, `404`.
 6. `error_code` doit utiliser les valeurs canoniques de `M3A`.
+7. `NOT_FOUND` sur `API_RECHERCHE_ENTREPRISES` (required source) force l’évaluation finale `FAILED`.
 
 ---
 
@@ -239,6 +249,9 @@ Exemple:
 
 ## Implementation Notes (non-binding)
 
+Décision opérationnelle (post-freeze):
+1. `Enrichment runs async by default (job queue), with a short sync attempt (<1200 ms) then fallback to async.`
+
 1. Queue/job runner possibles:
 - worker queue dédiée (recommandé),
 - cron de rattrapage stale,
@@ -265,9 +278,11 @@ Exemple:
 8. Les champs de logs obligatoires sont explicités.
 9. Les étapes pipeline pointent vers `M3A`/`M3B`/`M3D` sans contradiction.
 10. La section `Implementation Notes (non-binding)` ne crée pas de contrainte contractuelle.
+11. Les compteurs `required_sources_failed_count`/`optional_sources_failed_count` sont alignés entre event payload et state machine.
 
 ---
 
 ## Changelog patch
 
 - 2026-02-23: Création du patch `M3C` (split contractuel du patch M3 unifié).
+- 2026-02-23: Ajout required/optional source rules et compteurs dédiés dans `CompanyEnrichmentCompleted`.
