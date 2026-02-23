@@ -106,6 +106,50 @@ Designer une landing page SaaS avec 3 entrées: Agences / Clients / Intérimaire
 Sections: value prop, preuve “inspection-ready”, conformité (A1, durée 12 mois, frais vs salaire), démo visuelle dashboards, pricing (Starter/Pro/Elite), FAQ, formulaires segmentés.
 CTA: Demander démo / Devenir agence / S’inscrire intérimaire.
 
+### Direction visuelle moderne (obligatoire)
+
+- Construire une direction visuelle premium, claire et crédible B2B (pas de template générique).
+- Privilégier lisibilité, hiérarchie forte, contraste maîtrisé et sections narratives.
+- Prévoir variantes desktop + mobile dès le départ.
+- Prévoir états UI réels (hover/focus/disabled/loading/success/error) pour CTA et formulaires.
+
+### Landing “CMS-ready” (design de l’outil de gestion contenu)
+
+Concevoir les écrans d’un mini CMS marketing lié à la landing:
+
+- Liste des pages marketing (`slug`, langue, statut draft/published, updated_at).
+- Éditeur par blocs (hero, proof, features, faq, cta, legal section).
+- Gestion SEO par page: `meta_title`, `meta_description`, `og_title`, `og_description`, `og_image`, `canonical_url`.
+- Gestion indexation: `robots_index`, `robots_follow`, `sitemap_inclusion`.
+- Prévisualisation desktop/mobile avant publication.
+- Historique versions (lecture seule en V1 design, sans logique backend).
+
+### Traduction assistée (DeepL / ChatGPT / Claude) — design only
+
+Concevoir un workflow UX de traduction de contenu marketing:
+
+- Sélecteur langue source/cible.
+- Actions: “Pré-traduire”, “Réviser”, “Valider”, “Publier”.
+- Provider abstrait côté UI (`DeepL`, `OpenAI`, `Claude`) sans implémentation technique.
+- Diff visuel source vs traduction.
+- Statuts traduction: `not_started`, `machine_draft`, `in_review`, `approved`, `published`.
+- Toujours inclure validation humaine avant publication.
+
+### SEO-first (obligatoire)
+
+- Concevoir chaque template landing pour un rendu SEO robuste:
+- H1 unique, structure H2/H3 cohérente, zone FAQ structurée.
+- Blocs “preuve” et “cas d’usage” exploitables en rich snippets.
+- Emplacement explicite pour données structurées (schema.org) dans le handoff.
+- Prévoir composants dédiés pour liens internes, breadcrumbs marketing et CTA contextuels.
+- Prévoir états multilingues avec logique `hreflang` visualisable.
+
+Contraintes:
+
+- Figma ne calcule pas de score SEO et ne génère pas de logique d’indexation.
+- Le backend/CMS décide publication, routes, sitemap, robots, canonical.
+- L’UI expose uniquement les champs et états nécessaires.
+
 ## **1.3 — Auth & Onboarding Agence**
 
 Écrans: login, reset, choix langue, onboarding agence (profil, pays, secteurs, corridors, paramètres compliance).

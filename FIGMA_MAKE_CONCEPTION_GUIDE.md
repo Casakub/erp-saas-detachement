@@ -50,6 +50,8 @@ Arborescence cible de référence:
 | `frontend/web/` | écrans desktop agence/admin |
 | `frontend/worker-pwa/` | écrans mobile worker |
 | `frontend/shared-ui/` | composants partagés, tokens, patterns |
+| `frontend/landing/` | site marketing public, templates SEO, composants CMS |
+| `frontend/landing-cms/` | backoffice marketing (pages, traductions, SEO metadata) |
 | `backend/` | API, modules métier, outbox, audit |
 | `backend/modules/` | modules `M1..M13` + `M7bis` |
 | `backend/shared/` | auth, rbac, audit, outbox |
@@ -58,6 +60,21 @@ Arborescence cible de référence:
 
 Règle:
 - Toute décision de structure exécutable finale reste validée côté backend/substrat.
+
+## 4.bis) Stream Landing (CMS + i18n + SEO)
+
+Objectif:
+- Concevoir une landing moderne orientée conversion, éditable via CMS, multilingue et SEO-first.
+
+À inclure en design:
+- templates marketing (home, features, pricing, faq, legal),
+- interface CMS marketing (pages, blocs, preview, publication),
+- workflow traduction assistée avec validation humaine,
+- surfaces SEO (meta, OG, canonical, robots, sitemap, hreflang, schema placeholders).
+
+Règle:
+- Figma visualise le workflow et les champs.
+- Le backend/CMS exécute la logique de publication et d’indexation.
 
 ## 5) Structure Figma à créer (obligatoire)
 

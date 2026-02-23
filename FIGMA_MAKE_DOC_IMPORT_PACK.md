@@ -53,6 +53,18 @@ En plus du pack global, importer uniquement les docs du lot actif.
 | Lot 7 bis | Checklist 6.9 + `PATCH_DB_2.9.16-G` + `PATCH_EVENTS_2.10.4.11` + `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES` |
 | Lot 8 | Checklist 6.8 + surfaces M11/M12 |
 
+## 4.bis) Pack Landing / Growth (hors lot coeur)
+
+Quand la session Figma Make cible le site public marketing:
+
+Importer:
+1. `ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md` (bloc 1.2 Landing)
+2. `FIGMA_MAKE_CONCEPTION_GUIDE.md`
+3. `ERP Détachement europe/SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1) 30b688d6a59680e78855eae07f3c9771.md`
+
+Objectif:
+- Produire landing moderne + CMS-ready + traduction assistée + SEO-first sans dériver du périmètre V1.
+
 ## 5) Séquence d’utilisation
 
 1. Choisir le lot actif.
