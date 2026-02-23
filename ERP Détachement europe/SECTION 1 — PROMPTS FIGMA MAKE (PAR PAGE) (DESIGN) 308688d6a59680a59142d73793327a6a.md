@@ -470,6 +470,117 @@ Contraintes transversales tous flows :
 
 ---
 
+## **1.23 — Gestion des Permissions (RBAC) — Vue opérationnelle**
+
+> Objectif design: couvrir explicitement les surfaces “Gestion des permissions” de l’ancien prototype, sans inventer de règles hors contrat.
+
+### Écran — Liste des groupes de permissions
+
+- Tableau: nom du groupe, tenant/agence, statut (`active`/`inactive`), périmètre (modules), date de mise à jour.
+- Recherche par nom de groupe + filtres statut/tenant.
+- CTA: “Nouveau groupe”.
+
+### Écran — Fiche groupe de permissions
+
+- Onglet “Permissions atomiques” par domaine: missions, compliance, finance, clients, workers, documents, rapports.
+- Onglet “Rôles liés”: rôles autorisés sur le groupe.
+- Onglet “Fonctionnalités activées” (toggles visuels): `sipsi`, `country_pack`, `api_access`, `advanced_reports`.
+- Diff visuel “avant/après” lors d’une modification de droits.
+
+### États obligatoires
+
+- État normal: groupe actif et permissions cohérentes.
+- État warning: combinaison sensible (ex: droits d’écriture larges) avec message de confirmation.
+- État blocked: rôle non autorisé en édition (lecture seule explicite).
+
+### Contraintes V1/V2
+
+- V1: la matrice RBAC contractuelle reste la seule source de vérité backend.
+- V1: les toggles sans surface API contractée doivent rester visuels (`disabled` + badge “V2 / hors contrat actif”).
+- V2: extensions de feature toggles avancés possibles après contractualisation.
+
+---
+
+## **1.24 — Paramètres Utilisateur (profil, notifications, sécurité, préférences)**
+
+> Objectif design: couvrir la granularité “Paramètres” de l’ancien prototype avec bornage V1 réaliste.
+
+### Onglets à concevoir
+
+- Profil: nom, email, téléphone, société, langue préférée.
+- Notifications: canaux (`email`, `push`, `sms`), thèmes (missions, conformité, timesheets, finance).
+- Sécurité: changement mot de passe, sessions actives (lecture), activité récente.
+- Préférences: langue UI, format date/heure, fuseau horaire, densité d’affichage.
+
+### États obligatoires
+
+- Succès sauvegarde (toast + horodatage mise à jour).
+- Erreur validation formulaire.
+- Lecture seule si permission insuffisante.
+
+### Contraintes V1/V2
+
+- V1: MFA/2FA peut être affiché en placeholder, non activable si non contracté.
+- V1: suppression de compte et export complet de données en zone “danger” uniquement si endpoint contracté; sinon état non disponible.
+- Aucun écran paramètre ne doit contourner RBAC tenant.
+
+---
+
+## **1.25 — Rapports Système & Observabilité (V1 minimal, V2 avancé)**
+
+> Objectif design: reprendre l’intention “Rapports système / Analytics système” du prototype tout en respectant le périmètre V1.
+
+### Écran — Rapports système V1 (minimum)
+
+- Blocs: santé générale (API/DB/outbox), incidents récents, export conformité, activité d’audit.
+- Filtres: période, module, statut.
+- CTA: exporter CSV (si surface contractée), actualiser.
+
+### Écran — Monitoring opérationnel
+
+- Journal d’événements: type, entité, statut, date, correlation_id.
+- Vue erreurs: incidents ouverts/traités, priorité, dernier retry.
+- Encart runbook: liens vers actions opérationnelles standardisées.
+
+### États obligatoires
+
+- Normal: indicateurs dans les seuils.
+- Warning: erreurs récurrentes ou latence élevée.
+- Blocked: indisponibilité d’une source critique (lecture dégradée explicite).
+
+### Contraintes V1/V2
+
+- V1: privilégier une vue agrégée et lisible, sans inventer de métriques infra non contractées.
+- V2: onglets analytics avancés (croissance/distribution/conformité/système détaillé) peuvent être enrichis après validation contractuelle.
+
+---
+
+## **1.26 — Aide & Support (centre d’assistance produit)**
+
+> Objectif design: couvrir l’entrée “Aide” du prototype pour réduire la friction utilisateur en exploitation.
+
+### Écrans à concevoir
+
+- Centre d’aide: recherche, catégories (auth, missions, conformité, finance, mobile).
+- FAQ contextualisée par module.
+- Contact support: formulaire incident/besoin, priorité, pièce jointe.
+- Suivi ticket: statut (`open`, `in_progress`, `resolved`), historique échanges.
+
+### États obligatoires
+
+- Aide disponible + navigation par thème.
+- Aucun résultat recherche (fallback guidé).
+- Ticket créé avec référence.
+- Ticket en attente d’informations.
+
+### Contraintes
+
+- Aucune décision métier dans le centre d’aide.
+- Terminologie alignée avec le glossaire produit (M13).
+- Prévoir variantes multilingues FR/EN/PL/RO.
+
+---
+
 ## Changelog doc
 
 - 2026-02-17: Normalisation fences — sans changement métier.
@@ -478,3 +589,4 @@ Contraintes transversales tous flows :
 - 2026-02-23: Alignement V1 avec `SECTION 8` et `SECTION 10.F` (Marketplace en allocation assistée, auto déplacée V2) + ajout prompt 1.22 “Égalité de Traitement (M8.3)”.
 - 2026-02-23: Ajout du prompt 0.9 d’amorçage global + référence au guide racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
 - 2026-02-23: Ajout du mode `import manuel docs` (0.10) + prompt de contrôle lot avant chaque page (0.11) + référence `FIGMA_MAKE_DOC_IMPORT_PACK.md`.
+- 2026-02-23: Ajout prompts 1.23 à 1.26 (permissions avancées, paramètres utilisateur détaillés, rapports système V1/V2, aide/support) pour combler les écarts avec l’ancien prototype.

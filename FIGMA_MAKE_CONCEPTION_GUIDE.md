@@ -22,9 +22,9 @@
 - Toute logique critique reste backend (enforcement, conformité, finance).
 - No-code limité à l’orchestration (notifications, PDF, relances, exports).
 - V1:
-- mobile PWA online-only,
-- allocation marketplace assistée (pas d’allocation automatique),
-- séparation stricte backend/UI/no-code.
+    - mobile PWA online-only,
+    - allocation marketplace assistée (pas d’allocation automatique),
+    - séparation stricte backend/UI/no-code.
 
 ## 3) Architecture cible (contexte de conception)
 
@@ -92,7 +92,9 @@ Pages/dossiers Figma recommandés:
 10. `09_Lot7bis_Equal_Treatment`
 11. `10_Lot8_Marketplace_Risk_Certification`
 12. `11_Admin_Platform`
-13. `12_Handoff_Specs`
+13. `12_Settings_Permissions`
+14. `13_Reports_And_Help`
+15. `14_Handoff_Specs`
 
 Dans chaque page:
 - variantes desktop/mobile si applicable,
@@ -123,6 +125,8 @@ Mapping minimal à maintenir:
 | Finance | M10 |
 | Compliance extension | M8 (Lot 7) + M8.3 (Lot 7 bis) |
 | Marketplace/Risk | M11, M12 |
+| Settings/Permissions | M1, M13 |
+| Reports/Support | M1, M13 |
 | i18n & communications | M13 |
 
 ## 8) Checklist de sortie Figma Make
@@ -145,3 +149,4 @@ Mapping minimal à maintenir:
 
 - 2026-02-23: création du guide racine de conception Figma Make.
 - 2026-02-23: ajout référence au pack d’import manuel `FIGMA_MAKE_DOC_IMPORT_PACK.md`.
+- 2026-02-23: ajout des pages de cadrage `12_Settings_Permissions` et `13_Reports_And_Help` pour couvrir les surfaces issues de l’audit prototype.
