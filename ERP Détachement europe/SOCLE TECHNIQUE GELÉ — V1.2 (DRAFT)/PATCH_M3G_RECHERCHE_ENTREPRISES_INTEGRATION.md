@@ -52,7 +52,7 @@ Sources amont (source-of-facts):
 
 1. Dépendance opérationnelle aux endpoints admin pour le run métier.
 2. Usage `include_admin` en mode produit.
-3. Données non ouvertes/non diffusibles absentes de l’API.
+3. Les entités non-diffusibles ne sont **pas exclues systématiquement**: elles peuvent être renvoyées par l’API (notamment en recherche identifiant `SIREN/SIRET`), avec **masquage/partialisation** de certains champs selon les règles upstream. Notre produit doit gérer ce cas explicitement (affichage partiel + statut conformité), sans considérer cela comme un échec technique.
 
 ---
 
@@ -170,7 +170,7 @@ Règles générales de merge:
 | `results[0].nom_raison_sociale` | `legal_name` | `companies.legal_name` | prioritaire; fallback `nom_complet` si vide | 30j | oui |
 | `results[0].nom_complet` | `trade_name` | `companies.trade_name` | first non-empty | 30j | non |
 | `results[0].sigle` | `brand_name` | `companies.brand_name` | fallback possible de type acronyme légal; pas une enseigne stricte | 30j | non |
-| `results[0].nature_juridique` | `legal_form` | `companies.legal_form` | merge selon priorité M3A | 30j | non |
+| `results[0].nature_juridique` | `legal_form` | `companies.legal_form` | valeur upstream = code; MUST passer par un mapping interne `nature_juridique_code -> legal_form_label` (table de correspondance). Si mapping inconnu: stocker le code dans snapshot, et laisser `companies.legal_form` null (ne pas inventer). | 30j | non |
 | `results[0].date_creation` | `creation_date` | `companies.creation_date` | date valide la plus fiable | 30j | non |
 | `results[0].etat_administratif` | `active_status` | `companies.active_status` | map direct (`A/C`) | 7j | non |
 | `results[0].activite_principale` | `naf_code` | `companies.naf_code` | priorité sur fallback externe | 30j | non |
@@ -188,6 +188,12 @@ Règles générales de merge:
 | `results[0].matching_etablissements[]` | `matching_etablissements_snapshot` | `company_documents.payload_json` | snapshot paginé (via `page_etablissements`) | 30j | non |
 | `HTTP status + timing + source` | `source retrieval` | `company_source_retrievals.*` | upsert par `(company_siren, source_api)` | 30j | n/a |
 
+### Mapping code -> label (nature_juridique)
+
+1. Source upstream fournit un code.
+2. Notre projet maintient une table de correspondance `nature_juridique_code -> legal_form_label` (référence upstream: `search-api/app/service/formatters/nature_juridique.py`).
+3. DoD build: importer/maintenir cette table côté backend (doc-only ici).
+
 Règle d’évaluation:
 1. Absence de `finances` ou `complements` **n’est pas un échec** si `core_identity` est présente.
 2. `SUCCESS/PARTIAL/FAILED` reste évalué via `M3A`/`M3C` (required vs optional sources), pas sur la présence de chaque bloc optionnel Search API.
@@ -197,9 +203,10 @@ Règle d’évaluation:
 
 1. Les JSON paths listés dans la table de mapping ci-dessus sont normatifs pour l’implémentation.
 2. Au build, les implémenteurs MUST valider chaque path référencé contre l’OpenAPI YAML upstream `search-api/app/doc/open-api.yml`.
-3. En cas d’écart path/schema, les implémenteurs MUST NOT corriger ad-hoc dans le code.
-4. En cas d’écart, créer un patch documentaire `M3x_FIX` qui corrige les paths de mapping en préservant les champs canoniques M3A.
-5. Paths à risque élevé à vérifier explicitement contre l’OpenAPI upstream:
+3. Exception explicite: l’endpoint `/sources/last_modified` est un endpoint admin runtime non documenté dans `open-api.yml`. Sa validation doit se faire contre le code upstream (`app/routers/admin.py`) et non contre l’OpenAPI YAML. Cette exception ne s’applique qu’à cet endpoint; tous les autres mappings `/search` et `/near_point` restent soumis à validation OpenAPI.
+4. En cas d’écart path/schema, les implémenteurs MUST NOT corriger ad-hoc dans le code.
+5. En cas d’écart, créer un patch documentaire `M3x_FIX` qui corrige les paths de mapping en préservant les champs canoniques M3A.
+6. Paths à risque élevé à vérifier explicitement contre l’OpenAPI upstream:
 - `nature_juridique`
 - `etat_administratif`
 - `date_creation`
@@ -284,15 +291,19 @@ Règles:
 ## J) Security / compliance
 
 1. L’API est ouverte, mais le backend reste le seul appelant (pas de logique d’appel direct frontend).
-2. Les entreprises non-diffusibles et certains périmètres réglementaires ne sont pas présents dans la Search API; documenter explicitement cette limite produit.
-3. `include_admin` est interdit en mode produit.
-4. Logs:
+2. Les entités non-diffusibles ne sont **pas exclues systématiquement**: elles peuvent être renvoyées par l’API (notamment en recherche identifiant `SIREN/SIRET`), avec **masquage/partialisation** de certains champs selon les règles upstream. Notre produit doit gérer ce cas explicitement (affichage partiel + statut conformité), sans considérer cela comme un échec technique.
+3. Si une entreprise est détectée comme non-diffusible/masquée:
+- ne jamais tenter d’inférer/reconstruire les champs masqués,
+- afficher un message `données partiellement masquées (source officielle)`,
+- conserver le snapshot brut pour audit (`company_documents`) et tracer la `source_retrieval`.
+4. `include_admin` est interdit en mode produit.
+5. Logs:
 - ne pas logger les payloads complets;
 - logger uniquement métadonnées (source, code HTTP, latence, correlation_id, siren).
-5. Snapshots:
+6. Snapshots:
 - stocker dans `company_documents` (`doc_type=ENTERPRISE_SEARCH`) avec `checksum`;
 - imposer une limite de taille de payload (recommandé: 1 MB max, sinon tronquage contrôlé + hash).
-6. Données dirigeants:
+7. Données dirigeants:
 - usage strictement nécessaire au besoin métier;
 - pas d’exposition large hors écrans autorisés (`M3D`).
 
@@ -372,6 +383,7 @@ curl -G "https://recherche-entreprises.api.gouv.fr/near_point" \
 11. La clause `Path validation (build gate)` est présente, avec chemins à risque explicites.
 12. La règle `per_page` est déterministe: `SIREN -> 1`, `SIRET -> 5` (toujours `<=25`).
 13. La règle de sélection scanne `results[*]` quand l’entrée est un `SIRET` (per_page=5).
+14. La gestion non-diffusible/masquage est documentée (pas `absente`), et le mapping `nature_juridique` (`code -> label`) est explicitement requis.
 
 ---
 
@@ -380,3 +392,4 @@ curl -G "https://recherche-entreprises.api.gouv.fr/near_point" \
 - 2026-02-23: Création du patch `M3G` (contrat d’intégration Search API public mode).
 - 2026-02-23: Ajout provenance/freshness amont (search-infra + `/sources/last_modified`) sans dépendance bloquante.
 - 2026-02-23: Hardening doc-only: `Path validation`, clarification sémantique `sigle`, sélection déterministe SIRET/SIREN.
+- 2026-02-23: PATCH doc-only M3G appliqué: non-diffusible `masquage/partialisation` (pas `absence`), exception `Path validation` pour `/sources/last_modified`, mapping explicite `nature_juridique code -> label`.
