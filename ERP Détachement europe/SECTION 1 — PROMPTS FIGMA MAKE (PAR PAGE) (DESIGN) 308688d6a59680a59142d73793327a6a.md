@@ -17,7 +17,7 @@ Tu es Lead Product Designer SaaS RegTech B2B (compliance, finance, audit).
 Produit:
 Plateforme de conformité détachement (France-first, Europe-ready) pour agences + mobile intérimaire.
 Cœur: Score conformité (0–100), explications, blocages (enforcement), snapshots rémunération, coffre-fort, audit trail.
-Marketplace: catalogue + RFP + allocation auto (accès conditionné à certification).
+Marketplace: catalogue + RFP + allocation assistée V1 (accès conditionné à certification).
 
 Contraintes:
 - Desktop 1440 (agence/admin)
@@ -104,11 +104,12 @@ Devis: création/édition/statuts; Factures: statut paiement, relances; Commissi
 
 Recherche, filtres (entité/type/date), versionning, hash info, historique accès, permissions.
 
-## **1.15 — Marketplace: catalogue + RFP + allocation auto**
+## **1.15 — Marketplace: catalogue + RFP + allocation assistée (V1)**
 
 Catalogue agences: badge certification, ranking score + composants visibles, corridors/secteurs.
-RFP: création demande, mode allocation (manual/assisted/auto), shortlist, explications matching.
+RFP: création demande, mode allocation (manual/assisted), shortlist, explications matching.
 Allocation: écran “assignment” + accept/decline agence + reallocate.
+⚠️ V1: aucune allocation automatique active. Prévoir un placeholder explicite “Auto (V2)”.
 
 ## **1.16 — Paramètres (tenant)**
 
@@ -318,8 +319,54 @@ Contraintes transversales tous flows :
 
 ---
 
+## **1.22 — Égalité de Traitement (M8.3) — Check manuel V1**
+
+> Objectif design: visualiser un contrôle “égalité de traitement” assisté, sans décision automatique en V1.
+
+### Écran — Formulaire de check (lié à une compliance case)
+
+- Header: mission, worker, compliance_case_id, date du contrôle, agent responsable.
+- Bloc “Référence pays hôte”:
+- montant de référence (champ numérique),
+- période (`hourly` / `monthly`),
+- source de référence (texte libre encadré).
+- Bloc “Items directive” (checkboxes):
+- temps de travail conforme,
+- congés payés conformes,
+- santé/sécurité conforme,
+- hébergement conforme (optionnel / N.A.).
+- Bloc “Traitement des allocations” (`wage` / `reimbursement` / `mixed`).
+- Bloc notes justification.
+- CTA: “Enregistrer le check”.
+
+### Écran — Résultat du check (snapshot immuable)
+
+- Card résultat:
+- statut `conforme` / `non conforme` / `données insuffisantes`,
+- `gap_amount` et `gap_percentage`,
+- source de la référence salariale.
+- Timeline des checks successifs (historique immuable, newest first).
+- Badge warning si `NO_REMUNERATION_SNAPSHOT`.
+- Zone “Traçabilité”: date, acteur, id snapshot, lien audit.
+
+### États obligatoires
+
+- État conforme: tous items validés + comparaison rémunération conforme.
+- État non conforme: au moins un item critique non conforme.
+- État warning: snapshot rémunération absent (`NO_REMUNERATION_SNAPSHOT`), check enregistré avec données partielles.
+- État lecture worker: lecture seule, aucune action d’édition.
+
+### Contraintes UX contractuelles
+
+- Ne jamais afficher un blocage automatique de mission en V1 depuis cet écran.
+- Afficher un message explicite: “Alerte conformité — décision finale côté backend/humain”.
+- Aucune logique de calcul dans Figma; visualisation uniquement des statuts et explications.
+
+---
+
 ## Changelog doc
 
 - 2026-02-17: Normalisation fences — sans changement métier.
 - 2026-02-17: Fix fence ambiguë (SECTION 1), sans changement métier.
 - 2026-02-21: Ajout prompts manquants 1.18 (Timesheets desktop + mobile), 1.19 (Mobile PWA flows détaillés A→F), 1.20 (RFP Interne M4), 1.21 (Admin Plateforme Super Admin). Couverture design 100 % alignée avec SOCLE + Section 2.
+- 2026-02-23: Alignement V1 avec `SECTION 8` et `SECTION 10.F` (Marketplace en allocation assistée, auto déplacée V2) + ajout prompt 1.22 “Égalité de Traitement (M8.3)”.
