@@ -18,6 +18,7 @@ Prompt à utiliser dans Figma Make:
 
 - Tu conçois un produit SaaS RegTech multi-tenant en mode contract-first.
 - Tu dois lire et suivre le fichier racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
+- Tu dois lire et suivre le fichier racine `FIGMA_MAKE_DOC_IMPORT_PACK.md` pour charger le bon périmètre documentaire.
 - Tu dois organiser le fichier Figma selon les dossiers/pages définis dans ce guide.
 - Tu dois produire des écrans orientés états backend (`NORMAL`, `WARNING`, `BLOCKED`) sans logique métier implémentée.
 - Tu dois préparer un handoff design compatible avec une implémentation TypeScript modulaire.
@@ -35,6 +36,41 @@ Sortie attendue:
 1. Structure Figma initiale complète.
 2. Design system prêt.
 3. Liste des écrans prioritaires Lot 1 à Lot 8 avec états requis.
+
+## 0.10 — MODE IMPORT MANUEL DOCS (GITHUB -> FIGMA MAKE)
+
+Contexte:
+- En l’absence de synchronisation bidirectionnelle native Figma Make <-> GitHub, les docs sont importées manuellement.
+
+Règle:
+- Ne pas importer “tout le cahier des charges” brut dans un seul bloc.
+- Importer un pack documentaire ciblé par lot pour limiter le bruit de contexte.
+
+Dossier Figma obligatoire:
+1. Créer une page `00_DOCS_READONLY`.
+2. Créer des sous-sections:
+- `00_DOCS_GLOBAL_RULES`
+- `01_DOCS_LOT_ACTIVE`
+- `02_DOCS_MAPPING_SCREEN_TO_MODULE`
+- `03_DOCS_DECISIONS_V1_V2`
+
+Référence source du pack:
+- `FIGMA_MAKE_DOC_IMPORT_PACK.md` (racine repo).
+
+Critère de conformité avant design:
+1. Le lot actif est identifié.
+2. Les contraintes V1/V2 du lot sont rappelées dans `00_DOCS_READONLY`.
+3. Les pages design créées ne dépassent pas le scope du lot actif.
+
+## 0.11 — PROMPT DE CONTRÔLE AVANT CHAQUE PAGE
+
+Prompt à utiliser juste avant de générer un écran:
+
+- Vérifie le lot actif et les modules concernés.
+- Vérifie les contraintes V1 applicables depuis `00_DOCS_READONLY`.
+- Rappelle les exclusions V2 à ne pas implémenter visuellement.
+- Rappelle les états requis (`NORMAL`, `WARNING`, `BLOCKED`).
+- Si la demande sort du lot actif, STOP et demande validation.
 
 ## 1.0 — PROMPT MAÎTRE (à utiliser avant les pages)
 
@@ -397,3 +433,4 @@ Contraintes transversales tous flows :
 - 2026-02-21: Ajout prompts manquants 1.18 (Timesheets desktop + mobile), 1.19 (Mobile PWA flows détaillés A→F), 1.20 (RFP Interne M4), 1.21 (Admin Plateforme Super Admin). Couverture design 100 % alignée avec SOCLE + Section 2.
 - 2026-02-23: Alignement V1 avec `SECTION 8` et `SECTION 10.F` (Marketplace en allocation assistée, auto déplacée V2) + ajout prompt 1.22 “Égalité de Traitement (M8.3)”.
 - 2026-02-23: Ajout du prompt 0.9 d’amorçage global + référence au guide racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
+- 2026-02-23: Ajout du mode `import manuel docs` (0.10) + prompt de contrôle lot avant chaque page (0.11) + référence `FIGMA_MAKE_DOC_IMPORT_PACK.md`.

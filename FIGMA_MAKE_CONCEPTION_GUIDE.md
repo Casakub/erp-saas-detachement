@@ -12,6 +12,7 @@
 - `ERP Détachement europe/SECTION 8 — PLAN D’EXÉCUTION (ordre conseillé) 308688d6a596809584e4eef380abe47c.md`
 - `ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 30a688d6a596803a8541ef09201359f2.md`
 - `ERP Détachement europe/SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1) 30b688d6a59680e78855eae07f3c9771.md`
+- `FIGMA_MAKE_DOC_IMPORT_PACK.md`
 - Le backend reste seule source de vérité métier.
 
 ## 2) Principes non négociables
@@ -126,3 +127,4 @@ Mapping minimal à maintenir:
 ## 10) Mini-changelog
 
 - 2026-02-23: création du guide racine de conception Figma Make.
+- 2026-02-23: ajout référence au pack d’import manuel `FIGMA_MAKE_DOC_IMPORT_PACK.md`.
