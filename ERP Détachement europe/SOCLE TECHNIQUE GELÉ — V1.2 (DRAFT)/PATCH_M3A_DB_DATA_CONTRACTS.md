@@ -13,6 +13,7 @@ Liens:
 2. API: `PATCH_M3B_OPENAPI_API_SURFACE.md`
 3. Orchestration: `PATCH_M3C_EVENTS_ORCHESTRATION.md`
 4. RBAC/Security: `PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md`
+5. Search API integration (public mode): `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
 
 ---
 
@@ -22,6 +23,7 @@ Liens:
 2. Les types `uuid`, `jsonb`, `timestamptz` sont disponibles.
 3. Le backend gère l’idempotence et la concurrence par lock applicatif décrit en `M3C`.
 4. Les champs présentés comme `nullable` peuvent être progressivement enrichis.
+5. Les hints de fraîcheur amont Search API (`/sources/last_modified`) sont optionnels et non bloquants.
 
 ---
 
@@ -142,6 +144,11 @@ Priorité source:
 | `naf_code` | API_RECHERCHE_ENTREPRISES, INPI_RNE | API_RECHERCHE_ENTREPRISES > INPI_RNE | first non-empty | 30j | non |
 | `naf_label` | API_RECHERCHE_ENTREPRISES | API_RECHERCHE_ENTREPRISES | nullable | 30j | non |
 | `headcount_range` | API_RECHERCHE_ENTREPRISES | API_RECHERCHE_ENTREPRISES | nullable | 30j | non |
+| `enterprise_search.finances` | API_RECHERCHE_ENTREPRISES (`results[0].finances`) | API_RECHERCHE_ENTREPRISES | snapshot JSON dans `company_documents` (`doc_type=ENTERPRISE_SEARCH`) | 30j | non |
+| `enterprise_search.complements` | API_RECHERCHE_ENTREPRISES (`results[0].complements`) | API_RECHERCHE_ENTREPRISES | snapshot JSON dans `company_documents` (`doc_type=ENTERPRISE_SEARCH`) | 30j | non |
+| `enterprise_search.dirigeants` | API_RECHERCHE_ENTREPRISES (`results[0].dirigeants[]`) | API_RECHERCHE_ENTREPRISES | snapshot JSON dans `company_documents` (`doc_type=ENTERPRISE_SEARCH`) | 30j | non |
+| `enterprise_search.matching_etablissements` | API_RECHERCHE_ENTREPRISES (`results[0].matching_etablissements[]`) | API_RECHERCHE_ENTREPRISES | snapshot JSON paginé (`page_etablissements`) dans `company_documents` | 30j | non |
+| `enterprise_search.siege.siret` | API_RECHERCHE_ENTREPRISES (`results[0].siege.siret`) | API_RECHERCHE_ENTREPRISES | snapshot/diagnostic uniquement; ne pas écraser `requests.siret` (Option A M3B) | 30j | non |
 | `rcs_city` | API_ENTREPRISE_RCS, INPI_RNE | API_ENTREPRISE_RCS > INPI_RNE | first non-empty | 30j | non |
 | `registry_name` | API_ENTREPRISE_RCS, INPI_RNE | API_ENTREPRISE_RCS > INPI_RNE | first non-empty | 30j | non |
 
@@ -166,7 +173,7 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 
 | Valeur | Définition |
 |---|---|
-| `API_RECHERCHE_ENTREPRISES` | API recherche d’entreprises (data.gouv) |
+| `API_RECHERCHE_ENTREPRISES` | API Recherche d’entreprises (Annuaire des Entreprises, endpoints publics `/search` et `/near_point`) |
 | `INPI_RNE` | API formalités RNE (INPI) |
 | `API_ENTREPRISE_RCS` | extrait RCS via entreprise.api.gouv.fr |
 
@@ -194,6 +201,7 @@ Cette section est la référence canonique pour `M3B`, `M3C`, `M3D`. Les autres 
 Périmètre sources (contractuel):
 1. `required_sources = [API_RECHERCHE_ENTREPRISES]`
 2. `optional_sources = [INPI_RNE, API_ENTREPRISE_RCS]` (tant que non garanties à 100%)
+3. `API_RECHERCHE_ENTREPRISES` correspond à la Search API publique documentée dans `M3G`.
 
 | Niveau | Champs minimum requis | Conditions additionnelles |
 |---|---|---|
@@ -213,6 +221,18 @@ Périmètre sources (contractuel):
 6. `STALE` est autorisé uniquement si une donnée consolidée existe déjà en base.
 7. `RUNNING` est transitoire et ne doit pas rester bloqué au-delà du TTL lock défini en `M3C`.
 8. Un échec `NOT_FOUND` sur `API_RECHERCHE_ENTREPRISES` (required source) force `FAILED`.
+9. L’absence de `finances`/`complements`/`dirigeants` dans Search API n’est pas un échec si `core_identity` est présente.
+10. `requests.siret` (contexte demande) ne doit pas être remplacé par `results[0].siege.siret`.
+
+---
+
+## F) Upstream freshness hint policy (Search API)
+
+1. Le hint amont provient optionnellement de `GET /sources/last_modified` (endpoint admin upstream).
+2. Ce hint ne fait pas partie des critères `SUCCESS/PARTIAL/FAILED` et ne bloque jamais l’enrichissement.
+3. En V1.2.4, sans extension de schéma, le hint est conservé en logs/diagnostic UI et non persisté comme colonne dédiée.
+4. Le stockage persistant de hints détaillés (`json`) dans `company_source_retrievals` nécessite un patch ultérieur `M3x_FIX`.
+5. La référence contractuelle de comportement est portée par `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`.
 
 ---
 
@@ -223,6 +243,7 @@ Périmètre sources (contractuel):
 3. `M3C` doit utiliser les mêmes statuts et critères `SUCCESS/PARTIAL/FAILED`.
 4. `M3D` doit référencer les mêmes tables et catégories de données sensibles.
 5. Le présent document tranche tout conflit de schéma.
+6. `M3G` doit respecter les priorités de merge/TTL et ne pas contredire Option A (`request.siret`).
 
 ---
 
@@ -238,6 +259,8 @@ Périmètre sources (contractuel):
 8. `required_sources` et `optional_sources` sont explicités dans la section `D`.
 9. Les contraintes minimales de validation format sont documentées.
 10. Les index de traçabilité (`checksum`, retrievals) sont documentés.
+11. La couverture Search API (`finances`, `complements`, `dirigeants`, `matching_etablissements`, `siege.siret`) est explicitée.
+12. La politique `upstream freshness hint` est documentée sans imposer de changement de schéma.
 
 ---
 
@@ -245,3 +268,4 @@ Périmètre sources (contractuel):
 
 - 2026-02-23: Création du patch `M3A` (split contractuel du patch M3 unifié).
 - 2026-02-23: Ajustement required/optional sources pour rendre `SUCCESS/PARTIAL/FAILED` non ambigu.
+- 2026-02-23: Extension mapping Search API (dirigeants/finances/complements/matching/siege.siret) + politique freshness hint amont.

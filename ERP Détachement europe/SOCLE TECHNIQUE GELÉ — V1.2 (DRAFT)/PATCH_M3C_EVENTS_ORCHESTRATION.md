@@ -11,6 +11,7 @@ Liens:
 2. DB: `PATCH_M3A_DB_DATA_CONTRACTS.md`
 3. API: `PATCH_M3B_OPENAPI_API_SURFACE.md`
 4. RBAC/Security: `PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md`
+5. Search API integration (public mode): `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
 
 ---
 
@@ -20,6 +21,7 @@ Liens:
 2. Le lock distribué peut utiliser Redis ou lock DB; le comportement contractuel reste identique.
 3. Les appels source sont faits séquentiellement en priorité `API_RECHERCHE_ENTREPRISES -> INPI_RNE -> API_ENTREPRISE_RCS` pour limiter coût et complexité.
 4. Les jobs peuvent être relancés de manière idempotente.
+5. `API_RECHERCHE_ENTREPRISES` suit les contraintes upstream de `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`.
 
 ### Référence canonique obligatoire
 
@@ -177,6 +179,41 @@ Invariants:
 5. erreurs non retriables = `400`, `401`, `403`, `404`.
 6. `error_code` doit utiliser les valeurs canoniques de `M3A`.
 7. `NOT_FOUND` sur `API_RECHERCHE_ENTREPRISES` (required source) force l’évaluation finale `FAILED`.
+8. Sur `429`, respecter strictement `Retry-After` (prioritaire sur le backoff local).
+
+### Search API execution rules (required source)
+
+1. Throttling contractuel:
+- ne pas dépasser `7 rps` par utilisateur;
+- appliquer aussi un garde-fou tenant-scoped côté orchestrateur.
+2. Préconditions paramétriques:
+- au moins un paramètre de recherche;
+- `q`/`terms` < 3 caractères refusé sans filtre additionnel;
+- `per_page<=25` et `page*per_page<=10000`.
+3. Règles geo (`/near_point`):
+- `lat` + `long` obligatoires;
+- `radius` défaut 5, max 50;
+- `terms` interdit en mode geo.
+
+### Search API 2-pass strategy (minimal/include)
+
+Pass 1 (required, identity-first):
+1. endpoint: `/search`.
+2. paramètres: `minimal=true`, `include=siege,complements,finances,score`.
+3. but: obtenir `core_identity` + activité/adresse + signaux disponibles rapidement.
+
+Pass 2 (optionnel, approfondissement):
+1. endpoint: `/search` (ou `/near_point` pour cas géo/prospection).
+2. paramètres: `minimal=true`, `include=dirigeants,matching_etablissements`.
+3. but: enrichissement détaillé sans bloquer la réussite de base.
+
+Pagination `matching_etablissements`:
+1. utiliser `limite_matching_etablissements` (1..100) et `page_etablissements` (>=1).
+2. en flux standard M3, limiter à `page_etablissements=1`; pages suivantes sur demande explicite.
+
+Ops hook optionnel (non-binding):
+1. un job ops peut appeler `/sources/last_modified` pour diagnostiquer la fraîcheur amont.
+2. ce call ne doit jamais bloquer ni dégrader le pipeline d’enrichissement métier.
 
 ---
 
@@ -231,6 +268,7 @@ Exemple:
 4. Acquisition lock par `siren`.
 5. Émission `CompanyEnrichmentStarted`.
 6. Calls source `API_RECHERCHE_ENTREPRISES -> INPI_RNE -> API_ENTREPRISE_RCS`, avec event `CompanyEnrichmentSourceFetched` à chaque étape.
+   - `API_RECHERCHE_ENTREPRISES` s’exécute en 2 passes `minimal/include` (pass 1 required, pass 2 optionnelle).
 7. Merge/persistence selon règles `M3A`.
 8. Évaluation state machine.
 9. Émission `CompanyEnrichmentCompleted`.
@@ -279,6 +317,8 @@ Décision opérationnelle (post-freeze):
 9. Les étapes pipeline pointent vers `M3A`/`M3B`/`M3D` sans contradiction.
 10. La section `Implementation Notes (non-binding)` ne crée pas de contrainte contractuelle.
 11. Les compteurs `required_sources_failed_count`/`optional_sources_failed_count` sont alignés entre event payload et state machine.
+12. Les contraintes Search API (`<=7 rps`, `Retry-After`, `minimal/include`, règles pagination/geo) sont explicites.
+13. Le hook `/sources/last_modified` est marqué optionnel et non bloquant.
 
 ---
 
@@ -286,3 +326,4 @@ Décision opérationnelle (post-freeze):
 
 - 2026-02-23: Création du patch `M3C` (split contractuel du patch M3 unifié).
 - 2026-02-23: Ajout required/optional source rules et compteurs dédiés dans `CompanyEnrichmentCompleted`.
+- 2026-02-23: Alignement orchestration Search API (rate limit, Retry-After, stratégie 2 passes, pagination, freshness ops hook).

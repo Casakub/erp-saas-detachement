@@ -45,6 +45,7 @@ H1-bis — Patches faisant autorité (ne modifient pas LOCKED)
          ├── PATCH_M3D_RBAC_SECURITY_COMPLIANCE
          ├── PATCH_M3E_TEST_SCENARIOS
          ├── PATCH_M3F_IMPLEMENTATION_TASK_PACK
+         ├── PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION
          ├── PATCH_ATS_SCORING_Q7_V1_RULES_BASED
          └── DECISIONS_OWNER_V1.2
 
@@ -114,6 +115,12 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 |---|---|---|
 | `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` | 6 tâches build contract-first (DB/API/Worker/UI/RBAC/Tests) avec Inputs/Outputs/DoD/Do-not-change-contracts | Handover M3 V1.2.4 |
 
+### Patches Intégration Source (Doc-only)
+
+| Fichier | Périmètre | Source |
+|---|---|---|
+| `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md` | Contrat de consommation Search API (provenance, fraîcheur, mapping params/payloads, pagination, erreurs, throttling) | Intégration M3 V1.2.4 |
+
 ### Décisions & Compléments
 
 | Fichier | Contenu |
@@ -122,6 +129,7 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 | `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` | Fil conducteur M3 (overview) et index vers `M3A/M3B/M3C/M3D` |
 | `PATCH_M3E_TEST_SCENARIOS.md` | Suite QA doc-only M3 (12 scénarios Given/When/Then) |
 | `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` | Task pack doc-only pour exécution build contract-first |
+| `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md` | Contrat intégration Search API (public mode) aligné sur upstream Search API/search-infra |
 | `PATCH_ATS_SCORING_Q7_V1_RULES_BASED.md` | Algorithme scoring ATS V1 rules-v1.0, 3 GWT |
 | `DECISIONS_OWNER_V1.2.md` | 6 décisions formelles D1→D6 |
 
@@ -201,6 +209,7 @@ Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 - [ ] State machine unique (M3C) + transitions testées par M3E
 - [ ] TTL/Lock/Retry uniques (M3C) + UI staleness (M3B) aligné
 - [ ] RBAC matrix (M3D) couvre Company Card + docs/exports
+- [ ] Contrat Search API M3G (params/paging/errors/throttling/freshness) est aligné avec M3A/M3B/M3C
 - [ ] Source of truth: M3A présent dans overview/index/changelog
 
 Règle d’activation build:
@@ -226,3 +235,4 @@ Règle d’activation build:
 - 2026-02-23 : Ajout optionnel `PATCH_M3E_TEST_SCENARIOS.md` pour industrialiser la QA documentaire M3 (12 scénarios Given/When/Then).
 - 2026-02-23 : Ajout `Build Readiness Gate — M3` + `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md` + gouvernance post-freeze `M3x_FIX`.
 - 2026-02-23 : Ajustements minimaux post-freeze: required/optional sources, compteurs de failures dédiés, et Option A explicite (`SIRET` côté request).
+- 2026-02-23 : Ajout `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md` et alignement documentaire M3A/M3B/M3C sur provenance/freshness/rate-limit Search API.

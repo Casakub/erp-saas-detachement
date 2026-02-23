@@ -11,7 +11,7 @@
 
 ## Objectif
 
-Ce document est volontairement réduit à un rôle de pilotage. Les contrats détaillés sont éclatés en 4 patches synchronisés pour limiter les contradictions inter-docs.
+Ce document est volontairement réduit à un rôle de pilotage. Les contrats détaillés sont éclatés en 4 patches synchronisés (+ 1 patch d’intégration Search API) pour limiter les contradictions inter-docs.
 
 Parcours cible:
 1. La création de demande impose `SIREN` ou `SIRET`.
@@ -51,6 +51,10 @@ Option QA doc-only:
 Option build handover:
 1. `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md`
 - paquet de tâches contract-first pour passer doc -> build sans requalification design.
+
+Contrat d’intégration source (public mode):
+1. `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
+- contrat de consommation API Recherche d’entreprises (provenance, fraîcheur, mapping params/payloads, throttling).
 
 ---
 
@@ -97,7 +101,7 @@ Option build handover:
 
 ## Doc Consistency Checklist
 
-1. Les 4 patches M3 existent et sont référencés depuis l’index release pack.
+1. Les 4 patches M3 core + `M3G` existent et sont référencés depuis l’index release pack.
 2. La règle `PATCH_M3A source of truth` est répétée dans `M3A`, l’index et le changelog.
 3. Les noms de statuts d’enrichissement sont identiques dans `M3A`, `M3B`, `M3C`, `M3D`.
 4. Les champs DB de `M3A` existent dans les payloads API de `M3B` sans renommage ambigu.
@@ -112,3 +116,4 @@ Option build handover:
 
 - 2026-02-23: Création du patch M3 unifié.
 - 2026-02-23: Refactor en overview et split contractuel `M3A/M3B/M3C/M3D`.
+- 2026-02-23: Ajout de la référence `M3G` (contrat d’intégration Search API public mode).

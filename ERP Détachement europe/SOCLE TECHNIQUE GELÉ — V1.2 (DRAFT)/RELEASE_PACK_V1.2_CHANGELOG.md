@@ -315,7 +315,7 @@ Clore les derniers gaps : E2E-13, égalité traitement (OpenAPI+Events), ATS sco
 
 ### Objectif
 
-Remplacer le patch M3 monolithique par une structure split en 4 patches synchronisés (DB, API, Events/Orchestrator, RBAC/Security) tout en conservant un overview unique.
+Remplacer le patch M3 monolithique par une structure split en 4 patches synchronisés (DB, API, Events/Orchestrator, RBAC/Security), puis ajouter un contrat d’intégration source dédié (Search API) tout en conservant un overview unique.
 
 ### ✏️ PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md
 
@@ -379,6 +379,15 @@ Remplacer le patch M3 monolithique par une structure split en 4 patches synchron
 - traiter `M3A/M3B/M3C/M3D/M3E` comme baseline stable.
 - appliquer `M3x_FIX` pour toute correction après freeze.
 
+### 🆕 PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md
+
+**Contenu créé** :
+- Contrat de consommation des endpoints publics `/search` et `/near_point`.
+- Modèle de provenance/fraîcheur basé sur `search-infra` (Prétraitement -> ETL -> Indexation -> Snapshot) et usage optionnel de `/sources/last_modified`.
+- Tables de mapping paramètres/réponses avec règles explicites de merge, TTL, required-for-success.
+- Règles d’erreurs, throttling (`<=7 rps`, `Retry-After`), pagination (`per_page<=25`, cap `page*per_page<=10000`) et limites geo.
+- Exemples cURL contractuels (SIREN, filtres NAF+code postal, near_point).
+
 **Sources** : URLs officielles data.gouv / INPI / entreprise.api.gouv.fr + objectif couverture type Pappers.
 
 ---
@@ -387,8 +396,8 @@ Remplacer le patch M3 monolithique par une structure split en 4 patches synchron
 
 | Type | Vague 1 | Vague 2 | Vague 3 | Vague 4 | Total |
 |---|---|---|---|---|---|
-| Fichiers créés | 8 | 0 | 6 | 7 | **21** |
-| Fichiers modifiés | 3 | 1 | 3 | 5 | **12** |
+| Fichiers créés | 8 | 0 | 6 | 8 | **22** |
+| Fichiers modifiés | 3 | 1 | 3 | 7 | **14** |
 | Divergences corrigées | 0 | 0 | 2 | 0 | **2** |
 | Events définis | 6 | 0 | 2 | 4 | **12** |
 | Endpoints définis | 6 | 0 | 2 | 3 | **11** |
@@ -406,3 +415,4 @@ Remplacer le patch M3 monolithique par une structure split en 4 patches synchron
 - 2026-02-23 : Ajout des hardening assets Vague 4 (`Canonical enums`, `Minimum Success Fields`, `Implementation Notes`) et création optionnelle de `PATCH_M3E_TEST_SCENARIOS.md`.
 - 2026-02-23 : Ajout `Build Readiness Gate — M3`, table maître `DB↔API↔UI`, décision opérationnelle job model, et `PATCH_M3F_IMPLEMENTATION_TASK_PACK.md`.
 - 2026-02-23 : Ajustement minimal post-freeze: logique `required_sources/optional_sources`, compteurs `required_sources_failed_count/optional_sources_failed_count`, et verrouillage Option A (`SIRET` contextualisé `request`).
+- 2026-02-23 : docs(m3): add Search API integration contract (M3G) + align orchestration to upstream rate limits and data provenance.

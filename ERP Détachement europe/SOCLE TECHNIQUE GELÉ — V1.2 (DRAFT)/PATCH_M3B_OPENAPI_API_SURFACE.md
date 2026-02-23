@@ -11,6 +11,7 @@ Liens:
 2. DB: `PATCH_M3A_DB_DATA_CONTRACTS.md`
 3. Events/Orchestration: `PATCH_M3C_EVENTS_ORCHESTRATION.md`
 4. RBAC/Security: `PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md`
+5. Search API integration (public mode): `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
 
 ---
 
@@ -124,6 +125,16 @@ Retourner le détail demande et la Company Card consolidée.
 5. `registry_name`, `rcs_city`.
 6. `updated_at`.
 
+Blocs enrichissement Search API (optionnels):
+1. `company.finances` (objet annuel `year -> {ca, resultat_net}`) si disponible.
+2. `company.complements` (flags/labels open data) si disponible.
+3. L’absence de `company.finances` ou `company.complements` n’implique pas un échec si `core_identity` est présente (référence `M3A` section `D`).
+4. Règle snapshot -> projection:
+- `company.finances` et `company.complements` MUST être dérivés du snapshot `company_documents` `ENTERPRISE_SEARCH` le plus récent selon `retrieved_at`.
+- l’unicité des payloads par `checksum` est garantie par la contrainte DB.
+- aucune agrégation inter-snapshots n’est autorisée.
+- si snapshot absent, omettre le bloc (ne pas dégrader `core_identity`).
+
 #### `404 not_found`
 
 Cas:
@@ -157,10 +168,15 @@ Référence:
 | `headcount_range` | `companies.headcount_range` | `company.headcount_range` | `CompanyCard.Activity.HeadcountRange` | may | `10-19` |
 | `rcs_city` | `companies.rcs_city` | `company.registry.city` | `CompanyCard.Registry.City` | may | `PARIS` |
 | `registry_name` | `companies.registry_name` | `company.registry.name` | `CompanyCard.Registry.Name` | may | `RCS` |
+| `finances_snapshot` | `company_documents.payload_json` (`doc_type=ENTERPRISE_SEARCH`) | `company.finances` | `CompanyCard.Finance.Finances` | may | `{ \"2024\": { \"ca\": 1200000, \"resultat_net\": 95000 } }` |
+| `complements_snapshot` | `company_documents.payload_json` (`doc_type=ENTERPRISE_SEARCH`) | `company.complements` | `CompanyCard.Compliance.Complements` | may | `{ \"est_ess\": false, \"est_rge\": true }` |
 | `updated_at` | `companies.updated_at` | `company.updated_at` | `CompanyCard.Meta.UpdatedAt` | must | `2026-02-23T10:15:00Z` |
 | `enrichment_status` | `requests.enrichment_status` | `request.enrichment_status` | `CompanyCard.Meta.StatusBadge` | must | `PARTIAL` |
 | `enrichment_last_run_at` | `requests.enrichment_last_run_at` | `request.enrichment_last_run_at` | `CompanyCard.Meta.LastRunAt` | should | `2026-02-23T10:14:00Z` |
 | `enrichment_error` | `requests.enrichment_error` | `request.enrichment_error` | `CompanyCard.Meta.ErrorPanel` | may | `INPI_RNE:503:TIMEOUT` |
+
+Note sémantique identitaire:
+1. `company.brand_name` peut contenir le `sigle` légal Search API en fallback; ce champ n’est pas une enseigne stricte.
 
 ---
 
@@ -234,6 +250,10 @@ Option A — rendu identifiants Company Card:
 2. afficher `SIRET` depuis `request.siret`.
 3. si `request.siret` est null: masquer le champ ou afficher `non fourni`.
 
+Disponibilité des blocs Search API:
+1. `finances` et `complements` proviennent de l’agrégation open-data Search API.
+2. Ces blocs peuvent être absents selon la disponibilité amont, sans invalider `SUCCESS` si `core_identity` est satisfaite.
+
 Staleness UI:
 1. TTL de fraîcheur aligné sur `M3C`: 30 jours.
 2. Si stale détecté, l’UI doit afficher explicitement la date `updated_at`.
@@ -268,6 +288,8 @@ Auto-refresh recommandé:
 9. Les codes HTTP standard (`400/404/409/422`) sont cohérents.
 10. La table maître `DB↔API↔UI` est utilisée comme mapping unique au build.
 11. Option A est appliquée: `SIREN` lu depuis `company.siren`, `SIRET` lu depuis `request.siret`.
+12. Les blocs `company.finances`/`company.complements` sont explicitement optionnels et alignés avec `M3A`.
+13. La projection `company.finances`/`company.complements` suit strictement la règle `last snapshot only` (`ENTERPRISE_SEARCH`).
 
 ---
 
@@ -275,3 +297,5 @@ Auto-refresh recommandé:
 
 - 2026-02-23: Création du patch `M3B` (split contractuel du patch M3 unifié).
 - 2026-02-23: Verrouillage Option A (`SIRET` contextuel à la demande, `SIREN` consolidé côté company).
+- 2026-02-23: Ajout du contrat optionnel `finances`/`complements` (Search API) sans impact sur `core_identity`.
+- 2026-02-23: Hardening doc-only: règle snapshot->projection (`last snapshot only`) + clarification `sigle` fallback.

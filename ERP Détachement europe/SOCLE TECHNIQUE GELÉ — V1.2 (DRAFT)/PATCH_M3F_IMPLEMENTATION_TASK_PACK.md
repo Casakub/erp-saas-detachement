@@ -14,6 +14,7 @@ Liens:
 4. Orchestration: `PATCH_M3C_EVENTS_ORCHESTRATION.md`
 5. RBAC/Security: `PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md`
 6. QA scenarios: `PATCH_M3E_TEST_SCENARIOS.md`
+7. Search API integration: `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
 
 ---
 
@@ -49,6 +50,7 @@ Do not change contracts:
 Inputs:
 1. `PATCH_M3B_OPENAPI_API_SURFACE.md`
 2. `PATCH_M3A_DB_DATA_CONTRACTS.md` (mapping et enums)
+3. `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md` (params/réponses Search API)
 
 Outputs (files):
 1. routes `/v1/requests*`.
@@ -70,6 +72,7 @@ Do not change contracts:
 Inputs:
 1. `PATCH_M3C_EVENTS_ORCHESTRATION.md`
 2. `PATCH_M3A_DB_DATA_CONTRACTS.md`
+3. `PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md` (rate-limit, retries, 2-pass fetch)
 
 Outputs (files):
 1. worker/job orchestration M3.
