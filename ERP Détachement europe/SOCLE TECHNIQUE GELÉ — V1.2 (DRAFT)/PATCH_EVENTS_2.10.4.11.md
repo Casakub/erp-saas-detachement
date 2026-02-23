@@ -362,7 +362,7 @@ Cette section `2.10.4.11` couvre les events des Lots 5, 7, et les nouveaux event
 
 ## Règles communes (héritées de 2.10 LOCKED)
 
-```
+```json
 Architecture outbox : tous ces events transitent par la table events_outbox
   - max_retries = 8
   - backoff exponentiel (30s, 60s, 120s...)

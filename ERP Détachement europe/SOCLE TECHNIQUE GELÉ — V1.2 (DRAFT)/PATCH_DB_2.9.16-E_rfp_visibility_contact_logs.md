@@ -200,7 +200,7 @@ Le champ `visibility` hérite des RLS déjà définies sur `rfp_requests` (2.9.4
 
 ### Transition visibility (rfp_requests)
 
-```
+```json
 RÈGLE V1 :
   private → public : autorisé si marketplace_access.status = 'active' du tenant propriétaire
   public → private : autorisé uniquement si aucune réponse soumise (status RFP = 'open')
@@ -213,7 +213,7 @@ RBAC :
 
 ### Anti-désintermédiation (rfp_contact_logs)
 
-```
+```json
 RÈGLE V1 :
   Obligation de logguer tout contact direct (hors plateforme) entre agences et clients
   autour d'une RFP active.

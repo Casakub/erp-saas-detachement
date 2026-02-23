@@ -138,7 +138,7 @@ GET /v1/compliance-cases/{compliance_case_id}/equal-treatment-check:
 
 ### Events (référencer dans PATCH_EVENTS_2.10.4.11 si besoin)
 
-```
+```json
 EqualTreatmentCheckCreated
   Trigger: POST equal-treatment-check
   Payload: { compliance_case_id, mission_id, worker_id, is_compliant, gap_amount }
@@ -153,7 +153,7 @@ EqualTreatmentViolationDetected
 
 ### Règles métier V1
 
-```
+```json
 ALGORITHME V1 (règles-based, pas ML) :
   1. Récupérer worker_eligible_wage depuis worker_remuneration_snapshot (dernier)
   2. Comparer avec host_country_reference_wage (saisie manuelle V1)
@@ -259,7 +259,7 @@ CREATE POLICY rls_cexp_platform_admin ON compliance_exports FOR ALL TO authentic
 
 ### Contenu du PDF inspection-ready
 
-```
+```json
 Sections (toutes optionnelles, toutes incluses par défaut) :
   1. En-tête : mission, worker, agence, client, corridor
   2. Rémunération : dernier snapshot worker_remuneration_snapshot (immuable)
@@ -293,7 +293,7 @@ Sections (toutes optionnelles, toutes incluses par défaut) :
 
 ### Périmètre V1 MINIMAL retenu
 
-```
+```json
 V1 MINIMAL (endpoints read-only + gestion agences basique) :
   ✅ Stats globales plateforme (KPIs)
   ✅ Gestion agences : liste, détail, statut
@@ -307,7 +307,7 @@ Source décision : Audit fonctionnel 2026-02-22, Q2 Option A retenue.
 
 ### RBAC platform_admin (décision Q4 — Option A retenue)
 
-```
+```json
 ARCHITECTURE RETENUE (V1) :
   platform_admin = rôle JWT avec tenant_id = null (bypass RLS)
   Pas de tenant système séparé en V1
@@ -391,7 +391,7 @@ Vérification : l'ERRATA V1.1 mentionne-t-il explicitement que `POST /v1/invoice
 → Si oui : ✅ aucun ajout nécessaire
 → Si non : ajouter la clarification C1 ci-dessous
 
-```markdown
+```json
 ### Clarification C1 — Facturation depuis timesheets : V1 actif (résolution SOCLE vs OpenAPI)
 
 **Contradiction** : Le narratif SOCLE §M10 évoque "facturation depuis timesheets = V2".
@@ -405,7 +405,7 @@ L'endpoint `POST /v1/invoices:from-timesheet` est présent dans `2.11 OPENAPI LO
 
 ### Clarification C2 — Offline mobile : V2 (résolution SOCLE vs Checklist 6.0)
 
-```markdown
+```json
 ### Clarification C2 — Mobile PWA : online-only en V1 (résolution SOCLE vs Checklist 6.0)
 
 **Contradiction** :
@@ -423,7 +423,7 @@ L'item "Offline partiel validé" de la Checklist 6.0 est **hors scope V1** — r
 
 ### Clarification C3 — Section 2.10.4.11 : patch addendum
 
-```markdown
+```json
 ### Clarification C3 — Section 2.10.4.11 : addendum events (résolution référence orpheline)
 
 **Problème** : Les documents 6.7 (ligne 41), 6.6, SECTION 9 référencent "2.10.4.11" comme source d'events

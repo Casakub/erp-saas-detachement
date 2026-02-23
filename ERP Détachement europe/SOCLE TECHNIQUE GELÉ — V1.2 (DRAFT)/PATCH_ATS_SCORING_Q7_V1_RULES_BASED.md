@@ -53,7 +53,7 @@ Mais le **modèle de scoring n'est pas défini** : règles-based vs LLM reste un
 
 ### Format de score
 
-```
+```json
 score : integer, plage [0, 100]
   0   = aucun critère de matching satisfait
   100 = tous les critères obligatoires satisfaits avec dépassement
@@ -61,7 +61,7 @@ score : integer, plage [0, 100]
 
 ### Calcul du score (4 composantes pondérées)
 
-```
+```json
 COMPOSANTE 1 — Skills match (poids: 50%)
   matched_skills = intersection(cv_skills, job_required_skills)  [case-insensitive]
   if job_required_skills is empty → skills_score = 50 (neutre)
@@ -124,7 +124,7 @@ SCORE FINAL :
 
 ### Raisons listées (pour affichage frontend)
 
-```
+```json
 Format des raisons (dans score_breakdown) :
   skills_matched   : liste des compétences trouvées = points positifs
   skills_missing   : liste des compétences requises absentes = gaps
@@ -195,7 +195,7 @@ Format des raisons (dans score_breakdown) :
 
 ## Règles d'implémentation
 
-```
+```json
 - model_version = "rules-v1.0" (constante en dur dans le code V1)
 - Comparaison skills : case-insensitive, trim whitespace, exact match après normalisation
   → V2 : matching sémantique (LLM embeddings)
@@ -211,7 +211,7 @@ Format des raisons (dans score_breakdown) :
 
 ## Décision sur LLM Scoring
 
-```
+```json
 LLM SCORING = V2 UNIQUEMENT
 
 V1 : algorithme règles-based déterministe

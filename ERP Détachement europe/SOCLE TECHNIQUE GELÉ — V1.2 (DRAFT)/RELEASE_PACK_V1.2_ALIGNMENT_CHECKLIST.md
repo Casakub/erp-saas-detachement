@@ -131,7 +131,7 @@
 
 ### Verdict final
 
-```
+```json
 STATUS : ✅ READY-TO-CODE V1.2
 
 Gates satisfaites : 7/8

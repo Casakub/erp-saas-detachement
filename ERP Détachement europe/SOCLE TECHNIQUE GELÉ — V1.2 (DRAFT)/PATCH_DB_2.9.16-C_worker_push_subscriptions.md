@@ -13,7 +13,7 @@
 
 Le document `2.11.a — OPENAPI V1.2 (PATCH)` définit les endpoints suivants pour la gestion des abonnements Web Push VAPID (section Worker App Mobile) :
 
-```
+```json
 POST   /v1/worker/push-subscription
 DELETE /v1/worker/push-subscription
 ```
@@ -153,7 +153,7 @@ CREATE POLICY rls_wps_platform_admin
 
 ### Gestion des expirations (décision retenue : Option B)
 
-```
+```json
 Règle: retry 3x sur erreur 410 Gone (endpoint révoqué côté navigateur)
 → Après 3 échecs consécutifs → DELETE de la subscription (purge)
 → Log événement dans audit_logs: action='push_subscription_expired', actor='system'

@@ -43,7 +43,7 @@
 
 ### Algorithme moteur rémunération V1 (5 étapes)
 
-```
+```json
 ENTRÉES:
   compliance_case_id
   remuneration_inputs (base_salary, primes[], expense_items[])

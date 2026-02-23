@@ -123,7 +123,7 @@ Un fichier LOCKED avant un lot = engagement contractuel pour l'équipe dev. Tout
 
 ## Ordre d'exécution recommandé (timeline)
 
-```
+```json
 J+0 (aujourd'hui) :
   ✅ Soumettre OWNER_SIGNOFF_V1.2.md au Product Owner
   ✅ Passer READY immédiatement :
@@ -155,7 +155,7 @@ J+5 → J+? (parallèle au build) :
 
 ## Règles de LOCK (à respecter impérativement)
 
-```
+```json
 RÈGLE 1 — Un LOCKED ne peut jamais être modifié.
   → En cas d'erreur détectée : créer un PATCH_ ou ERRATA dédié.
   → Nommer le correctif : PATCH_<FICHIER>_ERRATA_<DATE>.md

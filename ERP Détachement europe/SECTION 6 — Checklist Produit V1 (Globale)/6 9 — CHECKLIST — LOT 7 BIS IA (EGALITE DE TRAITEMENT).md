@@ -67,7 +67,7 @@
 
 ### Algorithme V1 (règles-based, 3 étapes)
 
-```
+```json
 ENTRÉES (saisies manuellement par agent) :
   compliance_case_id
   host_country_reference_wage (montant brut de référence)

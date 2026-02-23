@@ -33,7 +33,7 @@ Le SaaS nécessite un rôle d'administration globale de la plateforme (dashboard
 
 ### Ce que "ACCEPTER Option A" signifie concrètement
 
-```
+```json
 JWT claims platform_admin :
   { sub: uuid, role_type: "platform_admin", tenant_id: null }
 
@@ -92,7 +92,7 @@ Endpoints V1 MINIMAL (5 endpoints read-only + 1 write) :
 
 ### Décision Owner
 
-```
+```json
 ☐ ACCEPTER — Option A (tenant_id=null, bypass RLS)
 ☐ ACCEPTER CONDITIONNELLEMENT — Option A tech, UI admin V2
 ☐ REFUSER — Choisir une alternative (préciser ci-dessous)
@@ -122,7 +122,7 @@ Le module M5 (ATS) doit calculer un score de pertinence pour chaque candidature.
 
 ### Ce que "ACCEPTER Rules-based" signifie concrètement
 
-```
+```json
 model_version = "rules-v1.0" (stocké dans applications.model_version)
 
 Algorithme 4 composantes :
@@ -182,7 +182,7 @@ GWT reproductibles :
 
 ### Décision Owner
 
-```
+```json
 ☐ ACCEPTER — Rules-based V1 (model_version="rules-v1.0")
 ☐ ACCEPTER CONDITIONNELLEMENT — Rules-based V1 + pilote LLM parallèle
 ☐ REFUSER — LLM scoring requis en V1 (spécification complète à écrire)
@@ -206,7 +206,7 @@ Le module M8.3 a été créé pour couvrir cette obligation. La question : péri
 
 ### Ce que "ACCEPTER V1 Manuel" signifie concrètement
 
-```
+```json
 V1 — Check manuel assisté :
   L'agent (tenant_admin / agency_user) saisit manuellement :
     - host_country_reference_wage (salaire de référence pays hôte — ex: SMIC FR 2026 = 11.88€/h)
@@ -266,7 +266,7 @@ V1 — Check manuel assisté :
 
 ### Décision Owner
 
-```
+```json
 ☐ ACCEPTER — V1 Manuel assisté (saisie manuelle, alerte uniquement, pas de blocage auto)
 ☐ ACCEPTER CONDITIONNELLEMENT — V1 Manuel + mention UI "source à vérifier manuellement"
 ☐ REFUSER — Automatisation requise en V1 (API externe à spécifier)

@@ -76,7 +76,7 @@ Ces items sont documentés comme V2 dans `DECISIONS_OWNER_V1.2.md`. Ils n'appara
 
 ## Résumé
 
-```
+```json
 OPEN ITEMS BLOQUANTS BUILD : 0
 OPEN ITEMS NÉCESSITANT DÉCISION OWNER : 3 (D1, D2, D6)
 OPEN ITEMS E2E MANQUANTS : 1 (E2E SIPSI)

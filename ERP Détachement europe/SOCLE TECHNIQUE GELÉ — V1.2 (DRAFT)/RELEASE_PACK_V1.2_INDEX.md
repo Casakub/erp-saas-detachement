@@ -20,7 +20,7 @@ Le Release Pack V1.2 consolide **toutes les décisions contractuelles** issues d
 
 ## Hiérarchie documentaire (H1 → H4)
 
-```
+```json
 H1 — LOCKED (immuable, source de vérité primaire)
      ├── SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/
      │   ├── 2.9  — Schéma DB V1.1 (LOCKED)

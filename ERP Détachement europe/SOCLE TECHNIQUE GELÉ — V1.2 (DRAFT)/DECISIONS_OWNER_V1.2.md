@@ -52,7 +52,7 @@
 - Tout endpoint `/v1/` hors préfixe `/v1/admin/platform/*` (sauf lecture agrégée)
 
 **Endpoints dédiés V1 MINIMAL** :
-```
+```json
 GET  /v1/admin/platform/stats                         (KPIs globaux cross-tenant)
 GET  /v1/admin/platform/tenants                       (liste tenants paginée)
 GET  /v1/admin/platform/tenants/{tenant_id}           (détail tenant)

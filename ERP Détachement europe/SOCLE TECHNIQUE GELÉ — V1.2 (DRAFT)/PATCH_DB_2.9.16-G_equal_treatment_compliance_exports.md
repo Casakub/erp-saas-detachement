@@ -324,7 +324,7 @@ CREATE POLICY rls_cexp_platform_admin
 
 ## Workflow job async (compliance_exports)
 
-```
+```json
 FLOW V1 :
   1. Frontend → POST /v1/compliance-cases/{id}:export-dossier
      → INSERT compliance_exports (status='pending') → 202 + export_id
@@ -355,7 +355,7 @@ TIMEOUT job :
 
 ## Contenu du PDF inspection-ready (spécification V1)
 
-```
+```json
 SECTIONS DU DOSSIER (ordre d'affichage) :
 
 1. EN-TÊTE

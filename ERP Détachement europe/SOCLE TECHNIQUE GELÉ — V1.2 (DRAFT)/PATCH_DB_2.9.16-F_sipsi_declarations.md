@@ -13,7 +13,7 @@
 
 Le document `2.11.a — OPENAPI V1.2 (PATCH)` définit l'endpoint suivant pour le SIPSI assisté V1 :
 
-```
+```json
 POST /v1/compliance-cases/{compliance_case_id}/sipsi-declaration
 ```
 
@@ -31,7 +31,7 @@ Cet endpoint nécessite une table de persistance pour stocker les déclarations 
 
 ### Scope V1 vs V2
 
-```
+```json
 V1 — SIPSI ASSISTÉ :
   ✅ Formulaire pré-rempli depuis données mission/worker/compliance_case
   ✅ Stockage déclaration en base (sipsi_declarations)
@@ -251,7 +251,7 @@ CREATE POLICY rls_sipsi_platform_admin
 
 ## Workflow V1 (assisté)
 
-```
+```json
 1. Agence crée compliance_case (M8, Lot 2)
 2. Agence déclenche POST /v1/compliance-cases/{id}/sipsi-declaration
    → Backend pré-remplit payload_json depuis données mission/worker/client

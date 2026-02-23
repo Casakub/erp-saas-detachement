@@ -35,7 +35,7 @@ Mais **absent de** :
 
 ### Architecture retenue (V1 — Décision Q4 Option A)
 
-```
+```json
 ARCHITECTURE V1 :
   platform_admin = rôle JWT avec tenant_id = null (ou valeur sentinel)
   Bypass RLS via policies dédiées sur toutes les tables

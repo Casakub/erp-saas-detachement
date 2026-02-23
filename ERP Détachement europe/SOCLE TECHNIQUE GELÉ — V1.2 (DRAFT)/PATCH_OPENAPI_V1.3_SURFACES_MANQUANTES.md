@@ -32,7 +32,7 @@ Ce patch V1.3 complète le document `2.11.a — OPENAPI V1.2 (PATCH)` (DRAFT V1.
 
 ## Convention de documentation des endpoints
 
-```
+```json
 Format utilisé :
   ENDPOINT — <METHOD> <PATH>
   Summary: description courte

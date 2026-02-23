@@ -134,6 +134,17 @@ Artifacts:
 4. Review “AI Contribution Rules”
 5. Merge
 
+## **3.4 Template pipeline Design -> Contrats -> Code**
+
+Référence opérationnelle:
+- `SECTION 3.T5 — TEMPLATE — PIPELINE FIGMA TO CONTRACT TO CODE (STANDARD IA).md`
+
+Usage recommandé:
+1. Appliquer `3.T5` dès qu'un écran Figma est figé.
+2. Produire le mapping écran -> API/Events/RBAC avant toute implémentation.
+3. Ouvrir un ticket `Design -> Contract`, puis un ticket `Contract -> Code`.
+4. Exécuter les gates `G0 -> G6` jusqu'à validation humaine explicite.
+
 ## 📦 ÉTAT DES LOTS (mise à jour 2026-02-20)
 
 | Lot | Modules | Statut CDC | Checklist | Prêt à coder |
