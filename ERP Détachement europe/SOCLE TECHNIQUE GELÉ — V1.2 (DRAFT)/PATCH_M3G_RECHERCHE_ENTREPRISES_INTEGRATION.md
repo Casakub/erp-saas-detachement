@@ -268,6 +268,7 @@ Règles:
 1. `Retry-After` est prioritaire sur le backoff interne.
 2. `NOT_FOUND` sur `API_RECHERCHE_ENTREPRISES` force `FAILED` (source required).
 3. Les payloads d’erreur exposés en API interne restent ceux de `M3B`.
+4. Si upstream retourne une entreprise non-diffusible/masquée, cela ne déclenche pas `NOT_FOUND`: traiter comme `SUCCESS/PARTIAL` selon `required_sources`, avec `data_masked=true` en diagnostic UI/log.
 
 ---
 
