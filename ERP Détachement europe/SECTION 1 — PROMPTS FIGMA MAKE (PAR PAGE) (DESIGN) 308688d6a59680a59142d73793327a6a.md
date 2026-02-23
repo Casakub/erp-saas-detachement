@@ -10,6 +10,32 @@
 - Les écrans doivent VISUALISER les états (score, blocage, conformité) sans implémenter la logique.
 - Toute règle métier est gérée par le backend.
 
+## 0.9 — PROMPT D’AMORÇAGE GLOBAL (OBLIGATOIRE EN TOUT PREMIER)
+
+Avant toute création de page/flow, appliquer ce prompt.
+
+Prompt à utiliser dans Figma Make:
+
+- Tu conçois un produit SaaS RegTech multi-tenant en mode contract-first.
+- Tu dois lire et suivre le fichier racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
+- Tu dois organiser le fichier Figma selon les dossiers/pages définis dans ce guide.
+- Tu dois produire des écrans orientés états backend (`NORMAL`, `WARNING`, `BLOCKED`) sans logique métier implémentée.
+- Tu dois préparer un handoff design compatible avec une implémentation TypeScript modulaire.
+- Tu dois respecter les contraintes V1: mobile PWA online-only, allocation marketplace assistée (pas d’auto-allocation), backend décisionnel, no-code orchestration uniquement.
+- Tu dois livrer:
+- arborescence Figma complète (pages + composants + variants + states),
+- conventions de nommage cohérentes modules/lots,
+- mapping écran -> module (`M1..M13`, `M7bis`) -> état backend attendu.
+- Tu ne dois pas:
+- inventer des règles légales,
+- créer des décisions automatiques côté UI,
+- introduire des fonctionnalités V2 dans des écrans V1.
+
+Sortie attendue:
+1. Structure Figma initiale complète.
+2. Design system prêt.
+3. Liste des écrans prioritaires Lot 1 à Lot 8 avec états requis.
+
 ## 1.0 — PROMPT MAÎTRE (à utiliser avant les pages)
 
 Tu es Lead Product Designer SaaS RegTech B2B (compliance, finance, audit).
@@ -370,3 +396,4 @@ Contraintes transversales tous flows :
 - 2026-02-17: Fix fence ambiguë (SECTION 1), sans changement métier.
 - 2026-02-21: Ajout prompts manquants 1.18 (Timesheets desktop + mobile), 1.19 (Mobile PWA flows détaillés A→F), 1.20 (RFP Interne M4), 1.21 (Admin Plateforme Super Admin). Couverture design 100 % alignée avec SOCLE + Section 2.
 - 2026-02-23: Alignement V1 avec `SECTION 8` et `SECTION 10.F` (Marketplace en allocation assistée, auto déplacée V2) + ajout prompt 1.22 “Égalité de Traitement (M8.3)”.
+- 2026-02-23: Ajout du prompt 0.9 d’amorçage global + référence au guide racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
