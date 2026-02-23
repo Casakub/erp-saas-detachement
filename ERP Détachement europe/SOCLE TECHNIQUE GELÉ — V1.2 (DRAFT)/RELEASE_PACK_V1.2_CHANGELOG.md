@@ -311,18 +311,85 @@ Clore les derniers gaps : E2E-13, égalité traitement (OpenAPI+Events), ATS sco
 
 ---
 
+## VAGUE 4 — Cadrage M3 SIREN/SIRET & enrichissement officiel FR (2026-02-23)
+
+### Objectif
+
+Remplacer le patch M3 monolithique par une structure split en 4 patches synchronisés (DB, API, Events/Orchestrator, RBAC/Security) tout en conservant un overview unique.
+
+### ✏️ PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md
+
+**Raison** : Conversion du document en `overview` pour réduire la duplication et renvoyer vers les 4 contrats spécialisés.
+
+**Contenu modifié** :
+- Positionnement explicite comme fil conducteur.
+- Ajout d'une table de couverture vers `M3A/M3B/M3C/M3D`.
+- Ajout des règles de priorité documentaire M3.
+
+### 🆕 PATCH_M3A_DB_DATA_CONTRACTS.md
+
+**Contenu créé** :
+- Glossaire data M3.
+- Contrat DB détaillé (`requests`, `companies`, `company_documents`, `company_source_retrievals`).
+- Matrice mapping champ -> source -> priorité -> merge -> TTL -> required-for-success.
+- Canonical enums (`enrichment_status`, `source_api`, `error_code`) référençables par tous les patches M3.
+- Table `Minimum Success Fields` (`SUCCESS` vs `PARTIAL`) pour aligner les implémentations.
+- Règle d'autorité explicite:
+- `If conflict: PATCH_M3A (DB) is the source of truth.`
+- `If conflict: PATCH_M3A is source of truth.`
+
+### 🆕 PATCH_M3B_OPENAPI_API_SURFACE.md
+
+**Contenu créé** :
+- Contrats `POST /v1/requests`, `GET /v1/requests/{request_id}`, `POST /v1/requests/{request_id}:refresh-company`.
+- Validation `SIREN/SIRET` et erreurs standardisées.
+- Contrat payload de réponse Company Card.
+- Contrat payload d'erreur API avec `correlation_id`.
+
+### 🆕 PATCH_M3C_EVENTS_ORCHESTRATION.md
+
+**Contenu créé** :
+- Contrat events outbox (`CompanyEnrichmentRequested`, `Started`, `SourceFetched`, `Completed`).
+- Machine d'états enrichissement (transitions + invariants).
+- Politique cache/lock précise (TTL, key, retry, backoff).
+- Contrat observabilité (champs de logs + format erreur interne job).
+- Section `Implementation Notes (non-binding)` pour guider le build sans créer de contrainte supplémentaire.
+
+### 🆕 PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md
+
+**Contenu créé** :
+- Matrice RBAC endpoint par endpoint.
+- Contrat sécurité secrets backend-only.
+- Règles conformité et minimisation de données.
+- DoD documentaire + QA checklist pré-codegen IA.
+
+### 🆕 PATCH_M3E_TEST_SCENARIOS.md (optionnel)
+
+**Contenu créé** :
+- 12 scénarios Given/When/Then couvrant validations input, cache hit, lock contention, stale refresh, partial/failure, observabilité.
+- Matrice de couverture rapide pour dériver les futurs tests d’implémentation.
+
+**Sources** : URLs officielles data.gouv / INPI / entreprise.api.gouv.fr + objectif couverture type Pappers.
+
+---
+
 ## Résumé statistique
 
-| Type | Vague 1 | Vague 2 | Vague 3 | Total |
-|---|---|---|---|---|
-| Fichiers créés | 8 | 0 | 6 | **14** |
-| Fichiers modifiés | 3 | 1 | 3 | **7** |
-| Divergences corrigées | 0 | 0 | 2 | **2** |
-| Events définis | 6 | 0 | 2 | **8** |
-| Endpoints définis | 6 | 0 | 2 | **8** |
-| Décisions formalisées | 3 | 0 | 3 | **6** |
-| E2E scénarios ajoutés | 0 | 7 | 1 | **8** |
+| Type | Vague 1 | Vague 2 | Vague 3 | Vague 4 | Total |
+|---|---|---|---|---|---|
+| Fichiers créés | 8 | 0 | 6 | 6 | **20** |
+| Fichiers modifiés | 3 | 1 | 3 | 4 | **11** |
+| Divergences corrigées | 0 | 0 | 2 | 0 | **2** |
+| Events définis | 6 | 0 | 2 | 4 | **12** |
+| Endpoints définis | 6 | 0 | 2 | 3 | **11** |
+| Décisions formalisées | 3 | 0 | 3 | 0 | **6** |
+| E2E scénarios ajoutés | 0 | 7 | 1 | 0 | **8** |
+| Scénarios doc-only M3 | 0 | 0 | 0 | 12 | **12** |
 
 ## Mini-changelog
 
 - 2026-02-22 : Création — Consolide Vague 1 (patches fondamentaux), Vague 2 (surfaces V1.2.2 + E2E-06→12), Vague 3 (E2E-13, equal-treatment, ATS Q7, platform_admin, QA Final).
+- 2026-02-23 : Ajout Vague 4 — création du patch `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` et indexation release pack pour le cadrage de la capture obligatoire SIREN/SIRET et de l'enrichissement officiel FR.
+- 2026-02-23 : Refactor Vague 4 en split `PATCH_M3A/M3B/M3C/M3D`; ajout de la règle: `If conflict: PATCH_M3A (DB) is the source of truth.`
+- 2026-02-23 : Ajout de la variante courte de priorité documentaire: `If conflict: PATCH_M3A is source of truth.`
+- 2026-02-23 : Ajout des hardening assets Vague 4 (`Canonical enums`, `Minimum Success Fields`, `Implementation Notes`) et création optionnelle de `PATCH_M3E_TEST_SCENARIOS.md`.

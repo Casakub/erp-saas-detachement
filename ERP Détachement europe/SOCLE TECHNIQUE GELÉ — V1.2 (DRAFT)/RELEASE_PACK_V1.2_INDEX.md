@@ -9,7 +9,7 @@
 
 ## Objectif du Pack V1.2
 
-Le Release Pack V1.2 consolide **toutes les décisions contractuelles** issues des 3 vagues d'audit fonctionnel du 2026-02-22. Il constitue la référence documentaire unique pour le build V1 de la plateforme SaaS détachement EU.
+Le Release Pack V1.2 consolide **toutes les décisions contractuelles** issues des vagues d'audit fonctionnel du 2026-02-22 au 2026-02-23. Il constitue la référence documentaire unique pour le build V1 de la plateforme SaaS détachement EU.
 
 **État à l'issue du QA Final** : ✅ READY-TO-CODE V1.2
 - Zéro surface sans contrat DB ↔ OpenAPI ↔ Events ↔ RBAC ↔ E2E
@@ -38,6 +38,12 @@ H1-bis — Patches faisant autorité (ne modifient pas LOCKED)
          ├── PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES
          ├── PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES
          ├── PATCH_RBAC_2.12.b_PLATFORM_ADMIN
+         ├── PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET
+         ├── PATCH_M3A_DB_DATA_CONTRACTS
+         ├── PATCH_M3B_OPENAPI_API_SURFACE
+         ├── PATCH_M3C_EVENTS_ORCHESTRATION
+         ├── PATCH_M3D_RBAC_SECURITY_COMPLIANCE
+         ├── PATCH_M3E_TEST_SCENARIOS
          ├── PATCH_ATS_SCORING_Q7_V1_RULES_BASED
          └── DECISIONS_OWNER_V1.2
 
@@ -52,6 +58,8 @@ H4 — Prototypes (non normatifs)
 ```
 
 **Règle** : En cas de contradiction, H1 prime. Les patches H1-bis priment sur H2-H4 pour les surfaces qu'ils couvrent.
+Règle complémentaire M3: `If conflict: PATCH_M3A (DB) is the source of truth.`
+Règle complémentaire M3 (courte): `If conflict: PATCH_M3A is source of truth.`
 
 ---
 
@@ -65,12 +73,14 @@ H4 — Prototypes (non normatifs)
 | `PATCH_DB_2.9.16-E_rfp_visibility_contact_logs.md` | `rfp_requests.visibility`, `rfp_contact_logs` | 4 | `20260222000003__lot4_m4_rfp_contact_logs.sql` |
 | `PATCH_DB_2.9.16-F_sipsi_declarations.md` | `sipsi_declarations` | 2/7 | `20260222000004__lot2_m8_sipsi_declarations.sql` |
 | `PATCH_DB_2.9.16-G_equal_treatment_compliance_exports.md` | `equal_treatment_checks`, `compliance_exports` | 7 | `20260222000005/6__lot7_m8_*.sql` |
+| `PATCH_M3A_DB_DATA_CONTRACTS.md` | `requests` (extension), `companies`, `company_documents`, `company_source_retrievals` | 4 (M3) | `20260223000007__lot4_m3_company_enrichment.sql` |
 
 ### Patches Events
 
 | Fichier | Events couverts | Section |
 |---|---|---|
 | `PATCH_EVENTS_2.10.4.11.md` | ComplianceDurationAlert, WorkerSkillAdded, SipsiDeclarationCreated, SipsiDeclarationStatusChanged, ComplianceDossierExportRequested, ComplianceDossierExportCompleted, EqualTreatmentCheckCreated, EqualTreatmentViolationDetected | §A→E |
+| `PATCH_M3C_EVENTS_ORCHESTRATION.md` | CompanyEnrichmentRequested, CompanyEnrichmentStarted, CompanyEnrichmentSourceFetched, CompanyEnrichmentCompleted | section unique |
 
 ### Patches OpenAPI
 
@@ -79,6 +89,7 @@ H4 — Prototypes (non normatifs)
 | `2.11.a — OPENAPI V1.2 (PATCH)` | Web Push VAPID, SIPSI, RFP contact-logs, ATS shortlist, Worker Skills | V1.2.2 |
 | `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md` | marketplace/agencies, leads/activities, export-dossier (POST+GET polling), compliance-score, equal-treatment-check (POST+GET) | V1.3.1 |
 | `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` | `/v1/admin/platform/stats`, `/v1/admin/platform/tenants`, `/v1/admin/platform/tenants/{tenant_id}`, `/v1/admin/platform/tenants/{tenant_id}/status`, `/v1/admin/platform/compliance-overview` | V1.4 |
+| `PATCH_M3B_OPENAPI_API_SURFACE.md` | `POST /v1/requests`, `GET /v1/requests/{request_id}`, `POST /v1/requests/{request_id}:refresh-company` | V1.2.4 |
 
 **Raison de mise à jour (post hardening)** : les surfaces API `platform_admin` sont désormais contractées via `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` (et non via `2.11` LOCKED, `2.11.a`, ni `PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md`).
 
@@ -88,12 +99,21 @@ H4 — Prototypes (non normatifs)
 |---|---|---|
 | `2.12.a — RBAC & PERMISSIONS V1.2 (PATCH)` | Matrice complète V1.2.2 (tous lots) | Audit 2026-02-22 |
 | `PATCH_RBAC_2.12.b_PLATFORM_ADMIN.md` | Rôle platform_admin (tenant_id=null, bypass RLS) | Décision D1 |
+| `PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md` | RBAC endpoints M3, secrets backend-only, conformité data minimization, DoD QA doc | Split M3 V1.2.4 |
+
+### Patches QA (Doc-only)
+
+| Fichier | Périmètre | Source |
+|---|---|---|
+| `PATCH_M3E_TEST_SCENARIOS.md` | 12 scénarios Gherkin-like pré-build pour validation M3 (input, cache/lock, partial/fail, stale refresh, observabilité) | Suite QA optionnelle V1.2.4 |
 
 ### Décisions & Compléments
 
 | Fichier | Contenu |
 |---|---|
 | `CDC_COMPLETIONS_FROM_AUDIT.md` | 5 compléments (M8.3, M8.4, M1.2, Corrections ERRATA, DB 2.9.16-G) |
+| `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` | Fil conducteur M3 (overview) et index vers `M3A/M3B/M3C/M3D` |
+| `PATCH_M3E_TEST_SCENARIOS.md` | Suite QA doc-only M3 (12 scénarios Given/When/Then) |
 | `PATCH_ATS_SCORING_Q7_V1_RULES_BASED.md` | Algorithme scoring ATS V1 rules-v1.0, 3 GWT |
 | `DECISIONS_OWNER_V1.2.md` | 6 décisions formelles D1→D6 |
 
@@ -102,7 +122,7 @@ H4 — Prototypes (non normatifs)
 | Fichier | Contenu |
 |---|---|
 | `RELEASE_PACK_V1.2_INDEX.md` | Ce fichier — index et hiérarchie |
-| `RELEASE_PACK_V1.2_CHANGELOG.md` | Changelog Vague 1→3 |
+| `RELEASE_PACK_V1.2_CHANGELOG.md` | Changelog Vague 1→4 |
 | `RELEASE_PACK_V1.2_ALIGNMENT_CHECKLIST.md` | Tableau DB ↔ OpenAPI ↔ Events ↔ RBAC ↔ E2E |
 | `RELEASE_PACK_V1.2_OPEN_ITEMS.md` | Items ouverts restants |
 
@@ -177,3 +197,6 @@ H4 — Prototypes (non normatifs)
 
 - 2026-02-22 : Création — QA Final V1.2 réalisé. 1 divergence corrigée (push-subscription). 7/8 gates satisfaites.
 - 2026-02-22 : Mise à jour post-hardening — ajout `PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md` dans le catalogue; contractualisation explicite des surfaces `platform_admin` via V1.4.
+- 2026-02-23 : Ajout `PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md` au catalogue V1.2 comme cadrage contract-first pour la capture obligatoire d'identifiant entreprise et l'enrichissement officiel FR.
+- 2026-02-23 : Refactor M3 en 4 patches synchronisés (`M3A`, `M3B`, `M3C`, `M3D`) et ajout de la règle de priorité `PATCH_M3A` source of truth en cas de conflit.
+- 2026-02-23 : Ajout optionnel `PATCH_M3E_TEST_SCENARIOS.md` pour industrialiser la QA documentaire M3 (12 scénarios Given/When/Then).
