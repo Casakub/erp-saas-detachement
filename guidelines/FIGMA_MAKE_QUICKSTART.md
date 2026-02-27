@@ -6,27 +6,31 @@
 - Eviter de charger 100+ fichiers avant de commencer.
 - Garder l'alignement contract-first avec le socle LOCKED.
 
-## Ordre de lecture minimal
+## Mode de lecture (obligatoire)
 
-1. `guidelines/Guidelines.md`
-2. `guidelines/overview-lot-active.md`
-3. `guidelines/overview-screen-module-map.md`
-4. `guidelines/components/reuse-gate.md`
-5. `guidelines/components/component-registry.md`
+- `minimal` (par defaut): generation ecran/composants dans le lot actif.
+- `extended`: besoin de mapping module/handoff detaille.
+- `deep`: uniquement si ambiguite contractuelle ou conflit de scope.
+
+## Fichiers a lire par mode
+
+- `minimal`:
+- `guidelines/Guidelines.md`
+- `guidelines/overview-lot-active.md`
+- `guidelines/components/reuse-gate.md`
+- `extended`:
+- `guidelines/overview-screen-module-map.md`
+- `guidelines/components/component-registry.md`
+- `guidelines/overview-handoff.md`
+- `deep`:
+- `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
 
 ## Prompt de demarrage (session)
 
 - Tu es assistant DESIGN/UI dans Figma Make.
-- Lis et applique uniquement ces fichiers:
-- `guidelines/Guidelines.md`
-- `guidelines/overview-lot-active.md`
-- `guidelines/overview-screen-module-map.md`
-- `guidelines/components/reuse-gate.md`
-- `guidelines/components/component-registry.md`
+- Active le mode `minimal` puis confirme le lot/module actif.
+- Applique strictement `guidelines/Guidelines.md`.
 - Contrainte absolue: UI/design seulement, aucune logique metier.
-- Respecte le lot/module actif et les limites V1.
-- Produis des composants reutilisables, avec variantes desktop/mobile et etats UI.
-- Pour les ecrans critiques, inclus `NORMAL`, `WARNING`, `BLOCKED`.
 - Si la demande est hors lot: STOP et demande validation.
 
 ## Prompt de generation ecran (reutilisable)
@@ -53,8 +57,3 @@
 - pas de sortie hors lot/module actif
 - pas de duplication composant sans justification
 - Si une regle est incertaine: STOP et demander arbitrage
-
-## Si contexte detaille necessaire
-
-- Utiliser `guidelines/INDEX.md` puis `guidelines/repo-docs/` pour ouvrir les sources exactes.
-
