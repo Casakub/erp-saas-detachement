@@ -11,7 +11,7 @@
 - `guidelines/Guidelines.md` (registre obligatoire)
 - `guidelines/components/reuse-gate.md`
 - `guidelines/components/component-library.md`
-- `ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md`
+- `guidelines/repo-docs/ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md`
 
 ## Registry Schema (mandatory columns)
 

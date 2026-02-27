@@ -3,13 +3,13 @@
 ## Purpose
 
 - Definir la bibliotheque de composants UI reusable pour Figma Make.
-- Couvrir les besoins explicites de `SECTION 1` sans introduire de logique metier.
+- Couvrir les besoins explicites de la source design canonique locale, sans introduire de logique metier.
 - Eviter les doublons visuels et stabiliser le handoff vers implementation code.
 
 ## Source Coverage
 
-- Source principale: `ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md`
-- Cadrage structure: `FIGMA_MAKE_CONCEPTION_GUIDE.md`
+- Source principale: `guidelines/repo-docs/ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md`
+- Cadrage structure: `guidelines/repo-docs/FIGMA_MAKE_CONCEPTION_GUIDE.md`
 - Regles de reuse: `guidelines/components/reuse-gate.md`
 - Registre obligatoire: `guidelines/components/component-registry.md`
 
@@ -197,6 +197,6 @@
 
 ## Definition Of Complete For This File
 
-- Covers generic design system components and module-specific UI sets from Section 1.
+- Covers generic design system components and module-specific UI sets from the local canonical design source (`guidelines/repo-docs/...SECTION 1...`).
 - Covers required states and responsive/accessibility constraints.
 - Remains UI-only and contract-first aligned.
