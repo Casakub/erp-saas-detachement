@@ -1,0 +1,11 @@
+# OS artifacts
+.DS_Store
+._*
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Supabase local CLI/runtime temp files
+supabase/.temp/
