@@ -14,3 +14,4 @@
 ## Structure
 
 - `documentation/runbooks/` : procédures opérationnelles et guides d'utilisation.
+- `documentation/ai/` : playbook IA backend + templates de run contract-first.
