@@ -9,6 +9,7 @@
 - Liens Figma validés.
 - Exports d'assets (`svg`, `png`) non sensibles.
 - Tokens design si un flux outillé est mis en place.
+- Guidelines Figma Make de référence: `guidelines/Guidelines.md`.
 
 ## Règles
 

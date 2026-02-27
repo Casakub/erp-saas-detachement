@@ -1,0 +1,119 @@
+# Guidelines Central Index
+
+- Scope: miroir documentaire centralise pour Figma Make et IA externes.
+- Source: documentation actuelle du repo (contractuelle + templates + runbooks + archives prototype).
+- Date sync: 2026-02-27 14:39:07 +0100
+- Fichiers recenses: 106
+
+## Canonical Entry
+
+- `guidelines/Guidelines.md`
+
+## Mirror Tree
+
+- `repo-docs/AGENTS.md`
+- `repo-docs/Ancien prototype/Analytics system.pdf`
+- `repo-docs/Ancien prototype/Conformité globale.pdf`
+- `repo-docs/Ancien prototype/Dashboard .pdf`
+- `repo-docs/Ancien prototype/Gestion Agences.pdf`
+- `repo-docs/Ancien prototype/Gestion des permissions.pdf`
+- `repo-docs/Ancien prototype/Landing Page.pdf`
+- `repo-docs/Ancien prototype/Missions globales.pdf`
+- `repo-docs/Ancien prototype/PROTOTYPE_FEATURES.md`
+- `repo-docs/Ancien prototype/Parametres.pdf`
+- `repo-docs/Ancien prototype/README.md`
+- `repo-docs/Ancien prototype/Rapport Système.pdf`
+- `repo-docs/Ancien prototype/Tous les Clients.pdf`
+- `repo-docs/Ancien prototype/Tous les talents.pdf`
+- `repo-docs/DOC_REMEDIATION_PLAN.md`
+- `repo-docs/ERP Détachement europe 308688d6a59680d8950feccf07ea2018.md`
+- `repo-docs/ERP Détachement europe/ERRATA — Clarifications contractuelles V1.1 30c688d6a5968034a583c3ceeb55b1b2.md`
+- `repo-docs/ERP Détachement europe/SECTION 1 — PROMPTS FIGMA MAKE (PAR PAGE) (DESIGN) 308688d6a59680a59142d73793327a6a.md`
+- `repo-docs/ERP Détachement europe/SECTION 10 — META STRUCTURE PRODUIT & GOUVERNANCE (INDEX) 30b688d6a59680e6967cd98ee0aa6a50.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.A — PILIERS FONCTIONNELS (6 PILIERS ↔ M1..M13) 30b688d6a59680698d88fef0d6fa06f7.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.B — RÔLES & PERMISSIONS (INDEX) 30b688d6a59680aa9271e0b904b76d93.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.C — DATA & LEGAL SOURCES REGISTER (IDCC + COUNTRY RULES) 30b688d6a596802fb409c572fc2d3892.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.D — SECURITY BASELINE (HASHING, LOGS, ENCRYPTION, RETENTION, KEY ROTATION, INCIDENT, PII) 30b688d6a59680a698c4d882eaea9fd5.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.E — ACCEPTANCE TESTS (GIVEN WHEN THEN) — CHAINE CRITIQUE E2E 30b688d6a59680adaadedb2ffea55aa7.md`
+- `repo-docs/ERP Détachement europe/SECTION 10.F — MVP V1 V2 MATRIX (ASSISTE VS AUTO + EXCLUSIONS V1) 30b688d6a59680e78855eae07f3c9771.md`
+- `repo-docs/ERP Détachement europe/SECTION 2 — PROMPTS IA BACKEND (PAR MODULE) (DEV) 308688d6a59680ebb64fe4ddb4223b41.md`
+- `repo-docs/ERP Détachement europe/SECTION 3 — TEMPLATE NOTION CLICKUP (PILOTAGE IA) 308688d6a59680acb6b6f7306e1d9a4b.md`
+- `repo-docs/ERP Détachement europe/SECTION 3.T1 — TEMPLATE — PRD MODULE (STANDARD IA) 30b688d6a596806181dac50b3fd334ce.md`
+- `repo-docs/ERP Détachement europe/SECTION 3.T2 — TEMPLATE — DB CHANGE AND MIGRATION IMPACT (STANDARD IA) 30b688d6a596809bb763d2cd469a3c2f.md`
+- `repo-docs/ERP Détachement europe/SECTION 3.T3 — TEMPLATE — SERVICE AND EVENTS HANDLER CONTRACT (STANDARD IA) 30b688d6a596805eb30df1905ec0bfa8.md`
+- `repo-docs/ERP Détachement europe/SECTION 3.T4 — TEMPLATE — IMPACT AND CHANGELOG (STANDARD IA) 30b688d6a59680268053f7be15164fa2.md`
+- `repo-docs/ERP Détachement europe/SECTION 3.T5 — TEMPLATE — PIPELINE FIGMA TO CONTRACT TO CODE (STANDARD IA).md`
+- `repo-docs/ERP Détachement europe/SECTION 4 — AI CONTRIBUTION RULES (OFFICIEL) 308688d6a5968046b8c5d098ffffff15.md`
+- `repo-docs/ERP Détachement europe/SECTION 5 — “DEFINITION OF DONE” GLOBAL (DoD) 308688d6a596807789b6f97e7433f4fd.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale) 308688d6a5968026b6d6e3a94a6817f4.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 1 — CHECKLIST “LOT 1 IA” (FOUNDATION) — Core Aut 309688d6a59680289ab6c2610e2ea8c2.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 2 A — CHECKLIST DE VALIDATION INTER-MODULES (LOT 30a688d6a59680cd973bcefa1b8dea2e.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 2 — CHECKLIST “LOT 2 IA” (CORE MÉTIER) — Mission 309688d6a5968025b83ee89daae2af50.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 3 — CHECKLIST — LOT 3 IA (TIMESHEETS & MOBILE) 309688d6a596802db703f94bc41b8d6c.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 4 — CHECKLIST “LOT 6 IA” — FINANCE BILLING (M10) — MODE C1 30a688d6a59680d4aab4f458847c3353.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 5 — CHECKLIST — LOT 4 IA (CRM, CLIENTS, VIGILANCE, RFP) 30b688d6a596805a8ee3fa3fc97db271.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 6 — CHECKLIST — LOT 5 IA (ATS, WORKERS) 30b688d6a5968097b150ebf02aa52ca0.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 7 — CHECKLIST — LOT 7 IA (COMPLIANCE ENGINE REMUNERATION) 30b688d6a59680cca2c4f65092f93b55.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 8 — CHECKLIST — LOT 8 IA (RISK, CERTIFICATION, MARKETPLACE) 30b688d6a59680fba415f73561265313.md`
+- `repo-docs/ERP Détachement europe/SECTION 6 — Checklist Produit V1 (Globale)/6 9 — CHECKLIST — LOT 7 BIS IA (EGALITE DE TRAITEMENT).md`
+- `repo-docs/ERP Détachement europe/SECTION 7 — ORCHESTRATION NO-CODE (AUTORISÉE) 308688d6a59680f2bff6f404c1ac8b90.md`
+- `repo-docs/ERP Détachement europe/SECTION 8 — PLAN D’EXÉCUTION (ordre conseillé) 308688d6a596809584e4eef380abe47c.md`
+- `repo-docs/ERP Détachement europe/SECTION 9 — IMPLEMENTATION SUBSTRATE (STACK & CONVENTIONS) 30a688d6a596803a8541ef09201359f2.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED) 308688d6a596805b8e40c7f8a22944ea.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 10 EVENTS MÉTIER V1 (Event-driven, Outbox, IA-fr 30a688d6a5968047ad41e7305d7d9b39.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11 — OPENAPI V1 (PARCOURS MVP) — 1 → 3 → 2 30a688d6a59680b8a5cfc33e26910adb.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 11.A — OPENAPI EXECUTION SCHEMAS (ANNEXE) 30b688d6a59680889d57de90b0df5efb.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 12 — RBAC & PERMISSIONS (MATRIX) — V1 30a688d6a596805ea41ae2abb55cbb97`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1 (LOCKED)/2 9 - Schéma DB V1 1 (V1 + Patch) 30a688d6a59680edbcb1f475916f9e0a.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/2.11.a — OPENAPI V1.2 (PATCH) — SURFACES MANQUANTES 30d688d6a59680e2b6a9d15b762899c1.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/2.12.a — RBAC & PERMISSIONS (MATRIX) — V1.2 (PATCH) 30d688d6a59680fab5eff18dedb70abc.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/CDC_COMPLETIONS_FROM_AUDIT.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/DECISIONS_OWNER_V1.2.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/MERGE_LOCK_PLAN_V1.2.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/OWNER_SIGNOFF_V1.2.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_ATS_SCORING_Q7_V1_RULES_BASED.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_DB_2.9.16-C_worker_push_subscriptions.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_DB_2.9.16-E_rfp_visibility_contact_logs.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_DB_2.9.16-F_sipsi_declarations.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_DB_2.9.16-G_equal_treatment_compliance_exports.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_EVENTS_2.10.4.11.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3A_DB_DATA_CONTRACTS.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3B_OPENAPI_API_SURFACE.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3C_EVENTS_ORCHESTRATION.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3D_RBAC_SECURITY_COMPLIANCE.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3E_TEST_SCENARIOS.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3F_IMPLEMENTATION_TASK_PACK.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3G_RECHERCHE_ENTREPRISES_INTEGRATION.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_M3_COMPANY_ENRICHMENT_SIREN_SIRET.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_OPENAPI_V1.3_SURFACES_MANQUANTES.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_OPENAPI_V1.4_PLATFORM_ADMIN_SURFACES.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/PATCH_RBAC_2.12.b_PLATFORM_ADMIN.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/RELEASE_CANDIDATE_V1.2.1.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/RELEASE_PACK_V1.2_ALIGNMENT_CHECKLIST.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/RELEASE_PACK_V1.2_CHANGELOG.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/RELEASE_PACK_V1.2_INDEX.md`
+- `repo-docs/ERP Détachement europe/SOCLE TECHNIQUE GELÉ — V1.2 (DRAFT)/RELEASE_PACK_V1.2_OPEN_ITEMS.md`
+- `repo-docs/FIGMA_MAKE_CONCEPTION_GUIDE.md`
+- `repo-docs/FIGMA_MAKE_DOC_IMPORT_PACK.md`
+- `repo-docs/backend/runbooks/bootstrap_local.md`
+- `repo-docs/backend/runbooks/rollback_migrations.md`
+- `repo-docs/design/FIGMA_LINKS.md`
+- `repo-docs/design/GUIDELINES.md`
+- `repo-docs/design/README.md`
+- `repo-docs/documentation/README.md`
+- `repo-docs/documentation/ai/PLAYBOOK.md`
+- `repo-docs/documentation/ai/runs/README.md`
+- `repo-docs/documentation/ai/runs/lot1-m1-foundation-tasks/01_IA_RUN_REQUEST.md`
+- `repo-docs/documentation/ai/runs/lot1-m1-foundation-tasks/02_MODULE_HEADER.md`
+- `repo-docs/documentation/ai/runs/lot1-m1-foundation-tasks/03_ALIGNMENT_MATRIX.md`
+- `repo-docs/documentation/ai/runs/lot1-m1-foundation-tasks/04_EXECUTION_PLAN.md`
+- `repo-docs/documentation/ai/runs/lot1-m1-foundation-tasks/05_SCOPE_NOTES.md`
+- `repo-docs/documentation/ai/templates/ALIGNMENT_MATRIX_TEMPLATE.md`
+- `repo-docs/documentation/ai/templates/CONFLICT_GATE_TEMPLATE.md`
+- `repo-docs/documentation/ai/templates/EXECUTION_PLAN_TEMPLATE.md`
+- `repo-docs/documentation/ai/templates/IA_RUN_REQUEST_TEMPLATE.md`
+- `repo-docs/documentation/ai/templates/MODULE_HEADER_TEMPLATE.md`
+- `repo-docs/documentation/ai/templates/PATCH_PACK_TEMPLATE.md`
+- `repo-docs/documentation/runbooks/README.md`
+- `repo-docs/scripts/PR0_BIS_DOC_CHECK_GATE_NOTE.md`
+- `repo-docs/tooling/README.md`

@@ -7,7 +7,7 @@ LC_ALL=C
 resolve_locked_doc_by_ids() {
   local file_id match
   for file_id in "$@"; do
-    match="$(find . -type f -name "*${file_id}*" -print -quit)"
+    match="$(find . -type f -name "*${file_id}*" ! -path "./guidelines/repo-docs/*" -print -quit)"
     if [[ -n "$match" ]]; then
       printf '%s' "$match"
       return 0
@@ -20,7 +20,7 @@ resolve_locked_doc_by_ids() {
 resolve_doc_by_ids_optional() {
   local file_id match
   for file_id in "$@"; do
-    match="$(find . -type f -name "*${file_id}*" -print -quit)"
+    match="$(find . -type f -name "*${file_id}*" ! -path "./guidelines/repo-docs/*" -print -quit)"
     if [[ -n "$match" ]]; then
       printf '%s' "$match"
       return 0
@@ -86,9 +86,9 @@ section "A) Fences"
 
 FORBIDDEN_PATTERN='^[[:space:]]*```(jsx|tsx|ts|js|markdown)[[:space:]]*$'
 if [[ "$SEARCH_TOOL" == "rg" ]]; then
-  FORBIDDEN_HITS="$(rg -n --no-heading --glob '*.md' "$FORBIDDEN_PATTERN" . || true)"
+  FORBIDDEN_HITS="$(rg -n --no-heading --glob '*.md' --glob '!guidelines/repo-docs/**' "$FORBIDDEN_PATTERN" . || true)"
 else
-  FORBIDDEN_HITS="$(grep -R -n -E --include='*.md' "$FORBIDDEN_PATTERN" . || true)"
+  FORBIDDEN_HITS="$(grep -R -n -E --include='*.md' "$FORBIDDEN_PATTERN" . | grep -v '^\\./guidelines/repo-docs/' || true)"
 fi
 
 if [[ -n "$FORBIDDEN_HITS" ]]; then
@@ -126,7 +126,7 @@ while IFS= read -r -d '' file; do
       printf("%s:%d: fence non fermée\n", file, FNR)
     }
   }' "$file" >> "$AMBIGUOUS_FILE"
-done < <(find . -type f -name '*.md' -print0)
+done < <(find . -type f -name '*.md' ! -path './guidelines/repo-docs/*' -print0)
 
 if [[ -s "$AMBIGUOUS_FILE" ]]; then
   ko "fences ambiguës/cassées détectées"

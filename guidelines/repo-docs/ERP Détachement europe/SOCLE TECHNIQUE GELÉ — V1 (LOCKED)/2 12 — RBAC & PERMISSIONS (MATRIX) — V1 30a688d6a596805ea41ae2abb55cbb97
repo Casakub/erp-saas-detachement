@@ -1,0 +1,195 @@
+# 2.12 — RBAC & PERMISSIONS (MATRIX) — V1
+
+**Statut** : DRAFT (devient LOCKED après validation)
+**Version** : 1.0
+**Dernière mise à jour** : 2026-02-15
+
+**Objectif** : Définir de manière contractuelle **qui peut faire quoi**, **sur quels endpoints**, dans un contexte **multi-tenant, RegTech, inspection-ready**.
+
+**Règle absolue** :
+
+- Toute évolution d’endpoint ⇒ update RBAC
+- Toute évolution RBAC ⇒ update OpenAPI + changelog
+- Aucune permission implicite
+
+---
+
+## 2.12.1 Rôles officiels (LOCKED V1)
+
+| Rôle | Description |
+| --- | --- |
+| tenant_admin | Administrateur du tenant (agence) |
+| agency_user | Utilisateur opérationnel agence |
+| consultant | Prospection / RFP / allocation |
+| client_user | Client final (lecture limitée) |
+| worker | Intérimaire (PWA mobile-first) |
+| system | Jobs internes / enforcement / batch |
+
+---
+
+## 2.12.2 Principes de sécurité (OBLIGATOIRES)
+
+- Tous les accès sont **tenant-scoped**
+- `client_user` et `worker` = **lecture strictement limitée**
+- Les décisions critiques (enforcement, issue invoice) = **jamais client / worker**
+- Le no-code **ne bypass jamais** le RBAC
+
+---
+
+## 2.12.3 RBAC — Parcours 1
+
+### Mission → Compliance Case → Enforcement
+
+### Missions (M7)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /missions | ✅ | ✅ | ✅ | ❌ | ❌ |
+| PATCH /missions/{id}/status | ✅ | ✅ | ❌ | ❌ | ❌ |
+| GET /missions/{id} | ✅ | ✅ | ✅ (scoped) | 👁️ | ❌ |
+
+---
+
+### Compliance Case (M8)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| GET /missions/{id}/compliance-case | ✅ | ✅ | ✅ | 👁️ | ❌ |
+| POST /missions/{id}/compliance-case/requirements/initialize | ✅ | ✅ | ❌ | ❌ | ❌ |
+| GET /compliance-cases/{id}/requirements | ✅ | ✅ | ✅ | ❌ | 👁️ (own only) |
+| PATCH /requirements/{id}/status | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### A1 (assisté V1)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /compliance-cases/{id}/a1-requests | ✅ | ✅ | ❌ | ❌ | ❌ |
+| PATCH /a1-requests/{id}/status | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### Remuneration (M8)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /compliance-cases/{id}/remuneration/inputs | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /compliance-cases/{id}/remuneration/snapshots:calculate | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### Enforcement (M8)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| GET /missions/{id}/enforcement | ✅ | ✅ | 👁️ | 👁️ | ❌ |
+| POST /missions/{id}/enforcement:evaluate | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## 2.12.4 RBAC — Parcours 3
+
+### Timesheet → Invoice → Payment
+
+### Timesheets (M7)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /missions/{id}/timesheets | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /timesheets/{id}/entries | ✅ | ✅ | ❌ | ❌ | ✅ (own only) |
+| POST /timesheets/{id}:submit | ✅ | ✅ | ❌ | ❌ | ✅ (own only) |
+| POST /timesheets/{id}:validate | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /timesheets/{id}:reject | ✅ | ✅ | ❌ | ✅ (si double validation activée) | ❌ |
+
+---
+
+### Invoices (M10) — Mode C / C1
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /invoices:from-timesheet | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /invoices/{id}:issue | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /invoices/{id}:block | ✅ | ❌ | ❌ | ❌ | ❌ |
+| POST /invoices/{id}:void | ✅ | ❌ | ❌ | ❌ | ❌ |
+| PATCH /timesheets/{id}/billing-status | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### Payments (M10)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /payments | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## 2.12.5 RBAC — Parcours 2
+
+### CRM → RFP → Allocation
+
+### Leads & Clients (M2 / M3)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /leads | ✅ | ✅ | ✅ | ❌ | ❌ |
+| PATCH /leads/{id}/status | ✅ | ✅ | ✅ | ❌ | ❌ |
+| GET /leads | ✅ | ✅ | ✅ | ❌ | ❌ |
+| POST /leads/{id}:convert-to-client | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /clients | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /clients/{id}/sites | ✅ | ✅ | ❌ | ❌ | ❌ |
+| POST /clients/{id}/documents | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### RFP (M4)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /rfps | ✅ | ✅ | ✅ | ❌ | ❌ |
+| POST /rfps/{id}:publish | ✅ | ✅ | ✅ | ❌ | ❌ |
+| POST /rfps/{id}/invites | ✅ | ✅ | ✅ | ❌ | ❌ |
+| POST /rfps/{id}/responses | ✅ | ✅ (agence invitée) | ❌ | ❌ | ❌ |
+| POST /rfps/{id}:allocate | ✅ | ✅ | ✅ | ❌ | ❌ |
+| POST /rfps/{id}:create-mission-draft | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+---
+
+## 2.12.6 RBAC — Tasks & Agency Profile
+
+### Tasks (V1.1)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| POST /tasks | ✅ | ✅ | ✅ | ❌ | ❌ |
+| PATCH /tasks/{id}/status | ✅ | ✅ | ✅ | ❌ | ❌ |
+| GET /tasks | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+---
+
+### Agency Profile (V1.1)
+
+| Endpoint | tenant_admin | agency_user | consultant | client_user | worker |
+| --- | --- | --- | --- | --- | --- |
+| PATCH /agency-profile | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## 2.12.7 Règles finales (ANTI-CHAOS)
+
+- `client_user` et `worker` = **aucune écriture métier critique**
+- `system` peut appeler uniquement :
+    - enforcement:evaluate
+    - batch expirations
+    - recalcul snapshots
+- Toute tentative hors RBAC ⇒ **403 + audit_log**
+
+---
+
+## Changelog doc
+
+- 2026-02-17: Alignement RBAC ↔ OpenAPI, sans changement métier.
+
+---
+
+FIN — RBAC V1
