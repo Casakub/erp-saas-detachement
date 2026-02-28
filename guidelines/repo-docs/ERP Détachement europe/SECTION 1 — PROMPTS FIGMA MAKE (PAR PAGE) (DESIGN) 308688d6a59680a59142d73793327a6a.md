@@ -10,6 +10,22 @@
 - Les écrans doivent VISUALISER les états (score, blocage, conformité) sans implémenter la logique.
 - Toute règle métier est gérée par le backend.
 
+## 0.8 — NAVIGATION DOCUMENTAIRE FIGMA MAKE (GUIDELINES-FIRST)
+
+Objectif:
+- Réduire le bruit contexte et guider Figma Make avec des chemins explicites.
+- Charger seulement la documentation utile au lot/module actif.
+
+Règles:
+1. Ouvrir en premier `guidelines/FIGMA_MAKE_QUICKSTART.md`.
+2. Ouvrir ensuite `guidelines/Guidelines.md`.
+3. Ouvrir `guidelines/overview-lot-active.md` pour confirmer le scope lot/module.
+4. Appliquer `guidelines/components/reuse-gate.md` avant toute création de composant.
+5. Mettre à jour `guidelines/components/component-registry.md` après chaque itération.
+6. Si besoin landing/CMS public, ouvrir le pack `guidelines/landing/*` depuis `guidelines/INDEX.md`.
+7. Escalader vers `guidelines/repo-docs/*` uniquement en cas d’ambiguïté contractuelle.
+8. Ne pas importer les fichiers `.pdf` dans Figma Make.
+
 ## 0.9 — PROMPT D’AMORÇAGE GLOBAL (OBLIGATOIRE EN TOUT PREMIER)
 
 Avant toute création de page/flow, appliquer ce prompt.
@@ -17,9 +33,13 @@ Avant toute création de page/flow, appliquer ce prompt.
 Prompt à utiliser dans Figma Make:
 
 - Tu conçois un produit SaaS RegTech multi-tenant en mode contract-first.
-- Tu dois lire et suivre le fichier racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
-- Tu dois lire et suivre le fichier racine `FIGMA_MAKE_DOC_IMPORT_PACK.md` pour charger le bon périmètre documentaire.
-- Tu dois organiser le fichier Figma selon les dossiers/pages définis dans ce guide.
+- Tu dois lire et suivre dans cet ordre:
+- `guidelines/FIGMA_MAKE_QUICKSTART.md`
+- `guidelines/Guidelines.md`
+- `guidelines/overview-lot-active.md`
+- `guidelines/components/reuse-gate.md`
+- Si contexte landing/CMS: `guidelines/landing/landing-run-prompt.md` ou `guidelines/landing/landing-cms-run-prompt.md`.
+- Si conflit ou ambiguïté: `guidelines/INDEX.md`, puis les fichiers cibles dans `guidelines/repo-docs/`.
 - Tu dois produire des écrans orientés états backend (`NORMAL`, `WARNING`, `BLOCKED`) sans logique métier implémentée.
 - Tu dois préparer un handoff design compatible avec une implémentation TypeScript modulaire.
 - Tu dois respecter les contraintes V1: mobile PWA online-only, allocation marketplace assistée (pas d’auto-allocation), backend décisionnel, no-code orchestration uniquement.
@@ -45,21 +65,21 @@ Contexte:
 Règle:
 - Ne pas importer “tout le cahier des charges” brut dans un seul bloc.
 - Importer un pack documentaire ciblé par lot pour limiter le bruit de contexte.
+- Ne pas importer de `.pdf` (non exploitable dans Figma Make).
 
-Dossier Figma obligatoire:
-1. Créer une page `00_DOCS_READONLY`.
-2. Créer des sous-sections:
-- `00_DOCS_GLOBAL_RULES`
-- `01_DOCS_LOT_ACTIVE`
-- `02_DOCS_MAPPING_SCREEN_TO_MODULE`
-- `03_DOCS_DECISIONS_V1_V2`
+Arborescence documentaire à utiliser telle quelle:
+1. Utiliser le dossier `guidelines/` déjà en place.
+2. Ne pas recréer un dossier docs parallèle dans Figma Make.
+3. Conserver les fichiers existants comme source unique de lecture.
 
 Référence source du pack:
-- `FIGMA_MAKE_DOC_IMPORT_PACK.md` (racine repo).
+- `guidelines/INDEX.md` (packs `minimal`, `extended`, `landing`, `deep`).
+- En approfondissement: `guidelines/repo-docs/FIGMA_MAKE_CONCEPTION_GUIDE.md`.
+- En approfondissement: `guidelines/repo-docs/FIGMA_MAKE_DOC_IMPORT_PACK.md`.
 
 Critère de conformité avant design:
 1. Le lot actif est identifié.
-2. Les contraintes V1/V2 du lot sont rappelées dans `00_DOCS_READONLY`.
+2. Les contraintes V1/V2 du lot sont vérifiées dans `guidelines/overview-lot-active.md` et `guidelines/Guidelines.md`.
 3. Les pages design créées ne dépassent pas le scope du lot actif.
 
 ## 0.11 — PROMPT DE CONTRÔLE AVANT CHAQUE PAGE
@@ -67,9 +87,11 @@ Critère de conformité avant design:
 Prompt à utiliser juste avant de générer un écran:
 
 - Vérifie le lot actif et les modules concernés.
-- Vérifie les contraintes V1 applicables depuis `00_DOCS_READONLY`.
+- Vérifie les contraintes V1 applicables depuis `guidelines/overview-lot-active.md` et `guidelines/Guidelines.md`.
 - Rappelle les exclusions V2 à ne pas implémenter visuellement.
 - Rappelle les états requis (`NORMAL`, `WARNING`, `BLOCKED`).
+- Applique `guidelines/components/reuse-gate.md` avant de créer un nouveau composant.
+- Prépare la mise à jour de `guidelines/components/component-registry.md` pour les composants touchés.
 - Si la demande sort du lot actif, STOP et demande validation.
 
 ## 1.0 — PROMPT MAÎTRE (à utiliser avant les pages)
@@ -242,21 +264,22 @@ Concevoir l'écran de gestion des timesheets côté agence.
 
 Liste timesheets par mission :
 - Colonnes : worker, mission, période (semaine), total heures, statut, billing_status, actions.
-- Filtres : statut (`draft / submitted / client_validated / agency_validated / validated / rejected`), mission, worker, période.
-- Badges statut colorés : draft (gris), submitted (bleu), client_validated (bleu-clair), agency_validated (bleu-moyen), validated (vert), rejected (rouge).
+- Filtres : statut (`draft / submitted / validated / rejected`), billing_status (`not_billed / billed / disputed`), mission, worker, période.
+- Badges statut colorés : draft (gris), submitted (bleu), validated (vert), rejected (rouge).
+- Badges billing_status : not_billed (gris), billed (vert), disputed (orange).
 
 Fiche timesheet (détail) :
 - Header : mission liée, worker, période (lun→dim), total heures calculé.
 - Tableau entries daily : colonnes date, heures, notes. Ligne par jour de la semaine.
-- Bloc double validation : deux zones distinctes — "Validation client" (statut + date + nom) et "Validation agence" (idem). Badge "En attente" si non encore validé par le rôle.
+- Bloc validation : zone "Validation agence" (statut + date + nom) + zone "Historique rejets" (raison + acteur + date).
 - Bloc enforcement : si `can_validate_timesheets = false` → banner rouge avec `blocking_reasons` explicites. Bouton "Valider" désactivé.
 - Actions : valider (si rôle autorisé + enforcement OK), rejeter (modal de rejet avec champ reason + notes), voir audit.
 
 États obligatoires à couvrir :
-- Timesheet soumise, en attente validation client.
+- Timesheet soumise, en attente validation agence.
 - Timesheet bloquée enforcement (mission non conforme) — actions désactivées + raison visible.
 - Timesheet rejetée — raison + possibilité de rework worker.
-- Timesheet fully validated — billing_status bascule `not_billed → billed` visible.
+- Timesheet validée + facture créée — billing_status `not_billed → billed` visible.
 
 ### Vue mobile — Worker (saisie + soumission)
 
@@ -268,7 +291,7 @@ Fiche timesheet (détail) :
 
 Soumission :
 - Bouton "Soumettre la semaine" — confirmation modale (récapitulatif heures + avertissement si mission warning).
-- Si `can_validate_timesheets = false` → bouton désactivé + message explication (jamais de jargon technique).
+- Si statut incompatible (ex: déjà soumise/validée) → bouton désactivé + message explicite.
 
 Historique timesheets :
 - Liste des semaines passées avec statut visuel simple : soumis / validé / rejeté.
@@ -342,14 +365,14 @@ Contraintes transversales tous flows :
 
 ### Liste RFPs internes
 
-- Tableau : titre besoin, client, corridor, secteur, dates, volume (headcount), statut (`draft / open / evaluating / closed`), visibilité (`private / public`).
+- Tableau : titre besoin, client, corridor, secteur, dates, volume (headcount), statut (`draft / sent / receiving / closed / awarded / cancelled`).
 - Filtres : statut, client, corridor, secteur.
 - Bouton : "Créer une demande".
 
 ### Création / édition RFP
 
 - Formulaire structuré : client (sélecteur), corridor origine/destination, secteur, intitulé poste, volume, dates souhaitées, IDCC cible (optionnel).
-- Champ visibilité : `Interne (privé)` ou `Publier sur Marketplace` (bascule).
+- Publication via action dédiée (`publish`) pour passer de `draft` à `sent/receiving`.
 - Résumé besoin (texte libre).
 - CTA : "Enregistrer brouillon" / "Publier + inviter agences".
 
@@ -367,16 +390,17 @@ Contraintes transversales tous flows :
 
 États obligatoires :
 - RFP en brouillon (éditable, non publiée).
-- RFP ouverte (en attente réponses).
-- RFP en évaluation (réponses reçues, comparateur actif).
+- RFP envoyée (sent) puis en réception (receiving).
 - RFP clôturée (agence sélectionnée, décision tracée).
-- RFP publiée marketplace (`visibility=public`) — badge distinctif.
+- RFP attribuée (awarded) ou annulée (cancelled).
 
 ---
 
 ## **1.21 — Admin Plateforme (Super Admin)**
 
 > Interface réservée au rôle `Platform Super Admin`. Distincte des paramètres tenant (1.16). Accès global, multi-tenant, sans scope tenant.
+> Statut contractuel: surface design en extension contrôlée tant que la matrice RBAC 2.12 LOCKED ne formalise pas explicitement `platform_admin` sur ces endpoints.
+> Règle Figma: conserver cette section en design non bloquant (placeholder/read-only) sauf validation explicite du lot/module extension.
 
 ### Dashboard Admin Plateforme
 
@@ -590,3 +614,6 @@ Contraintes transversales tous flows :
 - 2026-02-23: Ajout du prompt 0.9 d’amorçage global + référence au guide racine `FIGMA_MAKE_CONCEPTION_GUIDE.md`.
 - 2026-02-23: Ajout du mode `import manuel docs` (0.10) + prompt de contrôle lot avant chaque page (0.11) + référence `FIGMA_MAKE_DOC_IMPORT_PACK.md`.
 - 2026-02-23: Ajout prompts 1.23 à 1.26 (permissions avancées, paramètres utilisateur détaillés, rapports système V1/V2, aide/support) pour combler les écarts avec l’ancien prototype.
+- 2026-02-28: Adaptation `guidelines-first` pour Figma Make: ajout navigation 0.8, alignement des prompts 0.9/0.10/0.11 sur `guidelines/*`, ajout explicite des règles d’import ciblé et du cycle reuse-gate + component-registry.
+- 2026-02-28: Correction 0.10/0.11: suppression de l’exigence `00_DOCS_READONLY`; utilisation directe de la documentation existante dans `guidelines/*` pour éviter la duplication.
+- 2026-02-28: Alignement hors landing sur le contrat LOCKED: statuts timesheets simplifiés (`draft/submitted/validated/rejected`), clarification du lien billing_status↔facturation, RFP calé sur `rfp_status` LOCKED (`draft/sent/receiving/closed/awarded/cancelled`), section 1.21 marquée extension contrôlée.
