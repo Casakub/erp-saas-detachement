@@ -13,6 +13,7 @@
 - `overview-*`: contexte contract-first et lot/module.
 - `components/*`: reuse gate et registre composants.
 - `design-tokens/*`: conventions tokens UI.
+- `landing/*`: pack d execution landing (audit, plan, prompt, checklist handoff).
 - `repo-docs/*`: copie centralisee de la documentation actuelle du repo.
 - `INDEX.md`: index exhaustif des fichiers centralises.
 

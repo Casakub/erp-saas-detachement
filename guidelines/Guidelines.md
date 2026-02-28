@@ -13,6 +13,7 @@
 - `screen_generation`: creation d'un ecran/flow.
 - `component_work`: creation ou evolution de composants.
 - `design_tokens`: travail couleurs/typographies/espacements.
+- `landing_refactor`: amelioration de la landing existante section par section.
 - `unclear_scope`: scope non clair ou potentiellement hors lot.
 
 ### Step 2 - Ouvrir seulement le contexte necessaire
@@ -36,6 +37,12 @@ Puis selon le type:
 - `guidelines/design-tokens/colors.md`
 - `guidelines/design-tokens/typography.md`
 - `guidelines/design-tokens/spacing.md`
+- `landing_refactor`:
+- `guidelines/landing/landing-current-state-audit.md`
+- `guidelines/landing/landing-refactor-plan.md`
+- `guidelines/landing/landing-handoff-checklist.md`
+- `guidelines/components/component-registry.md`
+- `guidelines/components/component-library.md`
 - `unclear_scope`:
 - STOP, demander validation lot/module avant generation.
 

@@ -22,6 +22,11 @@
 - `guidelines/overview-screen-module-map.md`
 - `guidelines/components/component-registry.md`
 - `guidelines/overview-handoff.md`
+- `landing`:
+- `guidelines/landing/landing-current-state-audit.md`
+- `guidelines/landing/landing-refactor-plan.md`
+- `guidelines/landing/landing-handoff-checklist.md`
+- `guidelines/landing/landing-run-prompt.md`
 - `deep`:
 - `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
 
