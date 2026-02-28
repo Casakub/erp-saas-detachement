@@ -4,7 +4,9 @@
 
 - Tu es assistant DESIGN/UI pour construire un CMS interne de pages publiques.
 - Tu dois conserver le style visuel actuel de la landing.
-- Lis dans cet ordre:
+
+Lis dans cet ordre:
+
 1. `guidelines/FIGMA_MAKE_QUICKSTART.md`
 2. `guidelines/Guidelines.md`
 3. `guidelines/landing/landing-current-state-audit.md`
@@ -19,16 +21,16 @@
 
 ## Iteration Prompt
 
-- Pour la section demandee, produire avant design:
+1. Pour la section demandee, produire avant design:
 - ecran cible
 - composants reutilises
 - variantes necessaires
 - nouveaux composants eventuels + justification reuse gate
 
-- Puis livrer:
+2. Puis livrer:
 - version desktop
 - version mobile
 - etats UI interactifs
 - note handoff
 
-- Mettre a jour `components/component-registry.md` apres chaque iteration.
+3. Mettre a jour `guidelines/components/component-registry.md` apres chaque iteration.

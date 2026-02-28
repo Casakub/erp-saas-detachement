@@ -4,34 +4,49 @@
 
 - Donner a Figma Make un contexte court et actionnable.
 - Eviter de charger 100+ fichiers avant de commencer.
-- Garder l'alignement contract-first avec le socle LOCKED.
+- Garder l alignement contract-first avec le socle LOCKED.
+
+## Path Rule (important)
+
+- Ouvrir les fichiers par leur nom visible dans l arbre Figma.
+- Ne pas dependre de chemins absolus.
+- Si un fichier existe en double, privilegier celui du dossier `guidelines` actif.
 
 ## Mode de lecture (obligatoire)
 
-- `minimal` (par defaut): generation ecran/composants dans le lot actif.
+- `minimal`: generation ecran/composants dans le lot actif.
 - `extended`: besoin de mapping module/handoff detaille.
+- `landing`: travail landing/CMS public.
 - `deep`: uniquement si ambiguite contractuelle ou conflit de scope.
 
 ## Fichiers a lire par mode
 
-- `minimal`:
-        - `guidelines/Guidelines.md`
-        - `guidelines/overview-lot-active.md`
-        - `guidelines/components/reuse-gate.md`
-- `extended`:
-        - `guidelines/overview-screen-module-map.md`
-        - `guidelines/components/component-registry.md`
-        - `guidelines/overview-handoff.md`
-- `landing`:
-        - `guidelines/landing/landing-current-state-audit.md`
-        - `guidelines/landing/landing-refactor-plan.md`
-        - `guidelines/landing/landing-handoff-checklist.md`
-        - `guidelines/landing/landing-run-prompt.md`
-        - `guidelines/landing/landing-cms-architecture.md`
-        - `guidelines/landing/landing-page-template-catalog.md`
-        - `guidelines/landing/landing-cms-run-prompt.md`
-- `deep`:
-        - `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
+### `minimal`
+
+1. `guidelines/Guidelines.md`
+2. `guidelines/overview-lot-active.md`
+3. `guidelines/components/reuse-gate.md`
+
+### `extended`
+
+1. `guidelines/overview-screen-module-map.md`
+2. `guidelines/components/component-registry.md`
+3. `guidelines/overview-handoff.md`
+
+### `landing`
+
+1. `guidelines/landing/landing-current-state-audit.md`
+2. `guidelines/landing/landing-refactor-plan.md`
+3. `guidelines/landing/landing-handoff-checklist.md`
+4. `guidelines/landing/landing-run-prompt.md`
+5. `guidelines/landing/landing-cms-architecture.md`
+6. `guidelines/landing/landing-page-template-catalog.md`
+7. `guidelines/landing/landing-cms-run-prompt.md`
+
+### `deep`
+
+1. `guidelines/INDEX.md`
+2. Puis seulement les fichiers cibles dans `guidelines/repo-docs`.
 
 ## Prompt de demarrage (session)
 
@@ -43,15 +58,15 @@
 
 ## Prompt de generation ecran (reutilisable)
 
-- Genere l'ecran demande dans le scope du lot actif.
-- Avant creation, applique le reuse gate:
+1. Genere l ecran demande dans le scope du lot actif.
+2. Avant creation, applique le reuse gate:
 - chercher composant existant
 - reutiliser ou creer variante
 - creer nouveau composant seulement si necessaire
-- Livrer:
+3. Livrer:
 - ecran principal
 - variantes desktop/mobile
-- variantes d'etat (default, hover, focus, disabled, loading, success, error)
+- variantes d etat (default, hover, focus, disabled, loading, success, error)
 - liste composants reutilises
 - liste nouveaux composants + raison
 - note de scope lot/module
@@ -59,9 +74,9 @@
 
 ## Prompt de controle anti-derive
 
-- Verifie avant de repondre:
-        - pas de logique metier en UI
-        - pas de fonctionnalite V2 en lot V1
-        - pas de sortie hors lot/module actif
-        - pas de duplication composant sans justification
-        - Si une regle est incertaine: STOP et demander arbitrage
+1. Verifie avant de repondre:
+- pas de logique metier en UI
+- pas de fonctionnalite V2 en lot V1
+- pas de sortie hors lot/module actif
+- pas de duplication composant sans justification
+2. Si une regle est incertaine: STOP et demander arbitrage.

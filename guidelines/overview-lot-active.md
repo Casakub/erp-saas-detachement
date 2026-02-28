@@ -36,6 +36,6 @@
 ## How To Switch Lot
 
 1. Mettre a jour ce fichier avec le lot/module valide.
-2. Mettre a jour `guidelines/overview-screen-module-map.md` pour le lot cible.
+2. Mettre a jour `overview-screen-module-map.md` pour le lot cible.
 3. Mettre a jour les references run dans `documentation/ai/runs/...`.
 4. Re-lancer un controle de coherence documentaire.

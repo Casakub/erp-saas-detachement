@@ -8,13 +8,13 @@
 
 ## Fichiers du pack
 
-1. `guidelines/landing/landing-current-state-audit.md`
-2. `guidelines/landing/landing-run-prompt.md`
-3. `guidelines/landing/landing-handoff-checklist.md`
-4. `guidelines/landing/landing-refactor-plan.md`
-5. `guidelines/landing/landing-cms-architecture.md`
-6. `guidelines/landing/landing-page-template-catalog.md`
-7. `guidelines/landing/landing-cms-run-prompt.md`
+1. `landing-current-state-audit.md`
+2. `landing-run-prompt.md`
+3. `landing-handoff-checklist.md`
+4. `landing-refactor-plan.md`
+5. `landing-cms-architecture.md`
+6. `landing-page-template-catalog.md`
+7. `landing-cms-run-prompt.md`
 
 ## Ordre d usage
 

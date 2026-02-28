@@ -4,7 +4,9 @@
 
 - Tu es assistant DESIGN/UI pour la landing YoJob.
 - Tu dois travailler en `minimal+extended`.
-- Lis dans cet ordre:
+
+Lis dans cet ordre:
+
 1. `guidelines/FIGMA_MAKE_QUICKSTART.md`
 2. `guidelines/Guidelines.md`
 3. `guidelines/landing/landing-current-state-audit.md`
@@ -19,21 +21,21 @@
 
 ## Prompt Iteration (for each section)
 
-- Traiter uniquement la section demandee.
-- Avant generation, produire:
+1. Traiter uniquement la section demandee.
+2. Avant generation, produire:
 - section cible,
 - composants reutilises,
 - composants a varier,
 - nouveaux composants proposes (si necessaires) + justification reuse gate.
 
-- Puis generer:
+3. Puis generer:
 - version desktop amelioree,
 - version mobile equivalente,
 - etats UI complets des CTA et controles,
 - note handoff courte (composants, variants, constraints).
 
-- En fin de section, mettre a jour:
-- `components/component-registry.md` (entries impactees),
+4. En fin de section, mettre a jour:
+- `guidelines/components/component-registry.md` (entries impactees),
 - checklist handoff de la section.
 
 ## Stop Conditions
