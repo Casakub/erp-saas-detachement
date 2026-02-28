@@ -27,26 +27,26 @@ Toujours lire:
 Puis selon le type:
 
 - `screen_generation`:
-- `guidelines/overview-screen-module-map.md`
-- `guidelines/components/component-registry.md`
-- `guidelines/overview-handoff.md`
+        - `guidelines/overview-screen-module-map.md`
+        - `guidelines/components/component-registry.md`
+        - `guidelines/overview-handoff.md`
 - `component_work`:
-- `guidelines/components/component-registry.md`
-- `guidelines/components/component-library.md`
+        - `guidelines/components/component-registry.md`
+        - `guidelines/components/component-library.md`
 - `design_tokens`:
-- `guidelines/design-tokens/colors.md`
-- `guidelines/design-tokens/typography.md`
-- `guidelines/design-tokens/spacing.md`
+        - `guidelines/design-tokens/colors.md`
+        - `guidelines/design-tokens/typography.md`
+        - `guidelines/design-tokens/spacing.md`
 - `landing_refactor`:
-- `guidelines/landing/landing-current-state-audit.md`
-- `guidelines/landing/landing-refactor-plan.md`
-- `guidelines/landing/landing-handoff-checklist.md`
-- `guidelines/landing/landing-cms-architecture.md`
-- `guidelines/landing/landing-page-template-catalog.md`
-- `guidelines/components/component-registry.md`
-- `guidelines/components/component-library.md`
+        - `guidelines/landing/landing-current-state-audit.md`
+        - `guidelines/landing/landing-refactor-plan.md`
+        - `guidelines/landing/landing-handoff-checklist.md`
+        - `guidelines/landing/landing-cms-architecture.md`
+        - `guidelines/landing/landing-page-template-catalog.md`
+        - `guidelines/components/component-registry.md`
+        - `guidelines/components/component-library.md`
 - `unclear_scope`:
-- STOP, demander validation lot/module avant generation.
+        - STOP, demander validation lot/module avant generation.
 
 ### Step 3 - Escalade seulement si blocage
 

@@ -15,23 +15,23 @@
 ## Fichiers a lire par mode
 
 - `minimal`:
-- `guidelines/Guidelines.md`
-- `guidelines/overview-lot-active.md`
-- `guidelines/components/reuse-gate.md`
+        - `guidelines/Guidelines.md`
+        - `guidelines/overview-lot-active.md`
+        - `guidelines/components/reuse-gate.md`
 - `extended`:
-- `guidelines/overview-screen-module-map.md`
-- `guidelines/components/component-registry.md`
-- `guidelines/overview-handoff.md`
+        - `guidelines/overview-screen-module-map.md`
+        - `guidelines/components/component-registry.md`
+        - `guidelines/overview-handoff.md`
 - `landing`:
-- `guidelines/landing/landing-current-state-audit.md`
-- `guidelines/landing/landing-refactor-plan.md`
-- `guidelines/landing/landing-handoff-checklist.md`
-- `guidelines/landing/landing-run-prompt.md`
-- `guidelines/landing/landing-cms-architecture.md`
-- `guidelines/landing/landing-page-template-catalog.md`
-- `guidelines/landing/landing-cms-run-prompt.md`
+        - `guidelines/landing/landing-current-state-audit.md`
+        - `guidelines/landing/landing-refactor-plan.md`
+        - `guidelines/landing/landing-handoff-checklist.md`
+        - `guidelines/landing/landing-run-prompt.md`
+        - `guidelines/landing/landing-cms-architecture.md`
+        - `guidelines/landing/landing-page-template-catalog.md`
+        - `guidelines/landing/landing-cms-run-prompt.md`
 - `deep`:
-- `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
+        - `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
 
 ## Prompt de demarrage (session)
 
@@ -60,8 +60,8 @@
 ## Prompt de controle anti-derive
 
 - Verifie avant de repondre:
-- pas de logique metier en UI
-- pas de fonctionnalite V2 en lot V1
-- pas de sortie hors lot/module actif
-- pas de duplication composant sans justification
-- Si une regle est incertaine: STOP et demander arbitrage
+        - pas de logique metier en UI
+        - pas de fonctionnalite V2 en lot V1
+        - pas de sortie hors lot/module actif
+        - pas de duplication composant sans justification
+        - Si une regle est incertaine: STOP et demander arbitrage
