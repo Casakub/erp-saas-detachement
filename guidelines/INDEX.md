@@ -32,6 +32,9 @@
 3. `landing/landing-run-prompt.md`
 4. `landing/landing-refactor-plan.md`
 5. `landing/landing-handoff-checklist.md`
+6. `landing/landing-cms-architecture.md`
+7. `landing/landing-page-template-catalog.md`
+8. `landing/landing-cms-run-prompt.md`
 
 ## Lecture Par Mode
 
@@ -39,7 +42,7 @@
 | --- | --- |
 | `minimal` | `FIGMA_MAKE_QUICKSTART.md`, `Guidelines.md`, `overview-lot-active.md`, `components/reuse-gate.md`, `components/component-registry.md` |
 | `extended` | `overview-screen-module-map.md`, `overview-handoff.md`, `components/component-library.md`, `design-tokens/colors.md`, `design-tokens/typography.md`, `design-tokens/spacing.md` |
-| `landing` | `landing/README.md`, `landing/landing-current-state-audit.md`, `landing/landing-refactor-plan.md`, `landing/landing-handoff-checklist.md`, `landing/landing-run-prompt.md` |
+| `landing` | `landing/README.md`, `landing/landing-current-state-audit.md`, `landing/landing-refactor-plan.md`, `landing/landing-handoff-checklist.md`, `landing/landing-run-prompt.md`, `landing/landing-cms-architecture.md`, `landing/landing-page-template-catalog.md`, `landing/landing-cms-run-prompt.md` |
 | `deep` | fichiers cibles dans `repo-docs/` seulement si ambiguite contractuelle |
 
 ## Sources Contractuelles LOCKED (priorite absolue)

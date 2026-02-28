@@ -41,6 +41,8 @@ Puis selon le type:
 - `guidelines/landing/landing-current-state-audit.md`
 - `guidelines/landing/landing-refactor-plan.md`
 - `guidelines/landing/landing-handoff-checklist.md`
+- `guidelines/landing/landing-cms-architecture.md`
+- `guidelines/landing/landing-page-template-catalog.md`
 - `guidelines/components/component-registry.md`
 - `guidelines/components/component-library.md`
 - `unclear_scope`:

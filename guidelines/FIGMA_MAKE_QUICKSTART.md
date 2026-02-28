@@ -27,6 +27,9 @@
 - `guidelines/landing/landing-refactor-plan.md`
 - `guidelines/landing/landing-handoff-checklist.md`
 - `guidelines/landing/landing-run-prompt.md`
+- `guidelines/landing/landing-cms-architecture.md`
+- `guidelines/landing/landing-page-template-catalog.md`
+- `guidelines/landing/landing-cms-run-prompt.md`
 - `deep`:
 - `guidelines/INDEX.md` puis seulement les fichiers cibles dans `guidelines/repo-docs/`
 
