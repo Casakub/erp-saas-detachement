@@ -108,9 +108,17 @@ Contraintes:
 - Mobile 390 PWA (intérimaire)
 - UI sérieuse, lisible, data-heavy, audit-friendly
 - Composants modulaires, tokens, states (conforme/warning/bloqué)
+- Branding unifié, sans imposer le même rendu visuel entre landing et produit app
 
 Livrable:
 Fichier Figma structuré (Pages + Components + States + Flows) + design system d’abord.
+
+Règle design system bi-surface (obligatoire):
+- Construire un socle commun partagé: brand tokens, couleurs core, typographie core, spacing, radius, ombres, grille, principes a11y.
+- Construire une bibliothèque `marketing` (landing/CMS public): plus narrative et orientée conversion/SEO.
+- Construire une bibliothèque `product` (dashboard/modules métier): plus dense, lisible, orientée workflows data et conformité.
+- Interdiction de dupliquer inutilement un composant: réutiliser le socle commun puis spécialiser par surface.
+- Tout composant créé doit être enregistré via le registre composants (`guidelines/components/component-registry.md`).
 
 Chaque page critique (Mission, Finance, Compliance, Marketplace) doit inclure :
 - état NORMAL
@@ -119,7 +127,7 @@ Chaque page critique (Mission, Finance, Compliance, Marketplace) doit inclure :
 
 ## **1.1 — Design System (obligatoire en 1er)**
 
-Créer un design system complet: couleurs (success/warn/danger), typographies, boutons (disabled/danger), badges, alertes, tables, cards, modals “blocked”, composants timeline, composants scoring (donut + breakdown), composants “audit log”, formulaires upload docs, champs multi-langue, empty/loading/error.
+Créer un design system complet en deux surfaces (`marketing` et `product`) sur un socle partagé: couleurs (success/warn/danger), typographies, boutons (disabled/danger), badges, alertes, tables, cards, modals “blocked”, composants timeline, composants scoring (donut + breakdown), composants “audit log”, formulaires upload docs, champs multi-langue, empty/loading/error.
 Desktop 1440, Mobile 390. Accessibilité.
 
 ## **1.2 — Landing page (3 personas)**
@@ -617,3 +625,4 @@ Contraintes transversales tous flows :
 - 2026-02-28: Adaptation `guidelines-first` pour Figma Make: ajout navigation 0.8, alignement des prompts 0.9/0.10/0.11 sur `guidelines/*`, ajout explicite des règles d’import ciblé et du cycle reuse-gate + component-registry.
 - 2026-02-28: Correction 0.10/0.11: suppression de l’exigence `00_DOCS_READONLY`; utilisation directe de la documentation existante dans `guidelines/*` pour éviter la duplication.
 - 2026-02-28: Alignement hors landing sur le contrat LOCKED: statuts timesheets simplifiés (`draft/submitted/validated/rejected`), clarification du lien billing_status↔facturation, RFP calé sur `rfp_status` LOCKED (`draft/sent/receiving/closed/awarded/cancelled`), section 1.21 marquée extension contrôlée.
+- 2026-02-28: Ajustement du prompt maître 1.0/1.1: formalisation d’un design system bi-surface (`marketing` vs `product`) avec socle partagé pour conserver la cohérence de marque sans forcer une UI identique entre landing et dashboard.
